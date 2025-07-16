@@ -1,0 +1,79 @@
+{* Test file for incorrect Latte syntax detection *}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Latte Error Detection Test</title>
+</head>
+<body>
+    <h1>Incorrect Latte Syntax Examples</h1>
+    
+    {* 1. Invalid macro names *}
+    <section>
+        <h2>Invalid Macro Names</h2>
+        {invalidMacro $var}
+        {unknown}
+        {123invalid}
+    </section>
+    
+    {* 2. Unclosed macros *}
+    <section>
+        <h2>Unclosed Macros</h2>
+        {if $condition
+        {foreach $items as $item
+    </section>
+    
+    {* 3. Mismatched closing tags *}
+    <section>
+        <h2>Mismatched Closing Tags</h2>
+        {if $condition}
+            <p>This is a test</p>
+        {/foreach}
+        
+        {foreach $items as $item}
+            <p>{$item}</p>
+        {/if}
+    </section>
+    
+    {* 4. Unexpected closing tags *}
+    <section>
+        <h2>Unexpected Closing Tags</h2>
+        {/if}
+        {/foreach}
+        <p>{/block}</p>
+    </section>
+    
+    {* 5. Invalid attribute syntax *}
+    <section>
+        <h2>Invalid Attribute Syntax</h2>
+        <div n:invalid="$value"></div>
+        <div n:if=></div>
+        <div n:foreach></div>
+    </section>
+    
+    {* 6. Unclosed quotes in attributes *}
+    <section>
+        <h2>Unclosed Quotes in Attributes</h2>
+        <div n:if="$condition></div>
+        <div n:foreach="$items as $item></div>
+    </section>
+    
+    {* 7. Invalid filter syntax *}
+    <section>
+        <h2>Invalid Filter Syntax</h2>
+        <p>{$text|}</p>
+        <p>{$text||uppercase}</p>
+        <p>{$text|invalidFilter}</p>
+    </section>
+    
+    {* 8. Mixed errors *}
+    <section>
+        <h2>Mixed Errors</h2>
+        {if $condition}
+            <div n:invalid="value">
+                {$text|invalidFilter}
+            </div>
+        {/block}
+    </section>
+</body>
+</html>

@@ -1,0 +1,78 @@
+{* Latte 2.x specific features test file *}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{$title}</title>
+</head>
+<body>
+    <h1>Latte 2.x Specific Features</h1>
+    
+    {* Syntax change macro - specific to Latte 2.x *}
+    <h2>Syntax Change</h2>
+    <pre>
+    {syntax double}
+    {{if $user->isLoggedIn()}}
+        <p>User is logged in as {{$user->name|capitalize}}</p>
+    {{else}}
+        <p>User is not logged in</p>
+    {{/if}}
+    {{syntax}}
+    </pre>
+    
+    {* Literal delimiters - specific to Latte 2.x *}
+    <h2>Literal Delimiters</h2>
+    <pre>
+    {l}This is literal Latte syntax: {$variable}{r}
+    </pre>
+    
+    {* Use macro - specific to Latte 2.x *}
+    <h2>Use Macro</h2>
+    <pre>
+    {use MyMacros}
+    {use name=MyAlias from=MyMacros}
+    </pre>
+    
+    {* n:ifcontent attribute - specific to Latte 2.x *}
+    <h2>n:ifcontent Attribute</h2>
+    <div n:ifcontent>
+        {if $content}
+            {$content}
+        {/if}
+    </div>
+    
+    {* n:href attribute - specific to Latte 2.x *}
+    <h2>n:href Attribute</h2>
+    <a n:href="Page:default $param">Link text</a>
+    
+    {* Bytes filter - specific to Latte 2.x *}
+    <h2>Bytes Filter</h2>
+    <p>File size: {$fileSize|bytes}</p>
+    
+    {* DataStream filter - specific to Latte 2.x *}
+    <h2>DataStream Filter</h2>
+    <img src="{$imageData|dataStream}">
+    
+    {* URL filter - specific to Latte 2.x *}
+    <h2>URL Filter</h2>
+    <a href="{$link|url}">Link with URL encoding</a>
+    
+    {* Other Latte 2.x specific features *}
+    <h2>Other Latte 2.x Features</h2>
+    <p>Latte 2.x has different syntax for some macros and attributes compared to Latte 3.0+</p>
+    
+    {* Common features that work in both versions *}
+    <h2>Common Features</h2>
+    {if $condition}
+        <p>Conditional content</p>
+    {/if}
+    
+    {foreach $items as $item}
+        <p>{$item}</p>
+    {/foreach}
+    
+    {include 'partial.latte'}
+    
+    <p n:if="$visible">This element is conditionally visible</p>
+</body>
+</html>

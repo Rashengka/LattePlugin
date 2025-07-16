@@ -1,0 +1,70 @@
+{* Test file for Latte block and include macros *}
+
+{* Define a block *}
+{block content}
+    <h1>Default Content</h1>
+    <p>This is the default content of the block.</p>
+{/block}
+
+{* Include a template *}
+{include 'header.latte'}
+
+{* Include a template with parameters *}
+{include 'sidebar.latte', active => 'home', user => $user}
+
+{* Include a template with dynamic name *}
+{include $templateName}
+
+{* Define a block without printing it *}
+{define sidebar}
+    <div class="sidebar">
+        <h3>Navigation</h3>
+        <ul>
+            <li><a href="/">Home</a></li>
+            <li><a href="/about">About</a></li>
+            <li><a href="/contact">Contact</a></li>
+        </ul>
+    </div>
+{/define}
+
+{* Print a defined block *}
+{include sidebar}
+
+{* Extend a parent template *}
+{layout 'layout.latte'}
+
+{* Override a block from parent template *}
+{block title}My Page Title{/block}
+
+{* Block with parameters *}
+{define menu, $items}
+    <ul class="menu">
+        {foreach $items as $item}
+            <li><a href="{$item->url}">{$item->label}</a></li>
+        {/foreach}
+    </ul>
+{/define}
+
+{* Include a block with parameters *}
+{include menu, [
+    ['url' => '/', 'label' => 'Home'],
+    ['url' => '/about', 'label' => 'About'],
+    ['url' => '/contact', 'label' => 'Contact']
+]}
+
+{* Capture output to a variable *}
+{capture $sidebarContent}
+    <div class="sidebar-content">
+        <h3>Recent Posts</h3>
+        <ul>
+            {foreach $recentPosts as $post}
+                <li><a href="{$post->url}">{$post->title}</a></li>
+            {/foreach}
+        </ul>
+    </div>
+{/capture}
+
+{* Print captured content *}
+<div class="sidebar">
+    {$sidebarContent|noescape}
+</div>

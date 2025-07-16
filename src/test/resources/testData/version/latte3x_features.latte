@@ -1,0 +1,120 @@
+{* Latte 3.0+ specific features test file *}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{$title}</title>
+</head>
+<body>
+    <h1>Latte 3.0+ Specific Features</h1>
+    
+    {* Type declarations - specific to Latte 3.0+ *}
+    <h2>Type Declarations</h2>
+    <pre>
+    {varType string $name}
+    {varType int $age}
+    {varType array $items}
+    {varType App\User $user}
+    
+    {templateType App\Templates\BaseTemplate}
+    </pre>
+    
+    {* Parameters macro - specific to Latte 3.0+ *}
+    <h2>Parameters Macro</h2>
+    <pre>
+    {parameters
+        string $title
+        int $count = 0
+        ?array $items = null
+        App\User $user
+    }
+    </pre>
+    
+    {* PHP macro - specific to Latte 3.0+ *}
+    <h2>PHP Macro</h2>
+    <pre>
+    {php
+        $items = ['apple', 'banana', 'orange'];
+        $count = count($items);
+        $user = new User('John');
+    }
+    </pre>
+    
+    {* Do macro - specific to Latte 3.0+ *}
+    <h2>Do Macro</h2>
+    <pre>
+    {do $form->render()}
+    {do $logger->log('Page visited')}
+    </pre>
+    
+    {* n:name attribute - specific to Latte 3.0+ *}
+    <h2>n:name Attribute</h2>
+    <input n:name="username">
+    <select n:name="country"></select>
+    <textarea n:name="description"></textarea>
+    
+    {* n:nonce attribute - specific to Latte 3.0+ *}
+    <h2>n:nonce Attribute</h2>
+    <script n:nonce>
+        console.log('This script has a nonce attribute for CSP');
+    </script>
+    
+    {* Enhanced snippet attributes - specific to Latte 3.0+ *}
+    <h2>Enhanced Snippet Attributes</h2>
+    <div n:snippet-prepend="header">Prepended content</div>
+    <div n:snippet-append="footer">Appended content</div>
+    
+    {* Slice filter - specific to Latte 3.0+ *}
+    <h2>Slice Filter</h2>
+    <p>First three items: {$items|slice: 0, 3}</p>
+    
+    {* Batch filter - specific to Latte 3.0+ *}
+    <h2>Batch Filter</h2>
+    <div n:foreach="$items|batch: 3 as $batch">
+        {foreach $batch as $item}
+            <span>{$item}</span>
+        {/foreach}
+    </div>
+    
+    {* Spaceless filter - specific to Latte 3.0+ *}
+    <h2>Spaceless Filter</h2>
+    <div>
+        {spaceless}
+        <div>
+            <p>This content will have whitespace between tags removed</p>
+        </div>
+        {/spaceless}
+    </div>
+    
+    {* Clamp filter - specific to Latte 3.0+ *}
+    <h2>Clamp Filter</h2>
+    <p>Clamped value: {$value|clamp: 0, 100}</p>
+    
+    {* Enhanced array syntax - specific to Latte 3.0+ *}
+    <h2>Enhanced Array Syntax</h2>
+    <pre>
+    {var $array = [
+        'key1' => 'value1',
+        'key2' => 'value2',
+        'nested' => [
+            'a' => 1,
+            'b' => 2
+        ]
+    ]}
+    </pre>
+    
+    {* Common features that work in both versions *}
+    <h2>Common Features</h2>
+    {if $condition}
+        <p>Conditional content</p>
+    {/if}
+    
+    {foreach $items as $item}
+        <p>{$item}</p>
+    {/foreach}
+    
+    {include 'partial.latte'}
+    
+    <p n:if="$visible">This element is conditionally visible</p>
+</body>
+</html>

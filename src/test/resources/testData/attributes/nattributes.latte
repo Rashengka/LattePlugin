@@ -1,0 +1,80 @@
+{* Test file for Latte n:attributes *}
+
+{* Conditional rendering with n:if *}
+<div n:if="$user->isLoggedIn()">
+    <p>Welcome, {$user->name}</p>
+</div>
+
+{* Conditional rendering with n:ifset *}
+<div n:ifset="$user">
+    <p>User is set</p>
+</div>
+
+{* Loop with n:foreach *}
+<ul n:foreach="$items as $item">
+    <li>{$item}</li>
+</ul>
+
+{* Loop with n:foreach and key *}
+<dl n:foreach="$items as $key => $value">
+    <dt>{$key}</dt>
+    <dd>{$value}</dd>
+</dl>
+
+{* Inner loop with n:inner-foreach *}
+<ul n:inner-foreach="$items as $item">
+    <li>{$item}</li>
+</ul>
+
+{* Conditional class with n:class *}
+<div n:class="$active ? active, $error ? error">
+    <p>Content</p>
+</div>
+
+{* Conditional attributes with n:attr *}
+<a n:attr="href => $url, target => $isExternal ? '_blank', title => $title">
+    Link Text
+</a>
+
+{* Conditional tag with n:tag *}
+<n:tag n:tag="$isHeader ? h1 : div">
+    Dynamic Tag Content
+</n:tag>
+
+{* Combining multiple n:attributes *}
+<div n:if="$visible" n:foreach="$sections as $section" n:class="$section->isActive() ? active">
+    <h2>{$section->title}</h2>
+    <p>{$section->content}</p>
+</div>
+
+{* n:snippet for AJAX *}
+<div n:snippet="userProfile">
+    <h2>{$user->name}</h2>
+    <p>{$user->bio}</p>
+</div>
+
+{* n:include for including templates *}
+<div n:include="'partials/header.latte'"></div>
+
+{* n:block for defining blocks *}
+<div n:block="content">
+    <p>Block content</p>
+</div>
+
+{* n:inner-if for conditional inner content *}
+<div n:inner-if="$showContent">
+    <p>This content is conditionally shown</p>
+</div>
+
+{* n:inner-if with n:else *}
+<div n:inner-if="$user->isAdmin()">
+    <p>Admin content</p>
+</div>
+<div n:else>
+    <p>Non-admin content</p>
+</div>
+
+{* n:class with multiple conditions *}
+<button n:class="btn, $primary ? btn-primary : btn-secondary, $size === 'large' ? btn-lg : btn-sm">
+    Button Text
+</button>

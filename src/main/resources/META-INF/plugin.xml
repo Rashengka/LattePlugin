@@ -1,0 +1,52 @@
+<idea-plugin>
+    <id>org.latte.plugin</id>
+    <name>Latte Template Support</name>
+    <vendor email="support@example.com" url="http://www.example.com">Latte Plugin</vendor>
+    
+    <description><![CDATA[
+    Provides support for Latte template language.<br>
+    Features include:
+    <ul>
+        <li>Syntax highlighting for Latte macros</li>
+        <li>Code completion for Latte tags and attributes</li>
+        <li>Support for Latte-specific shortcuts</li>
+        <li>Integration with HTML editing features</li>
+    </ul>
+    ]]></description>
+
+    <!-- Product and plugin compatibility requirements -->
+    <depends>com.intellij.modules.platform</depends>
+    <depends>com.intellij.modules.lang</depends>
+    <depends>com.intellij.modules.xml</depends>
+    
+    <extensions defaultExtensionNs="com.intellij">
+        <!-- File type definition -->
+        <fileType name="Latte" implementationClass="org.latte.plugin.file.LatteFileType"
+                  fieldName="INSTANCE" language="Latte" extensions="latte"/>
+                  
+        <!-- Language definition -->
+        <lang.parserDefinition language="Latte" 
+                               implementationClass="org.latte.plugin.lang.LatteParserDefinition"/>
+                               
+        <!-- Syntax highlighting -->
+        <lang.syntaxHighlighterFactory language="Latte"
+                                       implementationClass="org.latte.plugin.highlighting.LatteSyntaxHighlighterFactory"/>
+                                       
+        <!-- Code completion -->
+        <completion.contributor language="Latte"
+                                implementationClass="org.latte.plugin.completion.LatteCompletionContributor"/>
+                                
+        <!-- Documentation provider -->
+        <lang.documentationProvider language="Latte"
+                                    implementationClass="org.latte.plugin.documentation.LatteDocumentationProvider"/>
+                                    
+        <!-- Color settings page for customizing syntax highlighting -->
+        <colorSettingsPage implementation="org.latte.plugin.highlighting.LatteColorSettingsPage"/>
+        
+        <!-- Settings configurable for plugin options -->
+        <applicationConfigurable parentId="language" 
+                                 instance="org.latte.plugin.settings.LatteSettingsConfigurable"
+                                 id="org.latte.plugin.settings.LatteSettingsConfigurable"
+                                 displayName="Latte"/>
+    </extensions>
+</idea-plugin>

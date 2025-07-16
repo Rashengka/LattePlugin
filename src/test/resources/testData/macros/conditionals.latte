@@ -1,0 +1,36 @@
+{* Test file for Latte conditional macros *}
+
+{* Simple if statement *}
+{if $user->isLoggedIn()}
+    <p>Welcome, {$user->name}</p>
+{/if}
+
+{* If-else statement *}
+{if $user->isLoggedIn()}
+    <p>Welcome, {$user->name}</p>
+{else}
+    <p>Please log in</p>
+{/if}
+
+{* If-elseif-else statement *}
+{if $user->isAdmin()}
+    <p>Welcome, Administrator</p>
+{elseif $user->isModerator()}
+    <p>Welcome, Moderator</p>
+{else}
+    <p>Welcome, User</p>
+{/if}
+
+{* Nested if statements *}
+{if $user->isLoggedIn()}
+    {if $user->isAdmin()}
+        <p>You have admin privileges</p>
+    {else}
+        <p>You have user privileges</p>
+    {/if}
+{/if}
+
+{* If with complex condition *}
+{if $user->isLoggedIn() && ($user->isAdmin() || $user->isModerator())}
+    <p>You have special privileges</p>
+{/if}

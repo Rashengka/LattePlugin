@@ -1,0 +1,81 @@
+{* Test file for Latte loop macros *}
+
+{* Simple foreach loop *}
+<ul>
+{foreach $items as $item}
+    <li>{$item}</li>
+{/foreach}
+</ul>
+
+{* Foreach with key *}
+<ul>
+{foreach $items as $key => $value}
+    <li>{$key}: {$value}</li>
+{/foreach}
+</ul>
+
+{* Nested foreach loops *}
+<ul>
+{foreach $categories as $category}
+    <li>
+        {$category->name}
+        <ul>
+            {foreach $category->items as $item}
+                <li>{$item->name}</li>
+            {/foreach}
+        </ul>
+    </li>
+{/foreach}
+</ul>
+
+{* Foreach with iteration variables *}
+<ul>
+{foreach $items as $item}
+    <li class="{if $iterator->isFirst()}first{/if} {if $iterator->isLast()}last{/if}">
+        {$iterator->counter}: {$item}
+        {if !$iterator->isLast()}, {/if}
+    </li>
+{/foreach}
+</ul>
+
+{* For loop *}
+<ul>
+{for $i = 1; $i <= 5; $i++}
+    <li>Item {$i}</li>
+{/for}
+</ul>
+
+{* While loop *}
+{var $i = 1}
+<ul>
+{while $i <= 5}
+    <li>Item {$i}</li>
+    {var $i = $i + 1}
+{/while}
+</ul>
+
+{* Foreach with empty check *}
+{if count($items) > 0}
+    <ul>
+    {foreach $items as $item}
+        <li>{$item}</li>
+    {/foreach}
+    </ul>
+{else}
+    <p>No items found.</p>
+{/if}
+
+{* Foreach with break and continue *}
+<ul>
+{foreach $items as $item}
+    {if $item->isHidden()}
+        {continue}
+    {/if}
+    
+    <li>{$item->name}</li>
+    
+    {if $item->isLast()}
+        {break}
+    {/if}
+{/foreach}
+</ul>

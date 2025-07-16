@@ -1,0 +1,28 @@
+{* Test file for Latte variable output *}
+
+{* Simple variable output *}
+<p>{$name}</p>
+
+{* Variable with object property *}
+<p>{$user->name}</p>
+
+{* Variable with array access *}
+<p>{$users[0]}</p>
+
+{* Variable with method call *}
+<p>{$user->getName()}</p>
+
+{* Variable with complex expression *}
+<p>{$user->isAdmin() ? 'Admin' : 'User'}</p>
+
+{* Direct output with = *}
+<p>{='Hello ' . $name}</p>
+
+{* HTML escaping *}
+<p>{$html}</p>
+
+{* Variable with filter *}
+<p>{$name|upper}</p>
+
+{* Multiple filters *}
+<p>{$name|upper|truncate:10}</p>
