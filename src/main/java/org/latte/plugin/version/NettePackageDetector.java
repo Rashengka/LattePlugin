@@ -3,9 +3,10 @@ package org.latte.plugin.version;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.vfs.VirtualFileManager;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonSyntaxException;
 import org.latte.plugin.settings.LatteSettings;
 
 import java.io.FileReader;
@@ -238,12 +239,11 @@ public class NettePackageDetector {
         
         try {
             // Parse JSON
-            JSONParser parser = new JSONParser();
-            JSONObject composerJson = (JSONObject) parser.parse(new FileReader(composerFile.getPath()));
+            JsonObject composerJson = JsonParser.parseReader(new FileReader(composerFile.getPath())).getAsJsonObject();
 
             // Check require section
-            JSONObject require = (JSONObject) composerJson.get("require");
-            if (require != null) {
+            if (composerJson.has("require")) {
+                JsonObject require = composerJson.getAsJsonObject("require");
                 // Check for each Nette package
                 checkPackage(packages, require, NETTE_APPLICATION);
                 checkPackage(packages, require, NETTE_FORMS);
@@ -251,8 +251,8 @@ public class NettePackageDetector {
             }
 
             // Check require-dev section
-            JSONObject requireDev = (JSONObject) composerJson.get("require-dev");
-            if (requireDev != null) {
+            if (composerJson.has("require-dev")) {
+                JsonObject requireDev = composerJson.getAsJsonObject("require-dev");
                 // If a package is not found in require, check in require-dev
                 if (!packages.containsKey(NETTE_APPLICATION)) {
                     checkPackage(packages, requireDev, NETTE_APPLICATION);
@@ -264,7 +264,7 @@ public class NettePackageDetector {
                     checkPackage(packages, requireDev, NETTE_ASSETS);
                 }
             }
-        } catch (IOException | ParseException e) {
+        } catch (IOException | JsonSyntaxException e) {
             // Log error or handle exception
             System.err.println("Error parsing composer.json: " + e.getMessage());
         }
@@ -279,10 +279,10 @@ public class NettePackageDetector {
      * @param jsonObject The JSON object to check for the package
      * @param packageName The name of the package to check for
      */
-    private static void checkPackage(Map<String, PackageInfo> packages, JSONObject jsonObject, String packageName) {
-        Object versionConstraint = jsonObject.get(packageName);
-        if (versionConstraint != null) {
-            int majorVersion = parseMajorVersion(versionConstraint.toString());
+    private static void checkPackage(Map<String, PackageInfo> packages, JsonObject jsonObject, String packageName) {
+        if (jsonObject.has(packageName)) {
+            JsonElement versionConstraint = jsonObject.get(packageName);
+            int majorVersion = parseMajorVersion(versionConstraint.getAsString());
             packages.put(packageName, new PackageInfo(true, majorVersion));
         } else {
             // Package not found, add with default version and not present

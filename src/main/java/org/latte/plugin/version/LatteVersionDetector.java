@@ -3,9 +3,10 @@ package org.latte.plugin.version;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.vfs.VirtualFileManager;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonSyntaxException;
 
 import java.io.FileReader;
 import java.io.IOException;
@@ -102,41 +103,42 @@ public class LatteVersionDetector {
     private static LatteVersion parseComposerJson(VirtualFile composerFile) {
         try {
             // Parse JSON
-            JSONParser parser = new JSONParser();
-            JSONObject composerJson = (JSONObject) parser.parse(new FileReader(composerFile.getPath()));
+            JsonObject composerJson = JsonParser.parseReader(new FileReader(composerFile.getPath())).getAsJsonObject();
 
             // Check require section
-            JSONObject require = (JSONObject) composerJson.get("require");
-            if (require != null) {
+            if (composerJson.has("require")) {
+                JsonObject require = composerJson.getAsJsonObject("require");
+                
                 // Check for latte/latte dependency
-                Object latteVersion = require.get("latte/latte");
-                if (latteVersion != null) {
-                    return parseVersionConstraint(latteVersion.toString());
+                if (require.has("latte/latte")) {
+                    JsonElement latteVersion = require.get("latte/latte");
+                    return parseVersionConstraint(latteVersion.getAsString());
                 }
 
                 // Check for nette/latte dependency (older projects)
-                Object netteLatteVersion = require.get("nette/latte");
-                if (netteLatteVersion != null) {
-                    return parseVersionConstraint(netteLatteVersion.toString());
+                if (require.has("nette/latte")) {
+                    JsonElement netteLatteVersion = require.get("nette/latte");
+                    return parseVersionConstraint(netteLatteVersion.getAsString());
                 }
             }
 
             // Check require-dev section
-            JSONObject requireDev = (JSONObject) composerJson.get("require-dev");
-            if (requireDev != null) {
+            if (composerJson.has("require-dev")) {
+                JsonObject requireDev = composerJson.getAsJsonObject("require-dev");
+                
                 // Check for latte/latte dependency
-                Object latteVersion = requireDev.get("latte/latte");
-                if (latteVersion != null) {
-                    return parseVersionConstraint(latteVersion.toString());
+                if (requireDev.has("latte/latte")) {
+                    JsonElement latteVersion = requireDev.get("latte/latte");
+                    return parseVersionConstraint(latteVersion.getAsString());
                 }
 
                 // Check for nette/latte dependency (older projects)
-                Object netteLatteVersion = requireDev.get("nette/latte");
-                if (netteLatteVersion != null) {
-                    return parseVersionConstraint(netteLatteVersion.toString());
+                if (requireDev.has("nette/latte")) {
+                    JsonElement netteLatteVersion = requireDev.get("nette/latte");
+                    return parseVersionConstraint(netteLatteVersion.getAsString());
                 }
             }
-        } catch (IOException | ParseException e) {
+        } catch (IOException | JsonSyntaxException e) {
             // Log error or handle exception
             System.err.println("Error parsing composer.json: " + e.getMessage());
         }
