@@ -23,6 +23,26 @@ Before you begin, ensure you have the following installed:
 
 > **Note**: If you have Gradle 8.x installed, see the [GRADLE_7.6_INSTALL.md](GRADLE_7.6_INSTALL.md) file for detailed instructions on how to install and use Gradle 7.6 alongside your existing Gradle installation.
 
+### Checking Version Requirements
+
+You can verify that your environment meets the required Java and Gradle versions by running the provided checker script:
+
+```bash
+# Make the script executable (if not already)
+chmod +x check_versions.sh
+
+# Run the checker script
+./check_versions.sh
+```
+
+The script will:
+- Check if your Java version is compatible (JDK 8-19, with JDK 17 recommended)
+- Check if your Gradle version is exactly 7.6
+- Verify the presence of Gradle wrapper files
+- Provide appropriate guidance if any requirements are not met
+
+This is a quick way to ensure your development environment is properly set up before proceeding with building the plugin.
+
 ## Setting Up the Development Environment
 
 ### Installing JDK 17

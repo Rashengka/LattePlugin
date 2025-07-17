@@ -8,6 +8,7 @@ import com.intellij.psi.PsiElement;
 import com.intellij.util.ProcessingContext;
 import org.jetbrains.annotations.NotNull;
 import org.latte.plugin.completion.NetteDefaultVariablesProvider.NetteVariable;
+import org.latte.plugin.custom.*;
 import org.latte.plugin.lang.LatteLanguage;
 import org.latte.plugin.lexer.LatteTokenTypes;
 import org.latte.plugin.macros.NetteMacro;
@@ -67,6 +68,14 @@ public class LatteCompletionContributor extends CompletionContributor {
                                     .withTypeText(macro.getTypeText())
                                     .withTailText(" - " + macro.getDescription(), true));
                         }
+                        
+                        // Add custom tags
+                        for (CustomTag tag : CustomTagsProvider.getAllTags(parameters.getOriginalFile().getProject())) {
+                            result.addElement(LookupElementBuilder.create(tag.getName())
+                                    .bold()
+                                    .withTypeText(tag.getTypeText())
+                                    .withTailText(tag.getDescription() != null ? " - " + tag.getDescription() : "", true));
+                        }
                     }
                 });
                 
@@ -84,6 +93,13 @@ public class LatteCompletionContributor extends CompletionContributor {
                             result.addElement(LookupElementBuilder.create(variable.getName())
                                     .withTypeText(variable.getType())
                                     .withTailText(" - " + variable.getDescription(), true));
+                        }
+                        
+                        // Add custom variables
+                        for (CustomVariable variable : CustomVariablesProvider.getAllVariables(parameters.getOriginalFile().getProject())) {
+                            result.addElement(LookupElementBuilder.create(variable.getName())
+                                    .withTypeText(variable.getTypeText())
+                                    .withTailText(variable.getDescription() != null ? " - " + variable.getDescription() : "", true));
                         }
                     }
                 });
@@ -143,6 +159,37 @@ public class LatteCompletionContributor extends CompletionContributor {
                         result.addElement(LookupElementBuilder.create("indent").withTypeText("Latte filter"));
                         result.addElement(LookupElementBuilder.create("padLeft").withTypeText("Latte filter"));
                         result.addElement(LookupElementBuilder.create("padRight").withTypeText("Latte filter"));
+                        
+                        // Add custom filters
+                        for (CustomFilter filter : CustomFiltersProvider.getAllFilters(parameters.getOriginalFile().getProject())) {
+                            result.addElement(LookupElementBuilder.create(filter.getName())
+                                    .withTypeText(filter.getTypeText())
+                                    .withTailText(filter.getDescription() != null ? " - " + filter.getDescription() : "", true));
+                        }
+                    }
+                });
+                
+        // Add completion for custom functions
+        extend(CompletionType.BASIC,
+                PlatformPatterns.psiElement().withLanguage(LatteLanguage.INSTANCE),
+                new CompletionProvider<>() {
+                    @Override
+                    protected void addCompletions(@NotNull CompletionParameters parameters,
+                                                 @NotNull ProcessingContext context,
+                                                 @NotNull CompletionResultSet result) {
+                        // Get the text before the caret
+                        String text = parameters.getPosition().getText();
+                        int offset = parameters.getOffset() - parameters.getPosition().getTextRange().getStartOffset();
+                        
+                        // Only provide completions in appropriate contexts for functions
+                        if (offset > 0 && !text.substring(0, offset).matches(".*[\\$\\|\\{\\}\\(\\)\\[\\]\\s]$")) {
+                            // Add custom functions
+                            for (CustomFunction function : CustomFunctionsProvider.getAllFunctions(parameters.getOriginalFile().getProject())) {
+                                result.addElement(LookupElementBuilder.create(function.getName())
+                                        .withTypeText(function.getTypeText())
+                                        .withTailText(function.getDescription() != null ? " - " + function.getDescription() : "", true));
+                            }
+                        }
                     }
                 });
     }

@@ -140,6 +140,20 @@ For detailed instructions on installing and managing Java versions, see [JAVA_IN
 
 For detailed instructions on installing and using Gradle 7.6, see [GRADLE_7.6_INSTALL.md](GRADLE_7.6_INSTALL.md).
 
+### Checking Version Requirements
+
+You can verify that your environment meets the required Java and Gradle versions by running the provided checker script:
+
+```bash
+# Make the script executable (if not already)
+chmod +x check_versions.sh
+
+# Run the checker script
+./check_versions.sh
+```
+
+The script will check if your installed Java and Gradle versions are compatible with the LattePlugin project and provide appropriate guidance if any requirements are not met.
+
 ### Running the Plugin
 
 1. Open the project in IntelliJ IDEA

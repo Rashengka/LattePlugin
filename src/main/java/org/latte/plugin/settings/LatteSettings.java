@@ -85,11 +85,17 @@ public final class LatteSettings implements PersistentStateComponent<LatteSettin
     
     /**
      * Gets the instance of the settings service.
+     * In test environment, returns a default instance with default settings.
      *
      * @return The settings instance
      */
     public static LatteSettings getInstance() {
-        return ApplicationManager.getApplication().getService(LatteSettings.class);
+        var application = ApplicationManager.getApplication();
+        if (application == null) {
+            // We're in a test environment, return a default instance
+            return new LatteSettings();
+        }
+        return application.getService(LatteSettings.class);
     }
     
     /**

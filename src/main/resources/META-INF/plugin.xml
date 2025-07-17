@@ -11,6 +11,9 @@
         <li>Code completion for Latte tags and attributes</li>
         <li>Support for Latte-specific shortcuts</li>
         <li>Integration with HTML editing features</li>
+        <li>Support for custom elements (tags, filters, functions, variables)</li>
+        <li>Quick-fix actions to add unknown elements as custom elements</li>
+        <li>Project-level settings for custom elements</li>
     </ul>
     ]]></description>
 
@@ -48,5 +51,29 @@
                                  instance="org.latte.plugin.settings.LatteSettingsConfigurable"
                                  id="org.latte.plugin.settings.LatteSettingsConfigurable"
                                  displayName="Latte"/>
+                                 
+        <!-- Project-level settings configurable for custom elements -->
+        <projectConfigurable parentId="language" 
+                             instance="org.latte.plugin.settings.LatteCustomElementsConfigurable"
+                             id="org.latte.plugin.settings.LatteCustomElementsConfigurable"
+                             displayName="Latte Custom Elements"/>
+                             
+        <!-- Intention actions for adding custom elements -->
+        <intentionAction>
+            <className>org.latte.plugin.intention.AddCustomTagIntentionAction</className>
+            <category>Latte</category>
+        </intentionAction>
+        <intentionAction>
+            <className>org.latte.plugin.intention.AddCustomFilterIntentionAction</className>
+            <category>Latte</category>
+        </intentionAction>
+        <intentionAction>
+            <className>org.latte.plugin.intention.AddCustomFunctionIntentionAction</className>
+            <category>Latte</category>
+        </intentionAction>
+        <intentionAction>
+            <className>org.latte.plugin.intention.AddCustomVariableIntentionAction</className>
+            <category>Latte</category>
+        </intentionAction>
     </extensions>
 </idea-plugin>
