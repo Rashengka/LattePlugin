@@ -32,6 +32,10 @@ public class NettePackageDetector {
     public static final String NETTE_APPLICATION = "nette/application";
     public static final String NETTE_FORMS = "nette/forms";
     public static final String NETTE_ASSETS = "nette/assets";
+    public static final String NETTE_DATABASE = "nette/database";
+    public static final String NETTE_SECURITY = "nette/security";
+    public static final String NETTE_MAIL = "nette/mail";
+    public static final String NETTE_HTTP = "nette/http";
     
     // Default major versions for packages
     private static final int DEFAULT_VERSION = 3;
@@ -83,6 +87,14 @@ public class NettePackageDetector {
                                         packages.get(NETTE_FORMS).isPresent());
             settings.setEnableNetteAssets(packages.containsKey(NETTE_ASSETS) && 
                                          packages.get(NETTE_ASSETS).isPresent());
+            settings.setEnableNetteDatabase(packages.containsKey(NETTE_DATABASE) && 
+                                          packages.get(NETTE_DATABASE).isPresent());
+            settings.setEnableNetteSecurity(packages.containsKey(NETTE_SECURITY) && 
+                                          packages.get(NETTE_SECURITY).isPresent());
+            settings.setEnableNetteMail(packages.containsKey(NETTE_MAIL) && 
+                                      packages.get(NETTE_MAIL).isPresent());
+            settings.setEnableNetteHttp(packages.containsKey(NETTE_HTTP) && 
+                                      packages.get(NETTE_HTTP).isPresent());
             return;
         }
 
@@ -102,6 +114,14 @@ public class NettePackageDetector {
                                     detectedPackages.get(NETTE_FORMS).isPresent());
         settings.setEnableNetteAssets(detectedPackages.containsKey(NETTE_ASSETS) && 
                                      detectedPackages.get(NETTE_ASSETS).isPresent());
+        settings.setEnableNetteDatabase(detectedPackages.containsKey(NETTE_DATABASE) && 
+                                      detectedPackages.get(NETTE_DATABASE).isPresent());
+        settings.setEnableNetteSecurity(detectedPackages.containsKey(NETTE_SECURITY) && 
+                                      detectedPackages.get(NETTE_SECURITY).isPresent());
+        settings.setEnableNetteMail(detectedPackages.containsKey(NETTE_MAIL) && 
+                                  detectedPackages.get(NETTE_MAIL).isPresent());
+        settings.setEnableNetteHttp(detectedPackages.containsKey(NETTE_HTTP) && 
+                                  detectedPackages.get(NETTE_HTTP).isPresent());
 
         // Cache the result
         if (projectPath != null) {
@@ -248,6 +268,10 @@ public class NettePackageDetector {
                 checkPackage(packages, require, NETTE_APPLICATION);
                 checkPackage(packages, require, NETTE_FORMS);
                 checkPackage(packages, require, NETTE_ASSETS);
+                checkPackage(packages, require, NETTE_DATABASE);
+                checkPackage(packages, require, NETTE_SECURITY);
+                checkPackage(packages, require, NETTE_MAIL);
+                checkPackage(packages, require, NETTE_HTTP);
             }
 
             // Check require-dev section
@@ -262,6 +286,18 @@ public class NettePackageDetector {
                 }
                 if (!packages.containsKey(NETTE_ASSETS)) {
                     checkPackage(packages, requireDev, NETTE_ASSETS);
+                }
+                if (!packages.containsKey(NETTE_DATABASE)) {
+                    checkPackage(packages, requireDev, NETTE_DATABASE);
+                }
+                if (!packages.containsKey(NETTE_SECURITY)) {
+                    checkPackage(packages, requireDev, NETTE_SECURITY);
+                }
+                if (!packages.containsKey(NETTE_MAIL)) {
+                    checkPackage(packages, requireDev, NETTE_MAIL);
+                }
+                if (!packages.containsKey(NETTE_HTTP)) {
+                    checkPackage(packages, requireDev, NETTE_HTTP);
                 }
             }
         } catch (IOException | JsonSyntaxException e) {

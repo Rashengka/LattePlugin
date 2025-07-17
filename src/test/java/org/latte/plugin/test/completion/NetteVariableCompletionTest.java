@@ -20,6 +20,7 @@ public class NetteVariableCompletionTest extends BasePlatformTestCase {
         settings.setEnableNetteApplication(true);
         settings.setEnableNetteForms(true);
         settings.setEnableNetteAssets(true);
+        settings.setEnableNetteDatabase(true);
     }
 
     @Override
@@ -59,6 +60,29 @@ public class NetteVariableCompletionTest extends BasePlatformTestCase {
         // Check for Nette Forms variables
         assertTrue("Missing form variable", lookupElements.contains("form"));
     }
+    
+    /**
+     * Tests that Nette Database variables are suggested.
+     */
+    public void testNetteDatabaseVariables() {
+        myFixture.configureByText("test.latte", "{$<caret>}");
+        myFixture.complete(CompletionType.BASIC);
+        
+        List<String> lookupElements = myFixture.getLookupElementStrings();
+        assertNotNull("No completion variants", lookupElements);
+        
+        // Check for Nette Database variables
+        assertTrue("Missing database variable", lookupElements.contains("database"));
+        assertTrue("Missing db variable", lookupElements.contains("db"));
+        assertTrue("Missing row variable", lookupElements.contains("row"));
+        
+        // Check for version-specific variables
+        // Note: We can't reliably test for version-specific variables here
+        // because the test environment doesn't have a real project with composer.json
+        // Instead, we'll just check that at least one of the version-specific variables exists
+        assertTrue("Missing explorer or context variable", 
+                lookupElements.contains("explorer") || lookupElements.contains("context"));
+    }
 
     /**
      * Tests that variables are not suggested when packages are disabled.
@@ -69,6 +93,7 @@ public class NetteVariableCompletionTest extends BasePlatformTestCase {
         settings.setEnableNetteApplication(false);
         settings.setEnableNetteForms(false);
         settings.setEnableNetteAssets(false);
+        settings.setEnableNetteDatabase(false);
         
         myFixture.configureByText("test.latte", "{$<caret>}");
         myFixture.complete(CompletionType.BASIC);
@@ -88,5 +113,12 @@ public class NetteVariableCompletionTest extends BasePlatformTestCase {
         assertFalse("control variable should not be suggested", lookupElements.contains("control"));
         assertFalse("flashes variable should not be suggested", lookupElements.contains("flashes"));
         assertFalse("form variable should not be suggested", lookupElements.contains("form"));
+        
+        // Check that database variables are not suggested
+        assertFalse("database variable should not be suggested", lookupElements.contains("database"));
+        assertFalse("db variable should not be suggested", lookupElements.contains("db"));
+        assertFalse("row variable should not be suggested", lookupElements.contains("row"));
+        assertFalse("explorer variable should not be suggested", lookupElements.contains("explorer"));
+        assertFalse("context variable should not be suggested", lookupElements.contains("context"));
     }
 }

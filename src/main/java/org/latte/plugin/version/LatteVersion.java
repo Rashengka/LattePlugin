@@ -13,16 +13,46 @@ public enum LatteVersion {
                "https://latte.nette.org/en/filters/2.x", "https://latte.nette.org/en/functions/2.x"),
     
     /**
+     * Latte version 2.4
+     */
+    VERSION_2_4("2.4", "https://latte.nette.org/en/syntax/2.x", "https://latte.nette.org/en/tags/2.x", 
+                "https://latte.nette.org/en/filters/2.x", "https://latte.nette.org/en/functions/2.x"),
+    
+    /**
+     * Latte version 2.5
+     */
+    VERSION_2_5("2.5", "https://latte.nette.org/en/syntax/2.x", "https://latte.nette.org/en/tags/2.x", 
+                "https://latte.nette.org/en/filters/2.x", "https://latte.nette.org/en/functions/2.x"),
+    
+    /**
      * Latte version 3.0+
      */
     VERSION_3X("3.0+", "https://latte.nette.org/en/syntax", "https://latte.nette.org/en/tags", 
                "https://latte.nette.org/en/filters", "https://latte.nette.org/en/functions"),
+    
+    /**
+     * Latte version 3.0
+     */
+    VERSION_3_0("3.0", "https://latte.nette.org/en/syntax", "https://latte.nette.org/en/tags", 
+                "https://latte.nette.org/en/filters", "https://latte.nette.org/en/functions"),
+    
+    /**
+     * Latte version 3.1
+     */
+    VERSION_3_1("3.1", "https://latte.nette.org/en/syntax", "https://latte.nette.org/en/tags", 
+                "https://latte.nette.org/en/filters", "https://latte.nette.org/en/functions"),
                
     /**
      * Latte version 4.0+
      */
     VERSION_4X("4.0+", "https://latte.nette.org/en/syntax", "https://latte.nette.org/en/tags", 
-               "https://latte.nette.org/en/filters", "https://latte.nette.org/en/functions");
+               "https://latte.nette.org/en/filters", "https://latte.nette.org/en/functions"),
+    
+    /**
+     * Latte version 4.0
+     */
+    VERSION_4_0("4.0", "https://latte.nette.org/en/syntax", "https://latte.nette.org/en/tags", 
+                "https://latte.nette.org/en/filters", "https://latte.nette.org/en/functions");
     
     private final String displayName;
     private final String documentationUrl;

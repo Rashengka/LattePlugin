@@ -16,6 +16,7 @@ public class NettePackageDetectorTest extends BasePlatformTestCase {
         assertEquals(3, NettePackageDetector.getPackageVersion(null, NettePackageDetector.NETTE_APPLICATION));
         assertEquals(3, NettePackageDetector.getPackageVersion(null, NettePackageDetector.NETTE_FORMS));
         assertEquals(3, NettePackageDetector.getPackageVersion(null, NettePackageDetector.NETTE_ASSETS));
+        assertEquals(3, NettePackageDetector.getPackageVersion(null, NettePackageDetector.NETTE_DATABASE));
     }
 
     /**
@@ -26,6 +27,7 @@ public class NettePackageDetectorTest extends BasePlatformTestCase {
         assertFalse(NettePackageDetector.isPackagePresent(null, NettePackageDetector.NETTE_APPLICATION));
         assertFalse(NettePackageDetector.isPackagePresent(null, NettePackageDetector.NETTE_FORMS));
         assertFalse(NettePackageDetector.isPackagePresent(null, NettePackageDetector.NETTE_ASSETS));
+        assertFalse(NettePackageDetector.isPackagePresent(null, NettePackageDetector.NETTE_DATABASE));
     }
 
     /**

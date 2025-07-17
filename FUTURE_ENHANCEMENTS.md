@@ -9,7 +9,11 @@ The Latte Plugin currently supports many features from Latte and Nette packages,
 - Nette/application macros, filters, and n:attributes
 - Nette/forms macros, filters, and n:attributes
 - Nette/assets macros and filters
-- Version-specific features for Latte 2.x and 3.0+
+- Nette/database macros, filters, and variables
+- Nette/security macros, filters, and variables
+- Nette/mail macros, filters, and variables
+- Nette/http variables and functions
+- Version-specific features for Latte 2.x, 3.0+, and 4.0+
 
 However, there are opportunities for enhancement to ensure complete coverage of all features and versions.
 
@@ -25,38 +29,40 @@ The plugin now includes support for Latte 4.0+ features:
 
 See LATTE_4.0_SUPPORT.md for detailed information about the implementation.
 
-### 2. Additional Nette Packages
+### 2. Additional Nette Packages (Implemented)
 
-Consider adding support for additional Nette packages:
+The plugin now includes support for additional Nette packages:
 
-- **nette/database**: Support for database-related macros and filters
-- **nette/security**: Support for security-related macros and variables
-- **nette/mail**: Support for email-related macros and templates
-- **nette/http**: Support for HTTP-related variables and functions
+- **nette/database**: Added support for database-related variables (`$database`, `$db`, `$row`), macros (`query`, `foreach`, `ifRow`), n:attributes (`n:query`, `n:ifRow`), and filters (`table`, `column`, `value`, `like`)
+- **nette/security**: Added support for security-related variables (`$user`, `$identity`, `$roles`), macros (`ifLoggedIn`, `ifRole`, `ifAllowed`), n:attributes (`n:ifLoggedIn`, `n:ifRole`, `n:ifAllowed`), and filters (`isLoggedIn`, `isAllowed`, `hasRole`, `getRoles`)
+- **nette/mail**: Added support for email-related variables (`$mail`, `$message`, `$attachment`, `$sender`), macros (`mail`, `subject`, `from`, `to`, `cc`, `bcc`, `attach`), n:attributes (`n:mail`, `n:subject`, `n:from`, `n:to`), and filters (`encodeEmail`, `formatEmail`, `attachFile`, `embedFile`)
+- **nette/http**: Added support for HTTP-related variables (`$httpRequest`, `$httpResponse`, `$session`, `$url`, `$cookies`, `$headers`) and version-specific features
 
-### 3. Enhanced n:attributes Support
+See NETTE_PACKAGE_SUPPORT.md for detailed information about the implementation.
 
-Improve support for n:attributes:
+### 3. Enhanced n:attributes Support (Implemented)
 
-- **Dynamic n:attributes**: Better support for dynamically generated n:attributes
-- **Prefixed n:attributes**: Support for prefixed n:attributes (e.g., n:class:hover)
-- **Custom n:attributes**: Enhanced support for custom n:attributes
+Improved support for n:attributes:
 
-### 4. Advanced Filters
+- **Dynamic n:attributes**: Added support for dynamically generated n:attributes by extending the ATTRIBUTE_NAME_PATTERN regex
+- **Prefixed n:attributes**: Added support for prefixed n:attributes (e.g., n:class:hover) by adding more prefixes to VALID_ATTRIBUTE_PREFIXES
+- **Custom n:attributes**: Added support for custom n:attributes by creating a CustomAttributesProvider
 
-Add support for more advanced filters:
+### 4. Advanced Filters (Implemented)
 
-- **Custom Filter Chaining**: Better support for chaining custom filters
-- **Filter Parameters**: Enhanced support for filter parameters
-- **Filter Auto-completion**: Smarter auto-completion for filters based on context
+Added support for more advanced filters:
 
-### 5. Version-Specific Features
+- **Custom Filter Chaining**: Added support for chaining custom filters by modifying the lexer and parser
+- **Filter Parameters**: Added support for filter parameters by extending the NetteFilter class
+- **Filter Auto-completion**: Enhanced filter auto-completion to be context-aware by modifying the LatteCompletionContributor
 
-Implement more granular version-specific features:
+### 5. Version-Specific Features (Implemented)
 
-- **Minor Version Differences**: Support for differences between minor versions (e.g., 3.1 vs 3.2)
-- **Deprecated Features**: Warnings for deprecated features in newer versions
-- **Version Migration**: Tools to help migrate between versions
+Implemented more granular version-specific features:
+
+- **Minor Version Differences**: Added support for differences between minor versions (e.g., 3.1 vs 3.2) by extending the LatteVersion enum and updating LatteVersionManager
+- **Deprecated Features**: Added warnings for deprecated features in newer versions by creating a DeprecatedFeatureDetector
+- **Version Migration**: Added tools to help migrate between versions by developing a VersionMigrationHelper
 
 ### 6. Performance Optimizations
 
@@ -84,14 +90,14 @@ Enhance testing and validation:
 
 ## Implementation Priorities
 
-1. **High Priority**:
-   - Latte 4.0+ support
-   - Enhanced n:attributes support
-   - Version-specific features
+1. **Completed**:
+   - Latte 4.0+ support ✓
+   - Enhanced n:attributes support ✓
+   - Version-specific features ✓
+   - Additional Nette packages ✓
+   - Advanced filters ✓
 
 2. **Medium Priority**:
-   - Additional Nette packages
-   - Advanced filters
    - Integration with PHP
 
 3. **Low Priority**:

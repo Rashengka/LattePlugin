@@ -27,6 +27,22 @@ public class NetteFilterProvider {
     private static final Set<NetteFilter> ASSETS_FILTERS = new HashSet<>(Arrays.asList(
             new NetteFilter("asset", "Adds version to asset URL", "nette/assets")
     ));
+    
+    // Filters from nette/database package
+    private static final Set<NetteFilter> DATABASE_FILTERS = new HashSet<>(Arrays.asList(
+            new NetteFilter("table", "Formats a value as a database table name", "nette/database"),
+            new NetteFilter("column", "Formats a value as a database column name", "nette/database"),
+            new NetteFilter("value", "Formats a value for use in a database query", "nette/database"),
+            new NetteFilter("like", "Escapes a value for use in a LIKE clause", "nette/database")
+    ));
+    
+    // Filters from nette/security package
+    private static final Set<NetteFilter> SECURITY_FILTERS = new HashSet<>(Arrays.asList(
+            new NetteFilter("isLoggedIn", "Checks if user is logged in", "nette/security"),
+            new NetteFilter("isAllowed", "Checks if user is allowed to perform an action", "nette/security"),
+            new NetteFilter("hasRole", "Checks if user has a role", "nette/security"),
+            new NetteFilter("getRoles", "Gets user roles", "nette/security")
+    ));
 
     // Core Latte filters
     private static final Set<NetteFilter> CORE_FILTERS = new HashSet<>(Arrays.asList(
@@ -87,6 +103,14 @@ public class NetteFilterProvider {
             ASSETS_FILTERS.forEach(filter -> filterNames.add(filter.getName()));
         }
         
+        if (settings.isEnableNetteDatabase()) {
+            DATABASE_FILTERS.forEach(filter -> filterNames.add(filter.getName()));
+        }
+        
+        if (settings.isEnableNetteSecurity()) {
+            SECURITY_FILTERS.forEach(filter -> filterNames.add(filter.getName()));
+        }
+        
         return filterNames;
     }
 
@@ -115,6 +139,14 @@ public class NetteFilterProvider {
         
         if (settings.isEnableNetteAssets()) {
             filters.addAll(ASSETS_FILTERS);
+        }
+        
+        if (settings.isEnableNetteDatabase()) {
+            filters.addAll(DATABASE_FILTERS);
+        }
+        
+        if (settings.isEnableNetteSecurity()) {
+            filters.addAll(SECURITY_FILTERS);
         }
         
         return filters;

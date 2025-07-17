@@ -23,12 +23,14 @@ public class NetteFilterTest extends BasePlatformTestCase {
         boolean originalApplicationSetting = settings.isEnableNetteApplication();
         boolean originalFormsSetting = settings.isEnableNetteForms();
         boolean originalAssetsSetting = settings.isEnableNetteAssets();
+        boolean originalDatabaseSetting = settings.isEnableNetteDatabase();
         
         try {
             // Enable all packages
             settings.setEnableNetteApplication(true);
             settings.setEnableNetteForms(true);
             settings.setEnableNetteAssets(true);
+            settings.setEnableNetteDatabase(true);
             
             // Get all filters
             Set<NetteFilter> allFilters = NetteFilterProvider.getAllFilters();
@@ -37,6 +39,7 @@ public class NetteFilterTest extends BasePlatformTestCase {
             assertContainsFilter(allFilters, "escapeUrl", "nette/application");
             assertContainsFilter(allFilters, "translate", "nette/forms");
             assertContainsFilter(allFilters, "asset", "nette/assets");
+            assertContainsFilter(allFilters, "table", "nette/database");
             
             // Verify that core filters are included
             assertContainsFilter(allFilters, "upper", "latte/core");
@@ -71,10 +74,26 @@ public class NetteFilterTest extends BasePlatformTestCase {
             // Get all filters again
             allFilters = NetteFilterProvider.getAllFilters();
             
+            // Verify that filters from nette/database are still included
+            assertNotContainsFilter(allFilters, "escapeUrl", "nette/application");
+            assertNotContainsFilter(allFilters, "translate", "nette/forms");
+            assertNotContainsFilter(allFilters, "asset", "nette/assets");
+            assertContainsFilter(allFilters, "table", "nette/database");
+            assertContainsFilter(allFilters, "upper", "latte/core");
+            assertContainsFilter(allFilters, "lower", "latte/core");
+            assertContainsFilter(allFilters, "escape", "latte/core");
+            
+            // Disable nette/database
+            settings.setEnableNetteDatabase(false);
+            
+            // Get all filters again
+            allFilters = NetteFilterProvider.getAllFilters();
+            
             // Verify that only core filters are included
             assertNotContainsFilter(allFilters, "escapeUrl", "nette/application");
             assertNotContainsFilter(allFilters, "translate", "nette/forms");
             assertNotContainsFilter(allFilters, "asset", "nette/assets");
+            assertNotContainsFilter(allFilters, "table", "nette/database");
             assertContainsFilter(allFilters, "upper", "latte/core");
             assertContainsFilter(allFilters, "lower", "latte/core");
             assertContainsFilter(allFilters, "escape", "latte/core");
@@ -83,6 +102,7 @@ public class NetteFilterTest extends BasePlatformTestCase {
             settings.setEnableNetteApplication(originalApplicationSetting);
             settings.setEnableNetteForms(originalFormsSetting);
             settings.setEnableNetteAssets(originalAssetsSetting);
+            settings.setEnableNetteDatabase(originalDatabaseSetting);
         }
     }
     
@@ -97,12 +117,14 @@ public class NetteFilterTest extends BasePlatformTestCase {
         boolean originalApplicationSetting = settings.isEnableNetteApplication();
         boolean originalFormsSetting = settings.isEnableNetteForms();
         boolean originalAssetsSetting = settings.isEnableNetteAssets();
+        boolean originalDatabaseSetting = settings.isEnableNetteDatabase();
         
         try {
             // Enable all packages
             settings.setEnableNetteApplication(true);
             settings.setEnableNetteForms(true);
             settings.setEnableNetteAssets(true);
+            settings.setEnableNetteDatabase(true);
             
             // Get all filter names
             Set<String> filterNames = NetteFilterProvider.getValidFilterNames();
@@ -111,16 +133,32 @@ public class NetteFilterTest extends BasePlatformTestCase {
             assertTrue("Filter names should include 'escapeUrl'", filterNames.contains("escapeUrl"));
             assertTrue("Filter names should include 'translate'", filterNames.contains("translate"));
             assertTrue("Filter names should include 'asset'", filterNames.contains("asset"));
+            assertTrue("Filter names should include 'table'", filterNames.contains("table"));
             
             // Verify that core filter names are included
             assertTrue("Filter names should include 'upper'", filterNames.contains("upper"));
             assertTrue("Filter names should include 'lower'", filterNames.contains("lower"));
             assertTrue("Filter names should include 'escape'", filterNames.contains("escape"));
             
-            // Disable all packages
+            // Disable application, forms, and assets packages but keep database enabled
             settings.setEnableNetteApplication(false);
             settings.setEnableNetteForms(false);
             settings.setEnableNetteAssets(false);
+            
+            // Get all filter names again
+            filterNames = NetteFilterProvider.getValidFilterNames();
+            
+            // Verify that database filter names are still included
+            assertFalse("Filter names should not include 'escapeUrl'", filterNames.contains("escapeUrl"));
+            assertFalse("Filter names should not include 'translate'", filterNames.contains("translate"));
+            assertFalse("Filter names should not include 'asset'", filterNames.contains("asset"));
+            assertTrue("Filter names should include 'table'", filterNames.contains("table"));
+            assertTrue("Filter names should include 'upper'", filterNames.contains("upper"));
+            assertTrue("Filter names should include 'lower'", filterNames.contains("lower"));
+            assertTrue("Filter names should include 'escape'", filterNames.contains("escape"));
+            
+            // Disable database package
+            settings.setEnableNetteDatabase(false);
             
             // Get all filter names again
             filterNames = NetteFilterProvider.getValidFilterNames();
@@ -129,6 +167,7 @@ public class NetteFilterTest extends BasePlatformTestCase {
             assertFalse("Filter names should not include 'escapeUrl'", filterNames.contains("escapeUrl"));
             assertFalse("Filter names should not include 'translate'", filterNames.contains("translate"));
             assertFalse("Filter names should not include 'asset'", filterNames.contains("asset"));
+            assertFalse("Filter names should not include 'table'", filterNames.contains("table"));
             assertTrue("Filter names should include 'upper'", filterNames.contains("upper"));
             assertTrue("Filter names should include 'lower'", filterNames.contains("lower"));
             assertTrue("Filter names should include 'escape'", filterNames.contains("escape"));
@@ -137,6 +176,7 @@ public class NetteFilterTest extends BasePlatformTestCase {
             settings.setEnableNetteApplication(originalApplicationSetting);
             settings.setEnableNetteForms(originalFormsSetting);
             settings.setEnableNetteAssets(originalAssetsSetting);
+            settings.setEnableNetteDatabase(originalDatabaseSetting);
         }
     }
     

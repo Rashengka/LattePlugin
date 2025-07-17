@@ -8,6 +8,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.util.xmlb.XmlSerializerUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.latte.plugin.custom.CustomAttribute;
 import org.latte.plugin.custom.CustomFilter;
 import org.latte.plugin.custom.CustomFunction;
 import org.latte.plugin.custom.CustomTag;
@@ -46,6 +47,11 @@ public final class LatteProjectSettings implements PersistentStateComponent<Latt
      * List of custom variables.
      */
     private List<CustomVariable> customVariables = new ArrayList<>();
+    
+    /**
+     * List of custom attributes.
+     */
+    private List<CustomAttribute> customAttributes = new ArrayList<>();
     
     /**
      * Gets the instance of the settings service for the specified project.
@@ -211,6 +217,45 @@ public final class LatteProjectSettings implements PersistentStateComponent<Latt
      */
     public void removeCustomVariable(@NotNull CustomVariable variable) {
         customVariables.remove(variable);
+    }
+    
+    /**
+     * Gets the list of custom attributes.
+     *
+     * @return The list of custom attributes
+     */
+    @NotNull
+    public List<CustomAttribute> getCustomAttributes() {
+        return customAttributes;
+    }
+    
+    /**
+     * Sets the list of custom attributes.
+     *
+     * @param customAttributes The list of custom attributes
+     */
+    public void setCustomAttributes(@NotNull List<CustomAttribute> customAttributes) {
+        this.customAttributes = customAttributes;
+    }
+    
+    /**
+     * Adds a custom attribute.
+     *
+     * @param attribute The attribute to add
+     */
+    public void addCustomAttribute(@NotNull CustomAttribute attribute) {
+        if (!customAttributes.contains(attribute)) {
+            customAttributes.add(attribute);
+        }
+    }
+    
+    /**
+     * Removes a custom attribute.
+     *
+     * @param attribute The attribute to remove
+     */
+    public void removeCustomAttribute(@NotNull CustomAttribute attribute) {
+        customAttributes.remove(attribute);
     }
     
     @Nullable

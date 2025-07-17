@@ -128,13 +128,21 @@ public class LatteCompletionContributor extends CompletionContributor {
                                     .withTypeText(attribute.getTypeText())
                                     .withTailText(" - " + attribute.getDescription(), true));
                         }
+                        
+                        // Add custom attributes
+                        for (CustomAttribute attribute : CustomAttributesProvider.getAllAttributes(parameters.getOriginalFile().getProject())) {
+                            result.addElement(LookupElementBuilder.create(attribute.getName())
+                                    .bold()
+                                    .withTypeText(attribute.getTypeText())
+                                    .withTailText(attribute.getDescription() != null ? " - " + attribute.getDescription() : "", true));
+                        }
                     }
                 });
 
         // Add completion for Latte filters
         extend(CompletionType.BASIC,
                 PlatformPatterns.psiElement().withLanguage(LatteLanguage.INSTANCE)
-                        .afterLeaf("|"),
+                        .afterLeaf(PlatformPatterns.psiElement(LatteTokenTypes.LATTE_FILTER_PIPE)),
                 new CompletionProvider<>() {
                     @Override
                     protected void addCompletions(@NotNull CompletionParameters parameters,
@@ -142,9 +150,24 @@ public class LatteCompletionContributor extends CompletionContributor {
                                                  @NotNull CompletionResultSet result) {
                         // Add Nette package filters
                         for (NetteFilter filter : NetteFilterProvider.getAllFilters()) {
-                            result.addElement(LookupElementBuilder.create(filter.getName())
+                            LookupElementBuilder builder = LookupElementBuilder.create(filter.getName())
                                     .withTypeText(filter.getTypeText())
-                                    .withTailText(" - " + filter.getDescription(), true));
+                                    .withTailText(" - " + filter.getDescription(), true);
+                            
+                            // Add parameter info if the filter has parameters
+                            if (filter.hasParameters()) {
+                                builder = builder.withTypeText(filter.getTypeText() + " with parameters")
+                                                .withTailText(" - " + filter.getDescription(), true)
+                                                .withPresentableText(filter.getDisplayText());
+                                
+                                // Add parameter info to the tail text
+                                String paramInfo = filter.getParameterInfoText();
+                                if (paramInfo != null) {
+                                    builder = builder.withTailText(" - " + filter.getDescription() + " - " + paramInfo, true);
+                                }
+                            }
+                            
+                            result.addElement(builder);
                         }
                         
                         // Add custom filters

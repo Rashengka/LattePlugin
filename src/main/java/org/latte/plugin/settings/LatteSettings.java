@@ -51,6 +51,63 @@ public final class LatteSettings implements PersistentStateComponent<LatteSettin
     private boolean enableNetteAssets = true;
     
     /**
+     * Whether to enable support for nette/database package.
+     * Default is true.
+     */
+    private boolean enableNetteDatabase = true;
+    
+    /**
+     * Whether to enable support for nette/security package.
+     * Default is true.
+     */
+    private boolean enableNetteSecurity = true;
+    
+    /**
+     * Whether to enable support for nette/mail package.
+     * Default is true.
+     */
+    private boolean enableNetteMail = true;
+    
+    /**
+     * Whether to enable support for nette/http package.
+     * Default is true.
+     */
+    private boolean enableNetteHttp = true;
+    
+    /**
+     * The selected nette/security version.
+     * If null, the plugin will try to auto-detect the version from composer.json.
+     */
+    private String selectedNetteSecurityVersion;
+    
+    /**
+     * The selected nette/mail version.
+     * If null, the plugin will try to auto-detect the version from composer.json.
+     */
+    private String selectedNetteMailVersion;
+    
+    /**
+     * The selected nette/http version.
+     * If null, the plugin will try to auto-detect the version from composer.json.
+     */
+    private String selectedNetteHttpVersion;
+    
+    /**
+     * Whether to override the detected nette/security version with the manually selected version.
+     */
+    private boolean overrideDetectedNetteSecurityVersion = false;
+    
+    /**
+     * Whether to override the detected nette/mail version with the manually selected version.
+     */
+    private boolean overrideDetectedNetteMailVersion = false;
+    
+    /**
+     * Whether to override the detected nette/http version with the manually selected version.
+     */
+    private boolean overrideDetectedNetteHttpVersion = false;
+    
+    /**
      * The selected nette/application version.
      * If null, the plugin will try to auto-detect the version from composer.json.
      */
@@ -69,6 +126,12 @@ public final class LatteSettings implements PersistentStateComponent<LatteSettin
     private String selectedNetteAssetsVersion;
     
     /**
+     * The selected nette/database version.
+     * If null, the plugin will try to auto-detect the version from composer.json.
+     */
+    private String selectedNetteDatabaseVersion;
+    
+    /**
      * Whether to override the detected nette/application version with the manually selected version.
      */
     private boolean overrideDetectedNetteApplicationVersion = false;
@@ -82,6 +145,11 @@ public final class LatteSettings implements PersistentStateComponent<LatteSettin
      * Whether to override the detected nette/assets version with the manually selected version.
      */
     private boolean overrideDetectedNetteAssetsVersion = false;
+    
+    /**
+     * Whether to override the detected nette/database version with the manually selected version.
+     */
+    private boolean overrideDetectedNetteDatabaseVersion = false;
     
     /**
      * Gets the instance of the settings service.
@@ -335,5 +403,225 @@ public final class LatteSettings implements PersistentStateComponent<LatteSettin
      */
     public void setOverrideDetectedNetteAssetsVersion(boolean overrideDetectedNetteAssetsVersion) {
         this.overrideDetectedNetteAssetsVersion = overrideDetectedNetteAssetsVersion;
+    }
+    
+    /**
+     * Gets whether support for nette/database package is enabled.
+     *
+     * @return True if nette/database support is enabled, false otherwise
+     */
+    public boolean isEnableNetteDatabase() {
+        return enableNetteDatabase;
+    }
+    
+    /**
+     * Sets whether support for nette/database package is enabled.
+     *
+     * @param enableNetteDatabase True to enable nette/database support, false to disable
+     */
+    public void setEnableNetteDatabase(boolean enableNetteDatabase) {
+        this.enableNetteDatabase = enableNetteDatabase;
+    }
+    
+    /**
+     * Gets the selected nette/database version.
+     *
+     * @return The selected version or null if not set
+     */
+    @Nullable
+    public String getSelectedNetteDatabaseVersion() {
+        return selectedNetteDatabaseVersion;
+    }
+    
+    /**
+     * Sets the selected nette/database version.
+     *
+     * @param selectedNetteDatabaseVersion The version to set
+     */
+    public void setSelectedNetteDatabaseVersion(@Nullable String selectedNetteDatabaseVersion) {
+        this.selectedNetteDatabaseVersion = selectedNetteDatabaseVersion;
+    }
+    
+    /**
+     * Gets whether to override the detected nette/database version with the manually selected version.
+     *
+     * @return True if the manually selected version should be used, false otherwise
+     */
+    public boolean isOverrideDetectedNetteDatabaseVersion() {
+        return overrideDetectedNetteDatabaseVersion;
+    }
+    
+    /**
+     * Sets whether to override the detected nette/database version with the manually selected version.
+     *
+     * @param overrideDetectedNetteDatabaseVersion True if the manually selected version should be used, false otherwise
+     */
+    public void setOverrideDetectedNetteDatabaseVersion(boolean overrideDetectedNetteDatabaseVersion) {
+        this.overrideDetectedNetteDatabaseVersion = overrideDetectedNetteDatabaseVersion;
+    }
+    
+    /**
+     * Gets whether support for nette/security package is enabled.
+     *
+     * @return True if nette/security support is enabled, false otherwise
+     */
+    public boolean isEnableNetteSecurity() {
+        return enableNetteSecurity;
+    }
+    
+    /**
+     * Sets whether support for nette/security package is enabled.
+     *
+     * @param enableNetteSecurity True to enable nette/security support, false to disable
+     */
+    public void setEnableNetteSecurity(boolean enableNetteSecurity) {
+        this.enableNetteSecurity = enableNetteSecurity;
+    }
+    
+    /**
+     * Gets the selected nette/security version.
+     *
+     * @return The selected version or null if not set
+     */
+    @Nullable
+    public String getSelectedNetteSecurityVersion() {
+        return selectedNetteSecurityVersion;
+    }
+    
+    /**
+     * Sets the selected nette/security version.
+     *
+     * @param selectedNetteSecurityVersion The version to set
+     */
+    public void setSelectedNetteSecurityVersion(@Nullable String selectedNetteSecurityVersion) {
+        this.selectedNetteSecurityVersion = selectedNetteSecurityVersion;
+    }
+    
+    /**
+     * Gets whether to override the detected nette/security version with the manually selected version.
+     *
+     * @return True if the manually selected version should be used, false otherwise
+     */
+    public boolean isOverrideDetectedNetteSecurityVersion() {
+        return overrideDetectedNetteSecurityVersion;
+    }
+    
+    /**
+     * Sets whether to override the detected nette/security version with the manually selected version.
+     *
+     * @param overrideDetectedNetteSecurityVersion True if the manually selected version should be used, false otherwise
+     */
+    public void setOverrideDetectedNetteSecurityVersion(boolean overrideDetectedNetteSecurityVersion) {
+        this.overrideDetectedNetteSecurityVersion = overrideDetectedNetteSecurityVersion;
+    }
+    
+    /**
+     * Gets whether support for nette/mail package is enabled.
+     *
+     * @return True if nette/mail support is enabled, false otherwise
+     */
+    public boolean isEnableNetteMail() {
+        return enableNetteMail;
+    }
+    
+    /**
+     * Sets whether support for nette/mail package is enabled.
+     *
+     * @param enableNetteMail True to enable nette/mail support, false to disable
+     */
+    public void setEnableNetteMail(boolean enableNetteMail) {
+        this.enableNetteMail = enableNetteMail;
+    }
+    
+    /**
+     * Gets the selected nette/mail version.
+     *
+     * @return The selected version or null if not set
+     */
+    @Nullable
+    public String getSelectedNetteMailVersion() {
+        return selectedNetteMailVersion;
+    }
+    
+    /**
+     * Sets the selected nette/mail version.
+     *
+     * @param selectedNetteMailVersion The version to set
+     */
+    public void setSelectedNetteMailVersion(@Nullable String selectedNetteMailVersion) {
+        this.selectedNetteMailVersion = selectedNetteMailVersion;
+    }
+    
+    /**
+     * Gets whether to override the detected nette/mail version with the manually selected version.
+     *
+     * @return True if the manually selected version should be used, false otherwise
+     */
+    public boolean isOverrideDetectedNetteMailVersion() {
+        return overrideDetectedNetteMailVersion;
+    }
+    
+    /**
+     * Sets whether to override the detected nette/mail version with the manually selected version.
+     *
+     * @param overrideDetectedNetteMailVersion True if the manually selected version should be used, false otherwise
+     */
+    public void setOverrideDetectedNetteMailVersion(boolean overrideDetectedNetteMailVersion) {
+        this.overrideDetectedNetteMailVersion = overrideDetectedNetteMailVersion;
+    }
+    
+    /**
+     * Gets whether support for nette/http package is enabled.
+     *
+     * @return True if nette/http support is enabled, false otherwise
+     */
+    public boolean isEnableNetteHttp() {
+        return enableNetteHttp;
+    }
+    
+    /**
+     * Sets whether support for nette/http package is enabled.
+     *
+     * @param enableNetteHttp True to enable nette/http support, false to disable
+     */
+    public void setEnableNetteHttp(boolean enableNetteHttp) {
+        this.enableNetteHttp = enableNetteHttp;
+    }
+    
+    /**
+     * Gets the selected nette/http version.
+     *
+     * @return The selected version or null if not set
+     */
+    @Nullable
+    public String getSelectedNetteHttpVersion() {
+        return selectedNetteHttpVersion;
+    }
+    
+    /**
+     * Sets the selected nette/http version.
+     *
+     * @param selectedNetteHttpVersion The version to set
+     */
+    public void setSelectedNetteHttpVersion(@Nullable String selectedNetteHttpVersion) {
+        this.selectedNetteHttpVersion = selectedNetteHttpVersion;
+    }
+    
+    /**
+     * Gets whether to override the detected nette/http version with the manually selected version.
+     *
+     * @return True if the manually selected version should be used, false otherwise
+     */
+    public boolean isOverrideDetectedNetteHttpVersion() {
+        return overrideDetectedNetteHttpVersion;
+    }
+    
+    /**
+     * Sets whether to override the detected nette/http version with the manually selected version.
+     *
+     * @param overrideDetectedNetteHttpVersion True if the manually selected version should be used, false otherwise
+     */
+    public void setOverrideDetectedNetteHttpVersion(boolean overrideDetectedNetteHttpVersion) {
+        this.overrideDetectedNetteHttpVersion = overrideDetectedNetteHttpVersion;
     }
 }

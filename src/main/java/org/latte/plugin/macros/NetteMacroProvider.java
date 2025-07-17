@@ -42,6 +42,24 @@ public class NetteMacroProvider {
             new NetteMacro("js", "Includes JavaScript files", "nette/assets"),
             new NetteMacro("asset", "Includes an asset with proper versioning", "nette/assets")
     ));
+    
+    // Macros from nette/database package
+    private static final Set<NetteMacro> DATABASE_MACROS = new HashSet<>(Arrays.asList(
+            new NetteMacro("query", "Executes a database query", "nette/database"),
+            new NetteMacro("foreach", "Loops through database results", "nette/database"),
+            new NetteMacro("ifRow", "Conditional rendering if a row exists", "nette/database"),
+            new NetteMacro("/ifRow", "Closes an ifRow block", "nette/database")
+    ));
+    
+    // Macros from nette/security package
+    private static final Set<NetteMacro> SECURITY_MACROS = new HashSet<>(Arrays.asList(
+            new NetteMacro("ifLoggedIn", "Conditional rendering if user is logged in", "nette/security"),
+            new NetteMacro("/ifLoggedIn", "Closes an ifLoggedIn block", "nette/security"),
+            new NetteMacro("ifRole", "Conditional rendering if user has a role", "nette/security"),
+            new NetteMacro("/ifRole", "Closes an ifRole block", "nette/security"),
+            new NetteMacro("ifAllowed", "Conditional rendering if user is allowed to perform an action", "nette/security"),
+            new NetteMacro("/ifAllowed", "Closes an ifAllowed block", "nette/security")
+    ));
 
     // Core Latte macros
     private static final Set<NetteMacro> CORE_MACROS = new HashSet<>(Arrays.asList(
@@ -74,6 +92,23 @@ public class NetteMacroProvider {
     private static final Set<NetteMacro> FORMS_ATTRIBUTES = new HashSet<>(Arrays.asList(
             new NetteMacro("n:name", "Binds an input to a form control", "nette/forms"),
             new NetteMacro("n:validation", "Adds validation to a form control", "nette/forms")
+    ));
+    
+    // N:attributes from nette/database package
+    private static final Set<NetteMacro> DATABASE_ATTRIBUTES = new HashSet<>(Arrays.asList(
+            new NetteMacro("n:query", "Executes a database query", "nette/database"),
+            new NetteMacro("n:ifRow", "Conditional rendering if a row exists", "nette/database"),
+            new NetteMacro("n:inner-ifRow", "Conditional inner content if a row exists", "nette/database")
+    ));
+    
+    // N:attributes from nette/security package
+    private static final Set<NetteMacro> SECURITY_ATTRIBUTES = new HashSet<>(Arrays.asList(
+            new NetteMacro("n:ifLoggedIn", "Conditional rendering if user is logged in", "nette/security"),
+            new NetteMacro("n:inner-ifLoggedIn", "Conditional inner content if user is logged in", "nette/security"),
+            new NetteMacro("n:ifRole", "Conditional rendering if user has a role", "nette/security"),
+            new NetteMacro("n:inner-ifRole", "Conditional inner content if user has a role", "nette/security"),
+            new NetteMacro("n:ifAllowed", "Conditional rendering if user is allowed to perform an action", "nette/security"),
+            new NetteMacro("n:inner-ifAllowed", "Conditional inner content if user is allowed to perform an action", "nette/security")
     ));
     
     // Core Latte n:attributes
@@ -116,6 +151,14 @@ public class NetteMacroProvider {
             ASSETS_MACROS.forEach(macro -> macroNames.add(macro.getName()));
         }
         
+        if (settings.isEnableNetteDatabase()) {
+            DATABASE_MACROS.forEach(macro -> macroNames.add(macro.getName()));
+        }
+        
+        if (settings.isEnableNetteSecurity()) {
+            SECURITY_MACROS.forEach(macro -> macroNames.add(macro.getName()));
+        }
+        
         return macroNames;
     }
 
@@ -146,6 +189,14 @@ public class NetteMacroProvider {
             macros.addAll(ASSETS_MACROS);
         }
         
+        if (settings.isEnableNetteDatabase()) {
+            macros.addAll(DATABASE_MACROS);
+        }
+        
+        if (settings.isEnableNetteSecurity()) {
+            macros.addAll(SECURITY_MACROS);
+        }
+        
         return macros;
     }
 
@@ -170,6 +221,14 @@ public class NetteMacroProvider {
         
         if (settings.isEnableNetteForms()) {
             attributes.addAll(FORMS_ATTRIBUTES);
+        }
+        
+        if (settings.isEnableNetteDatabase()) {
+            attributes.addAll(DATABASE_ATTRIBUTES);
+        }
+        
+        if (settings.isEnableNetteSecurity()) {
+            attributes.addAll(SECURITY_ATTRIBUTES);
         }
         
         return attributes;

@@ -38,7 +38,6 @@ public class LatteVersionTest extends BasePlatformTestCase {
     /**
      * Tests detection of Latte 3.0+ version from content.
      */
-    @Test
     public void testDetectVersion3x() {
         LatteVersion version = LatteVersion.detectVersionFromContent(latte3xContent);
         assertEquals("Should detect Latte 3.0+", LatteVersion.VERSION_3X, version);

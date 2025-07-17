@@ -18,7 +18,9 @@ import java.util.regex.Pattern;
 public class LatteAttributeLexer extends LexerBase {
     // Valid attribute prefixes
     private static final Set<String> VALID_ATTRIBUTE_PREFIXES = new HashSet<>(Arrays.asList(
-            "n:", "n:inner-", "n:tag-", "n:class-", "n:attr-"
+            "n:", "n:inner-", "n:tag-", "n:class-", "n:attr-", 
+            // Support for prefixed n:attributes (e.g., n:class:hover)
+            "n:class:", "n:attr:", "n:tag:", "n:data-"
     ));
     
     // Valid attribute names
@@ -29,7 +31,8 @@ public class LatteAttributeLexer extends LexerBase {
     ));
     
     // Patterns for matching different parts of an attribute
-    private static final Pattern ATTRIBUTE_NAME_PATTERN = Pattern.compile("^(n:[a-zA-Z0-9_-]+)");
+    // Enhanced pattern to support dynamic n:attributes and more complex prefixed attributes
+    private static final Pattern ATTRIBUTE_NAME_PATTERN = Pattern.compile("^(n:[a-zA-Z0-9_:.\\-]+)");
     
     // States
     private static final int STATE_INITIAL = 0;

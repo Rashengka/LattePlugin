@@ -37,6 +37,21 @@ public class NetteDefaultVariablesProvider {
             variables.addAll(getNetteAssetsVariables(project));
         }
         
+        // Add variables from Nette Database
+        if (isNetteDatabaseEnabled()) {
+            variables.addAll(getNetteDatabaseVariables(project));
+        }
+        
+        // Add variables from Nette Security
+        if (isNetteSecurityEnabled()) {
+            variables.addAll(getNetteSecurityVariables(project));
+        }
+        
+        // Add variables from Nette HTTP
+        if (isNetteHttpEnabled()) {
+            variables.addAll(getNetteHttpVariables(project));
+        }
+        
         return variables;
     }
     
@@ -124,6 +139,35 @@ public class NetteDefaultVariablesProvider {
     }
     
     /**
+     * Gets default variables for Nette Database.
+     *
+     * @param project The project to get variables for
+     * @return A list of default variables
+     */
+    public static List<NetteVariable> getNetteDatabaseVariables(Project project) {
+        List<NetteVariable> variables = new ArrayList<>();
+        
+        // Get the version of Nette Database
+        int version = getNetteDatabaseVersion(project);
+        
+        // Add common variables (available in all versions)
+        variables.add(new NetteVariable("database", "Nette\\Database\\Connection", "Database connection object"));
+        variables.add(new NetteVariable("db", "Nette\\Database\\Connection", "Alias for database connection object"));
+        variables.add(new NetteVariable("row", "Nette\\Database\\Row", "Current database row in foreach loops"));
+        
+        // Add version-specific variables
+        if (version >= 3) {
+            // Nette Database 3.x specific variables
+            variables.add(new NetteVariable("explorer", "Nette\\Database\\Explorer", "Database explorer object"));
+        } else {
+            // Nette Database 2.x specific variables
+            variables.add(new NetteVariable("context", "Nette\\Database\\Context", "Database context object"));
+        }
+        
+        return variables;
+    }
+    
+    /**
      * Checks if Nette Application support is enabled.
      *
      * @return True if Nette Application support is enabled, false otherwise
@@ -148,6 +192,96 @@ public class NetteDefaultVariablesProvider {
      */
     private static boolean isNetteAssetsEnabled() {
         return LatteSettings.getInstance().isEnableNetteAssets();
+    }
+    
+    /**
+     * Checks if Nette Database support is enabled.
+     *
+     * @return True if Nette Database support is enabled, false otherwise
+     */
+    private static boolean isNetteDatabaseEnabled() {
+        return LatteSettings.getInstance().isEnableNetteDatabase();
+    }
+    
+    /**
+     * Checks if Nette Security support is enabled.
+     *
+     * @return True if Nette Security support is enabled, false otherwise
+     */
+    private static boolean isNetteSecurityEnabled() {
+        return LatteSettings.getInstance().isEnableNetteSecurity();
+    }
+    
+    /**
+     * Checks if Nette HTTP support is enabled.
+     *
+     * @return True if Nette HTTP support is enabled, false otherwise
+     */
+    private static boolean isNetteHttpEnabled() {
+        return LatteSettings.getInstance().isEnableNetteHttp();
+    }
+    
+    /**
+     * Gets default variables for Nette HTTP.
+     *
+     * @param project The project to get variables for
+     * @return A list of default variables
+     */
+    public static List<NetteVariable> getNetteHttpVariables(Project project) {
+        List<NetteVariable> variables = new ArrayList<>();
+        
+        // Get the version of Nette HTTP
+        int version = getNetteHttpVersion(project);
+        
+        // Add common variables (available in all versions)
+        variables.add(new NetteVariable("httpRequest", "Nette\\Http\\Request", "HTTP request object"));
+        variables.add(new NetteVariable("httpResponse", "Nette\\Http\\Response", "HTTP response object"));
+        variables.add(new NetteVariable("session", "Nette\\Http\\Session", "Session object"));
+        variables.add(new NetteVariable("url", "Nette\\Http\\Url", "Current URL object"));
+        variables.add(new NetteVariable("cookies", "array", "HTTP cookies"));
+        variables.add(new NetteVariable("headers", "array", "HTTP headers"));
+        
+        // Add version-specific variables
+        if (version >= 3) {
+            // Nette HTTP 3.x specific variables
+            variables.add(new NetteVariable("requestFactory", "Nette\\Http\\RequestFactory", "HTTP request factory"));
+        } else {
+            // Nette HTTP 2.x specific variables
+            // No specific variables for version 2.x
+        }
+        
+        return variables;
+    }
+    
+    /**
+     * Gets default variables for Nette Security.
+     *
+     * @param project The project to get variables for
+     * @return A list of default variables
+     */
+    public static List<NetteVariable> getNetteSecurityVariables(Project project) {
+        List<NetteVariable> variables = new ArrayList<>();
+        
+        // Get the version of Nette Security
+        int version = getNetteSecurityVersion(project);
+        
+        // Add common variables (available in all versions)
+        variables.add(new NetteVariable("user", "Nette\\Security\\User", "User authentication and authorization"));
+        variables.add(new NetteVariable("identity", "Nette\\Security\\IIdentity", "User identity"));
+        variables.add(new NetteVariable("roles", "array", "User roles"));
+        
+        // Add version-specific variables
+        if (version >= 3) {
+            // Nette Security 3.x specific variables
+            variables.add(new NetteVariable("authenticator", "Nette\\Security\\Authenticator", "User authentication service"));
+            variables.add(new NetteVariable("authorizator", "Nette\\Security\\Authorizator", "User authorization service"));
+        } else {
+            // Nette Security 2.x specific variables
+            variables.add(new NetteVariable("authenticator", "Nette\\Security\\IAuthenticator", "User authentication service"));
+            variables.add(new NetteVariable("authorizator", "Nette\\Security\\IAuthorizator", "User authorization service"));
+        }
+        
+        return variables;
     }
     
     /**
@@ -214,6 +348,72 @@ public class NetteDefaultVariablesProvider {
         
         // Otherwise, use the detected version
         return NettePackageDetector.getPackageVersion(project, NettePackageDetector.NETTE_ASSETS);
+    }
+    
+    /**
+     * Gets the version of Nette Database.
+     *
+     * @param project The project to get the version for
+     * @return The major version number
+     */
+    private static int getNetteDatabaseVersion(Project project) {
+        LatteSettings settings = LatteSettings.getInstance();
+        
+        // If override is enabled, use the selected version
+        if (settings.isOverrideDetectedNetteDatabaseVersion() && settings.getSelectedNetteDatabaseVersion() != null) {
+            try {
+                return Integer.parseInt(settings.getSelectedNetteDatabaseVersion());
+            } catch (NumberFormatException e) {
+                // Ignore and use detected version
+            }
+        }
+        
+        // Otherwise, use the detected version
+        return NettePackageDetector.getPackageVersion(project, NettePackageDetector.NETTE_DATABASE);
+    }
+    
+    /**
+     * Gets the version of Nette Security.
+     *
+     * @param project The project to get the version for
+     * @return The major version number
+     */
+    private static int getNetteSecurityVersion(Project project) {
+        LatteSettings settings = LatteSettings.getInstance();
+        
+        // If override is enabled, use the selected version
+        if (settings.isOverrideDetectedNetteSecurityVersion() && settings.getSelectedNetteSecurityVersion() != null) {
+            try {
+                return Integer.parseInt(settings.getSelectedNetteSecurityVersion());
+            } catch (NumberFormatException e) {
+                // Ignore and use detected version
+            }
+        }
+        
+        // Otherwise, use the detected version
+        return NettePackageDetector.getPackageVersion(project, NettePackageDetector.NETTE_SECURITY);
+    }
+    
+    /**
+     * Gets the version of Nette HTTP.
+     *
+     * @param project The project to get the version for
+     * @return The major version number
+     */
+    private static int getNetteHttpVersion(Project project) {
+        LatteSettings settings = LatteSettings.getInstance();
+        
+        // If override is enabled, use the selected version
+        if (settings.isOverrideDetectedNetteHttpVersion() && settings.getSelectedNetteHttpVersion() != null) {
+            try {
+                return Integer.parseInt(settings.getSelectedNetteHttpVersion());
+            } catch (NumberFormatException e) {
+                // Ignore and use detected version
+            }
+        }
+        
+        // Otherwise, use the detected version
+        return NettePackageDetector.getPackageVersion(project, NettePackageDetector.NETTE_HTTP);
     }
     
     /**

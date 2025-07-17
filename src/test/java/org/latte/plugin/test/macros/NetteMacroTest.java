@@ -23,12 +23,14 @@ public class NetteMacroTest extends BasePlatformTestCase {
         boolean originalApplicationSetting = settings.isEnableNetteApplication();
         boolean originalFormsSetting = settings.isEnableNetteForms();
         boolean originalAssetsSetting = settings.isEnableNetteAssets();
+        boolean originalDatabaseSetting = settings.isEnableNetteDatabase();
         
         try {
             // Enable all packages
             settings.setEnableNetteApplication(true);
             settings.setEnableNetteForms(true);
             settings.setEnableNetteAssets(true);
+            settings.setEnableNetteDatabase(true);
             
             // Get all macros
             Set<NetteMacro> allMacros = NetteMacroProvider.getAllMacros();
@@ -37,6 +39,7 @@ public class NetteMacroTest extends BasePlatformTestCase {
             assertContainsMacro(allMacros, "link", "nette/application");
             assertContainsMacro(allMacros, "form", "nette/forms");
             assertContainsMacro(allMacros, "css", "nette/assets");
+            assertContainsMacro(allMacros, "query", "nette/database");
             
             // Disable nette/application
             settings.setEnableNetteApplication(false);
@@ -66,6 +69,18 @@ public class NetteMacroTest extends BasePlatformTestCase {
             // Get all macros again
             allMacros = NetteMacroProvider.getAllMacros();
             
+            // Verify that macros from nette/database are still included
+            assertNotContainsMacro(allMacros, "link", "nette/application");
+            assertNotContainsMacro(allMacros, "form", "nette/forms");
+            assertNotContainsMacro(allMacros, "css", "nette/assets");
+            assertContainsMacro(allMacros, "query", "nette/database");
+            
+            // Disable nette/database
+            settings.setEnableNetteDatabase(false);
+            
+            // Get all macros again
+            allMacros = NetteMacroProvider.getAllMacros();
+            
             // Verify that no macros are included
             assertTrue("No macros should be included when all packages are disabled", allMacros.isEmpty());
         } finally {
@@ -73,6 +88,7 @@ public class NetteMacroTest extends BasePlatformTestCase {
             settings.setEnableNetteApplication(originalApplicationSetting);
             settings.setEnableNetteForms(originalFormsSetting);
             settings.setEnableNetteAssets(originalAssetsSetting);
+            settings.setEnableNetteDatabase(originalDatabaseSetting);
         }
     }
     
@@ -86,11 +102,13 @@ public class NetteMacroTest extends BasePlatformTestCase {
         // Save original settings
         boolean originalApplicationSetting = settings.isEnableNetteApplication();
         boolean originalFormsSetting = settings.isEnableNetteForms();
+        boolean originalDatabaseSetting = settings.isEnableNetteDatabase();
         
         try {
             // Enable all packages
             settings.setEnableNetteApplication(true);
             settings.setEnableNetteForms(true);
+            settings.setEnableNetteDatabase(true);
             
             // Get all attributes
             Set<NetteMacro> allAttributes = NetteMacroProvider.getAllAttributes();
@@ -98,6 +116,7 @@ public class NetteMacroTest extends BasePlatformTestCase {
             // Verify that attributes from all packages are included
             assertContainsMacro(allAttributes, "n:href", "nette/application");
             assertContainsMacro(allAttributes, "n:name", "nette/forms");
+            assertContainsMacro(allAttributes, "n:query", "nette/database");
             
             // Disable nette/application
             settings.setEnableNetteApplication(false);
@@ -115,12 +134,24 @@ public class NetteMacroTest extends BasePlatformTestCase {
             // Get all attributes again
             allAttributes = NetteMacroProvider.getAllAttributes();
             
+            // Verify that attributes from nette/database are still included
+            assertNotContainsMacro(allAttributes, "n:href", "nette/application");
+            assertNotContainsMacro(allAttributes, "n:name", "nette/forms");
+            assertContainsMacro(allAttributes, "n:query", "nette/database");
+            
+            // Disable nette/database
+            settings.setEnableNetteDatabase(false);
+            
+            // Get all attributes again
+            allAttributes = NetteMacroProvider.getAllAttributes();
+            
             // Verify that no attributes are included
             assertTrue("No attributes should be included when all packages are disabled", allAttributes.isEmpty());
         } finally {
             // Restore original settings
             settings.setEnableNetteApplication(originalApplicationSetting);
             settings.setEnableNetteForms(originalFormsSetting);
+            settings.setEnableNetteDatabase(originalDatabaseSetting);
         }
     }
     
@@ -135,12 +166,14 @@ public class NetteMacroTest extends BasePlatformTestCase {
         boolean originalApplicationSetting = settings.isEnableNetteApplication();
         boolean originalFormsSetting = settings.isEnableNetteForms();
         boolean originalAssetsSetting = settings.isEnableNetteAssets();
+        boolean originalDatabaseSetting = settings.isEnableNetteDatabase();
         
         try {
             // Enable all packages
             settings.setEnableNetteApplication(true);
             settings.setEnableNetteForms(true);
             settings.setEnableNetteAssets(true);
+            settings.setEnableNetteDatabase(true);
             
             // Get all macro names
             Set<String> macroNames = NetteMacroProvider.getValidMacroNames();
@@ -149,11 +182,24 @@ public class NetteMacroTest extends BasePlatformTestCase {
             assertTrue("Macro names should include 'link'", macroNames.contains("link"));
             assertTrue("Macro names should include 'form'", macroNames.contains("form"));
             assertTrue("Macro names should include 'css'", macroNames.contains("css"));
+            assertTrue("Macro names should include 'query'", macroNames.contains("query"));
             
-            // Disable all packages
+            // Disable application, forms, and assets packages but keep database enabled
             settings.setEnableNetteApplication(false);
             settings.setEnableNetteForms(false);
             settings.setEnableNetteAssets(false);
+            
+            // Get all macro names again
+            macroNames = NetteMacroProvider.getValidMacroNames();
+            
+            // Verify that only database macro names are included
+            assertFalse("Macro names should not include 'link'", macroNames.contains("link"));
+            assertFalse("Macro names should not include 'form'", macroNames.contains("form"));
+            assertFalse("Macro names should not include 'css'", macroNames.contains("css"));
+            assertTrue("Macro names should include 'query'", macroNames.contains("query"));
+            
+            // Disable database package
+            settings.setEnableNetteDatabase(false);
             
             // Get all macro names again
             macroNames = NetteMacroProvider.getValidMacroNames();
@@ -165,6 +211,7 @@ public class NetteMacroTest extends BasePlatformTestCase {
             settings.setEnableNetteApplication(originalApplicationSetting);
             settings.setEnableNetteForms(originalFormsSetting);
             settings.setEnableNetteAssets(originalAssetsSetting);
+            settings.setEnableNetteDatabase(originalDatabaseSetting);
         }
     }
     

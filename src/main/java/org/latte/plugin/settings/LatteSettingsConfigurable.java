@@ -29,6 +29,10 @@ public class LatteSettingsConfigurable implements Configurable {
     private JBCheckBox enableNetteApplicationCheckBox;
     private JBCheckBox enableNetteFormsCheckBox;
     private JBCheckBox enableNetteAssetsCheckBox;
+    private JBCheckBox enableNetteDatabaseCheckBox;
+    private JBCheckBox enableNetteSecurityCheckBox;
+    private JBCheckBox enableNetteMailCheckBox;
+    private JBCheckBox enableNetteHttpCheckBox;
     
     // Nette package version settings
     private ComboBox<String> netteApplicationVersionComboBox;
@@ -39,6 +43,18 @@ public class LatteSettingsConfigurable implements Configurable {
     
     private ComboBox<String> netteAssetsVersionComboBox;
     private JBCheckBox overrideDetectedNetteAssetsVersionCheckBox;
+    
+    private ComboBox<String> netteDatabaseVersionComboBox;
+    private JBCheckBox overrideDetectedNetteDatabaseVersionCheckBox;
+    
+    private ComboBox<String> netteSecurityVersionComboBox;
+    private JBCheckBox overrideDetectedNetteSecurityVersionCheckBox;
+    
+    private ComboBox<String> netteMailVersionComboBox;
+    private JBCheckBox overrideDetectedNetteMailVersionCheckBox;
+    
+    private ComboBox<String> netteHttpVersionComboBox;
+    private JBCheckBox overrideDetectedNetteHttpVersionCheckBox;
 
     @Nls(capitalization = Nls.Capitalization.Title)
     @Override
@@ -59,6 +75,10 @@ public class LatteSettingsConfigurable implements Configurable {
         enableNetteApplicationCheckBox = new JBCheckBox("Enable nette/application support");
         enableNetteFormsCheckBox = new JBCheckBox("Enable nette/forms support");
         enableNetteAssetsCheckBox = new JBCheckBox("Enable nette/assets support");
+        enableNetteDatabaseCheckBox = new JBCheckBox("Enable nette/database support");
+        enableNetteSecurityCheckBox = new JBCheckBox("Enable nette/security support");
+        enableNetteMailCheckBox = new JBCheckBox("Enable nette/mail support");
+        enableNetteHttpCheckBox = new JBCheckBox("Enable nette/http support");
         
         // Nette package version settings
         netteApplicationVersionComboBox = new ComboBox<>(new String[]{"2", "3", "4"});
@@ -69,6 +89,18 @@ public class LatteSettingsConfigurable implements Configurable {
         
         netteAssetsVersionComboBox = new ComboBox<>(new String[]{"1"});
         overrideDetectedNetteAssetsVersionCheckBox = new JBCheckBox("Override detected version");
+        
+        netteDatabaseVersionComboBox = new ComboBox<>(new String[]{"2", "3"});
+        overrideDetectedNetteDatabaseVersionCheckBox = new JBCheckBox("Override detected version");
+        
+        netteSecurityVersionComboBox = new ComboBox<>(new String[]{"2", "3"});
+        overrideDetectedNetteSecurityVersionCheckBox = new JBCheckBox("Override detected version");
+        
+        netteMailVersionComboBox = new ComboBox<>(new String[]{"2", "3"});
+        overrideDetectedNetteMailVersionCheckBox = new JBCheckBox("Override detected version");
+        
+        netteHttpVersionComboBox = new ComboBox<>(new String[]{"2", "3"});
+        overrideDetectedNetteHttpVersionCheckBox = new JBCheckBox("Override detected version");
         
         // Build the form
         FormBuilder formBuilder = FormBuilder.createFormBuilder()
@@ -100,7 +132,39 @@ public class LatteSettingsConfigurable implements Configurable {
         assetsVersionPanel.add(netteAssetsVersionComboBox);
         assetsVersionPanel.add(overrideDetectedNetteAssetsVersionCheckBox);
         
-        formBuilder.addComponent(assetsVersionPanel, 1);
+        formBuilder.addComponent(assetsVersionPanel, 1)
+                .addComponent(enableNetteDatabaseCheckBox, 1);
+                
+        JPanel databaseVersionPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        databaseVersionPanel.add(new JBLabel("Version:"));
+        databaseVersionPanel.add(netteDatabaseVersionComboBox);
+        databaseVersionPanel.add(overrideDetectedNetteDatabaseVersionCheckBox);
+        
+        formBuilder.addComponent(databaseVersionPanel, 1)
+                .addComponent(enableNetteSecurityCheckBox, 1);
+                
+        JPanel securityVersionPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        securityVersionPanel.add(new JBLabel("Version:"));
+        securityVersionPanel.add(netteSecurityVersionComboBox);
+        securityVersionPanel.add(overrideDetectedNetteSecurityVersionCheckBox);
+        
+        formBuilder.addComponent(securityVersionPanel, 1)
+                .addComponent(enableNetteMailCheckBox, 1);
+                
+        JPanel mailVersionPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        mailVersionPanel.add(new JBLabel("Version:"));
+        mailVersionPanel.add(netteMailVersionComboBox);
+        mailVersionPanel.add(overrideDetectedNetteMailVersionCheckBox);
+        
+        formBuilder.addComponent(mailVersionPanel, 1)
+                .addComponent(enableNetteHttpCheckBox, 1);
+                
+        JPanel httpVersionPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        httpVersionPanel.add(new JBLabel("Version:"));
+        httpVersionPanel.add(netteHttpVersionComboBox);
+        httpVersionPanel.add(overrideDetectedNetteHttpVersionCheckBox);
+        
+        formBuilder.addComponent(httpVersionPanel, 1);
         
         // Add listeners to enable/disable version settings based on package enable/disable
         enableNetteApplicationCheckBox.addActionListener(e -> {
@@ -119,6 +183,30 @@ public class LatteSettingsConfigurable implements Configurable {
             boolean enabled = enableNetteAssetsCheckBox.isSelected();
             netteAssetsVersionComboBox.setEnabled(enabled);
             overrideDetectedNetteAssetsVersionCheckBox.setEnabled(enabled);
+        });
+        
+        enableNetteDatabaseCheckBox.addActionListener(e -> {
+            boolean enabled = enableNetteDatabaseCheckBox.isSelected();
+            netteDatabaseVersionComboBox.setEnabled(enabled);
+            overrideDetectedNetteDatabaseVersionCheckBox.setEnabled(enabled);
+        });
+        
+        enableNetteSecurityCheckBox.addActionListener(e -> {
+            boolean enabled = enableNetteSecurityCheckBox.isSelected();
+            netteSecurityVersionComboBox.setEnabled(enabled);
+            overrideDetectedNetteSecurityVersionCheckBox.setEnabled(enabled);
+        });
+        
+        enableNetteMailCheckBox.addActionListener(e -> {
+            boolean enabled = enableNetteMailCheckBox.isSelected();
+            netteMailVersionComboBox.setEnabled(enabled);
+            overrideDetectedNetteMailVersionCheckBox.setEnabled(enabled);
+        });
+        
+        enableNetteHttpCheckBox.addActionListener(e -> {
+            boolean enabled = enableNetteHttpCheckBox.isSelected();
+            netteHttpVersionComboBox.setEnabled(enabled);
+            overrideDetectedNetteHttpVersionCheckBox.setEnabled(enabled);
         });
         
         myMainPanel.add(formBuilder.getPanel(), BorderLayout.NORTH);
@@ -145,6 +233,10 @@ public class LatteSettingsConfigurable implements Configurable {
         modified |= enableNetteApplicationCheckBox.isSelected() != settings.isEnableNetteApplication();
         modified |= enableNetteFormsCheckBox.isSelected() != settings.isEnableNetteForms();
         modified |= enableNetteAssetsCheckBox.isSelected() != settings.isEnableNetteAssets();
+        modified |= enableNetteDatabaseCheckBox.isSelected() != settings.isEnableNetteDatabase();
+        modified |= enableNetteSecurityCheckBox.isSelected() != settings.isEnableNetteSecurity();
+        modified |= enableNetteMailCheckBox.isSelected() != settings.isEnableNetteMail();
+        modified |= enableNetteHttpCheckBox.isSelected() != settings.isEnableNetteHttp();
         
         // Check if Nette package version settings are modified
         String selectedNetteApplicationVersion = (String) netteApplicationVersionComboBox.getSelectedItem();
@@ -171,6 +263,38 @@ public class LatteSettingsConfigurable implements Configurable {
         }
         modified |= overrideDetectedNetteAssetsVersionCheckBox.isSelected() != settings.isOverrideDetectedNetteAssetsVersion();
         
+        String selectedNetteDatabaseVersion = (String) netteDatabaseVersionComboBox.getSelectedItem();
+        if (selectedNetteDatabaseVersion != null && settings.getSelectedNetteDatabaseVersion() != null) {
+            modified |= !selectedNetteDatabaseVersion.equals(settings.getSelectedNetteDatabaseVersion());
+        } else if (selectedNetteDatabaseVersion != null || settings.getSelectedNetteDatabaseVersion() != null) {
+            modified = true;
+        }
+        modified |= overrideDetectedNetteDatabaseVersionCheckBox.isSelected() != settings.isOverrideDetectedNetteDatabaseVersion();
+        
+        String selectedNetteSecurityVersion = (String) netteSecurityVersionComboBox.getSelectedItem();
+        if (selectedNetteSecurityVersion != null && settings.getSelectedNetteSecurityVersion() != null) {
+            modified |= !selectedNetteSecurityVersion.equals(settings.getSelectedNetteSecurityVersion());
+        } else if (selectedNetteSecurityVersion != null || settings.getSelectedNetteSecurityVersion() != null) {
+            modified = true;
+        }
+        modified |= overrideDetectedNetteSecurityVersionCheckBox.isSelected() != settings.isOverrideDetectedNetteSecurityVersion();
+        
+        String selectedNetteMailVersion = (String) netteMailVersionComboBox.getSelectedItem();
+        if (selectedNetteMailVersion != null && settings.getSelectedNetteMailVersion() != null) {
+            modified |= !selectedNetteMailVersion.equals(settings.getSelectedNetteMailVersion());
+        } else if (selectedNetteMailVersion != null || settings.getSelectedNetteMailVersion() != null) {
+            modified = true;
+        }
+        modified |= overrideDetectedNetteMailVersionCheckBox.isSelected() != settings.isOverrideDetectedNetteMailVersion();
+        
+        String selectedNetteHttpVersion = (String) netteHttpVersionComboBox.getSelectedItem();
+        if (selectedNetteHttpVersion != null && settings.getSelectedNetteHttpVersion() != null) {
+            modified |= !selectedNetteHttpVersion.equals(settings.getSelectedNetteHttpVersion());
+        } else if (selectedNetteHttpVersion != null || settings.getSelectedNetteHttpVersion() != null) {
+            modified = true;
+        }
+        modified |= overrideDetectedNetteHttpVersionCheckBox.isSelected() != settings.isOverrideDetectedNetteHttpVersion();
+        
         return modified;
     }
 
@@ -196,6 +320,26 @@ public class LatteSettingsConfigurable implements Configurable {
         
         settings.setSelectedNetteAssetsVersion((String) netteAssetsVersionComboBox.getSelectedItem());
         settings.setOverrideDetectedNetteAssetsVersion(overrideDetectedNetteAssetsVersionCheckBox.isSelected());
+        
+        // Apply nette/database settings
+        settings.setEnableNetteDatabase(enableNetteDatabaseCheckBox.isSelected());
+        settings.setSelectedNetteDatabaseVersion((String) netteDatabaseVersionComboBox.getSelectedItem());
+        settings.setOverrideDetectedNetteDatabaseVersion(overrideDetectedNetteDatabaseVersionCheckBox.isSelected());
+        
+        // Apply nette/security settings
+        settings.setEnableNetteSecurity(enableNetteSecurityCheckBox.isSelected());
+        settings.setSelectedNetteSecurityVersion((String) netteSecurityVersionComboBox.getSelectedItem());
+        settings.setOverrideDetectedNetteSecurityVersion(overrideDetectedNetteSecurityVersionCheckBox.isSelected());
+        
+        // Apply nette/mail settings
+        settings.setEnableNetteMail(enableNetteMailCheckBox.isSelected());
+        settings.setSelectedNetteMailVersion((String) netteMailVersionComboBox.getSelectedItem());
+        settings.setOverrideDetectedNetteMailVersion(overrideDetectedNetteMailVersionCheckBox.isSelected());
+        
+        // Apply nette/http settings
+        settings.setEnableNetteHttp(enableNetteHttpCheckBox.isSelected());
+        settings.setSelectedNetteHttpVersion((String) netteHttpVersionComboBox.getSelectedItem());
+        settings.setOverrideDetectedNetteHttpVersion(overrideDetectedNetteHttpVersionCheckBox.isSelected());
     }
 
     @Override
@@ -237,6 +381,50 @@ public class LatteSettingsConfigurable implements Configurable {
         boolean assetsEnabled = enableNetteAssetsCheckBox.isSelected();
         netteAssetsVersionComboBox.setEnabled(assetsEnabled);
         overrideDetectedNetteAssetsVersionCheckBox.setEnabled(assetsEnabled);
+        
+        // Reset nette/database settings
+        enableNetteDatabaseCheckBox.setSelected(settings.isEnableNetteDatabase());
+        netteDatabaseVersionComboBox.setSelectedItem(settings.getSelectedNetteDatabaseVersion() != null ? 
+                settings.getSelectedNetteDatabaseVersion() : "3");
+        overrideDetectedNetteDatabaseVersionCheckBox.setSelected(settings.isOverrideDetectedNetteDatabaseVersion());
+        
+        // Update enabled state of nette/database version settings
+        boolean databaseEnabled = enableNetteDatabaseCheckBox.isSelected();
+        netteDatabaseVersionComboBox.setEnabled(databaseEnabled);
+        overrideDetectedNetteDatabaseVersionCheckBox.setEnabled(databaseEnabled);
+        
+        // Reset nette/security settings
+        enableNetteSecurityCheckBox.setSelected(settings.isEnableNetteSecurity());
+        netteSecurityVersionComboBox.setSelectedItem(settings.getSelectedNetteSecurityVersion() != null ? 
+                settings.getSelectedNetteSecurityVersion() : "3");
+        overrideDetectedNetteSecurityVersionCheckBox.setSelected(settings.isOverrideDetectedNetteSecurityVersion());
+        
+        // Update enabled state of nette/security version settings
+        boolean securityEnabled = enableNetteSecurityCheckBox.isSelected();
+        netteSecurityVersionComboBox.setEnabled(securityEnabled);
+        overrideDetectedNetteSecurityVersionCheckBox.setEnabled(securityEnabled);
+        
+        // Reset nette/mail settings
+        enableNetteMailCheckBox.setSelected(settings.isEnableNetteMail());
+        netteMailVersionComboBox.setSelectedItem(settings.getSelectedNetteMailVersion() != null ? 
+                settings.getSelectedNetteMailVersion() : "3");
+        overrideDetectedNetteMailVersionCheckBox.setSelected(settings.isOverrideDetectedNetteMailVersion());
+        
+        // Update enabled state of nette/mail version settings
+        boolean mailEnabled = enableNetteMailCheckBox.isSelected();
+        netteMailVersionComboBox.setEnabled(mailEnabled);
+        overrideDetectedNetteMailVersionCheckBox.setEnabled(mailEnabled);
+        
+        // Reset nette/http settings
+        enableNetteHttpCheckBox.setSelected(settings.isEnableNetteHttp());
+        netteHttpVersionComboBox.setSelectedItem(settings.getSelectedNetteHttpVersion() != null ? 
+                settings.getSelectedNetteHttpVersion() : "3");
+        overrideDetectedNetteHttpVersionCheckBox.setSelected(settings.isOverrideDetectedNetteHttpVersion());
+        
+        // Update enabled state of nette/http version settings
+        boolean httpEnabled = enableNetteHttpCheckBox.isSelected();
+        netteHttpVersionComboBox.setEnabled(httpEnabled);
+        overrideDetectedNetteHttpVersionCheckBox.setEnabled(httpEnabled);
     }
 
     @Nullable

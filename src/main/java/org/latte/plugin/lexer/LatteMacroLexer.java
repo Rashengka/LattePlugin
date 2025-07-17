@@ -4,6 +4,7 @@ import com.intellij.lexer.LexerBase;
 import com.intellij.psi.tree.IElementType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.latte.plugin.filters.NetteFilterProvider;
 import org.latte.plugin.macros.NetteMacroProvider;
 
 import java.util.Arrays;
@@ -174,6 +175,38 @@ public class LatteMacroLexer extends LexerBase {
                 tokenType = LatteTokenTypes.LATTE_FILTER_PIPE;
                 tokenEnd = ++position;
                 return;
+            }
+            
+            // Handle filter name after pipe
+            if (position == tokenStart && tokenStart > startOffset && 
+                    buffer.charAt(tokenStart - 1) == '|') {
+                // We're right after a pipe, so this should be a filter name
+                String filterText = buffer.subSequence(position, endOffset).toString();
+                Matcher filterMatcher = MACRO_NAME_PATTERN.matcher(filterText);
+                
+                if (filterMatcher.find()) {
+                    String filterName = filterMatcher.group(1);
+                    position += filterMatcher.end();
+                    
+                    // Check if it's a valid filter name
+                    if (NetteFilterProvider.getValidFilterNames().contains(filterName)) {
+                        tokenType = LatteTokenTypes.LATTE_FILTER_NAME;
+                    } else {
+                        tokenType = LatteTokenTypes.LATTE_ERROR_UNKNOWN_FILTER;
+                    }
+                    
+                    tokenEnd = position;
+                    return;
+                } else {
+                    // Invalid filter syntax
+                    tokenType = LatteTokenTypes.LATTE_ERROR_INVALID_FILTER_SYNTAX;
+                    // Advance to the next pipe or the end of the macro
+                    while (position < endOffset && buffer.charAt(position) != '|' && buffer.charAt(position) != '}') {
+                        position++;
+                    }
+                    tokenEnd = position;
+                    return;
+                }
             }
             
             position++;
