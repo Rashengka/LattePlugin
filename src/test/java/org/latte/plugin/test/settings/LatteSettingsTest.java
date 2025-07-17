@@ -90,6 +90,31 @@ public class LatteSettingsTest extends BasePlatformTestCase {
     }
 
     /**
+     * Tests that Latte 4.0+ version can be detected and overridden.
+     */
+    public void testLatteVersion4xOverride() {
+        // Set the current version to 4.0+
+        LatteVersionManager.setCurrentVersion(LatteVersion.VERSION_4X);
+        
+        // Check that isVersion4x returns true and other version checks return false
+        assertTrue("Version should be 4.0+", LatteVersionManager.isVersion4x());
+        assertFalse("Version should not be 2.x", LatteVersionManager.isVersion2x());
+        assertFalse("Version should not be 3.x", LatteVersionManager.isVersion3x());
+        
+        // Override the version to 3.0+
+        settings.setSelectedVersion("3.0+");
+        settings.setOverrideDetectedVersion(true);
+        
+        // Update the current version based on settings
+        LatteVersionManager.setCurrentVersion(settings.getSelectedVersionEnum());
+        
+        // Check that isVersion4x returns false and isVersion3x returns true
+        assertFalse("Version should not be 4.0+", LatteVersionManager.isVersion4x());
+        assertFalse("Version should not be 2.x", LatteVersionManager.isVersion2x());
+        assertTrue("Version should be 3.x", LatteVersionManager.isVersion3x());
+    }
+
+    /**
      * Tests that package enable/disable settings work.
      */
     public void testPackageEnableDisable() {

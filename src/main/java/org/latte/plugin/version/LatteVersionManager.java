@@ -46,6 +46,15 @@ public class LatteVersionManager {
     public static boolean isVersion3x() {
         return currentVersion == LatteVersion.VERSION_3X;
     }
+    
+    /**
+     * Checks if the current version is Latte 4.0+.
+     *
+     * @return True if the current version is 4.0+, false otherwise
+     */
+    public static boolean isVersion4x() {
+        return currentVersion == LatteVersion.VERSION_4X;
+    }
 
     /**
      * Gets the documentation URL for the current version.

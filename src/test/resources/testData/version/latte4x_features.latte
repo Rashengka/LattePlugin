@@ -1,0 +1,90 @@
+{* Latte 4.0+ specific features test file *}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{$title}</title>
+</head>
+<body>
+    <h1>Latte 4.0+ Specific Features</h1>
+    
+    {* Type checking - specific to Latte 4.0+ *}
+    <h2>Type Checking</h2>
+    <pre>
+    {typeCheck}
+    {strictTypes}
+    </pre>
+    
+    {* Asynchronous includes - specific to Latte 4.0+ *}
+    <h2>Asynchronous Includes</h2>
+    <pre>
+    {asyncInclude 'partial.latte'}
+    {await $asyncResult}
+    </pre>
+    
+    {* Dependency injection - specific to Latte 4.0+ *}
+    <h2>Dependency Injection</h2>
+    <pre>
+    {inject App\Services\UserService}
+    </pre>
+    
+    {* Enhanced type declarations - building on Latte 3.0+ features *}
+    <h2>Enhanced Type Declarations</h2>
+    <pre>
+    {varType string|null $name}
+    {varType int<0, 100> $percentage}
+    {varType array<string, int> $mapping}
+    {varType App\User&Serializable $user}
+    
+    {templateType App\Templates\BaseTemplate}
+    </pre>
+    
+    {* Enhanced n:attributes - building on Latte 3.0+ features *}
+    <h2>Enhanced n:attributes</h2>
+    <div n:attr="data-id => $id, data-type => $type">
+        Enhanced attribute syntax
+    </div>
+    
+    <div n:class="$condition ? active : inactive, $user->isAdmin() ? admin">
+        Enhanced class attribute
+    </div>
+    
+    {* New filters - specific to Latte 4.0+ *}
+    <h2>New Filters</h2>
+    <p>JSON: {$data|json}</p>
+    <p>Base64: {$data|base64}</p>
+    <p>Format: {$number|format: '%.2f'}</p>
+    
+    {* Features inherited from Latte 3.0+ *}
+    <h2>Inherited from Latte 3.0+</h2>
+    <pre>
+    {varType string $name}
+    {templateType App\Templates\BaseTemplate}
+    
+    {parameters
+        string $title
+        int $count = 0
+    }
+    
+    {php
+        $items = ['apple', 'banana', 'orange'];
+    }
+    
+    {do $form->render()}
+    </pre>
+    
+    {* Common features that work across all versions *}
+    <h2>Common Features</h2>
+    {if $condition}
+        <p>Conditional content</p>
+    {/if}
+    
+    {foreach $items as $item}
+        <p>{$item}</p>
+    {/foreach}
+    
+    {include 'partial.latte'}
+    
+    <p n:if="$visible">This element is conditionally visible</p>
+</body>
+</html>

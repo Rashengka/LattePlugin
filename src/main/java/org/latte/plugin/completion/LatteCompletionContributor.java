@@ -19,7 +19,7 @@ import org.latte.plugin.version.LatteVersionManager;
 
 /**
  * Provides code completion for Latte tags and attributes.
- * Supports both Latte 2.x and 3.0+ versions.
+ * Supports Latte 2.x, 3.0+, and 4.0+ versions.
  */
 public class LatteCompletionContributor extends CompletionContributor {
 
@@ -34,7 +34,23 @@ public class LatteCompletionContributor extends CompletionContributor {
                                                  @NotNull ProcessingContext context,
                                                  @NotNull CompletionResultSet result) {
                         // Add version-specific macros
-                        if (LatteVersionManager.isVersion3x()) {
+                        if (LatteVersionManager.isVersion4x()) {
+                            // Latte 4.0+ specific macros
+                            result.addElement(LookupElementBuilder.create("typeCheck").bold().withTypeText("Latte 4.0+ macro"));
+                            result.addElement(LookupElementBuilder.create("strictTypes").bold().withTypeText("Latte 4.0+ macro"));
+                            result.addElement(LookupElementBuilder.create("asyncInclude").bold().withTypeText("Latte 4.0+ macro"));
+                            result.addElement(LookupElementBuilder.create("await").bold().withTypeText("Latte 4.0+ macro"));
+                            result.addElement(LookupElementBuilder.create("inject").bold().withTypeText("Latte 4.0+ macro"));
+                            result.addElement(LookupElementBuilder.create("_").bold().withTypeText("Latte 4.0+ macro"));
+                            result.addElement(LookupElementBuilder.create("=").bold().withTypeText("Latte 4.0+ macro"));
+                            
+                            // Also include 3.0+ macros as they are likely still supported in 4.0+
+                            result.addElement(LookupElementBuilder.create("varType").bold().withTypeText("Latte 3.0+ macro"));
+                            result.addElement(LookupElementBuilder.create("templateType").bold().withTypeText("Latte 3.0+ macro"));
+                            result.addElement(LookupElementBuilder.create("php").bold().withTypeText("Latte 3.0+ macro"));
+                            result.addElement(LookupElementBuilder.create("do").bold().withTypeText("Latte 3.0+ macro"));
+                            result.addElement(LookupElementBuilder.create("parameters").bold().withTypeText("Latte 3.0+ macro"));
+                        } else if (LatteVersionManager.isVersion3x()) {
                             // Latte 3.0+ specific macros
                             result.addElement(LookupElementBuilder.create("varType").bold().withTypeText("Latte 3.0+ macro"));
                             result.addElement(LookupElementBuilder.create("templateType").bold().withTypeText("Latte 3.0+ macro"));

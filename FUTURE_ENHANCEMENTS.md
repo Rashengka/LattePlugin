@@ -15,13 +15,15 @@ However, there are opportunities for enhancement to ensure complete coverage of 
 
 ## Potential Enhancements
 
-### 1. Latte 4.0+ Support
+### 1. Latte 4.0+ Support (Implemented)
 
-While the plugin has infrastructure for Latte 4.0+ (defined in LatteVersion enum), specific features and syntax changes in Latte 4.0+ are not fully implemented:
+The plugin now includes support for Latte 4.0+ features:
 
-- **Completion Contributor**: Update LatteCompletionContributor to handle Latte 4.0+ specific macros and syntax
-- **Version Detection**: Enhance LatteVersionManager to better detect and handle Latte 4.0+ features
-- **Documentation**: Update documentation with Latte 4.0+ specific features
+- **Completion Contributor**: LatteCompletionContributor has been updated to handle Latte 4.0+ specific macros and syntax, including typeCheck, strictTypes, asyncInclude, await, inject, and more.
+- **Version Detection**: LatteVersionManager has been enhanced with isVersion4x() method and LatteVersion.detectVersionFromContent() now detects Latte 4.0+ specific syntax.
+- **Documentation**: Documentation has been updated with Latte 4.0+ specific features in LATTE_4.0_SUPPORT.md.
+
+See LATTE_4.0_SUPPORT.md for detailed information about the implementation.
 
 ### 2. Additional Nette Packages
 

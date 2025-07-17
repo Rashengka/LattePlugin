@@ -121,11 +121,20 @@ public enum LatteVersion {
         if (content.contains("{* Latte 3.0+ *}")) {
             return VERSION_3X;
         }
+        if (content.contains("{* Latte 4.0+ *}")) {
+            return VERSION_4X;
+        }
         
         // Look for version-specific syntax patterns
         // (These are simplified examples - real detection would be more sophisticated)
         if (content.contains("{varType") || content.contains("{templateType")) {
             return VERSION_3X; // These are 3.0+ specific macros
+        }
+        
+        // Look for Latte 4.0+ specific syntax patterns
+        // These are educated guesses based on the evolution pattern
+        if (content.contains("{typeCheck") || content.contains("{strictTypes")) {
+            return VERSION_4X; // These are potential 4.0+ specific macros
         }
         
         // Default to null (couldn't detect)
