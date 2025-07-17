@@ -1,0 +1,178 @@
+package org.latte.plugin.test.filters;
+
+import com.intellij.testFramework.fixtures.BasePlatformTestCase;
+import org.latte.plugin.filters.NetteFilter;
+import org.latte.plugin.filters.NetteFilterProvider;
+import org.latte.plugin.settings.LatteSettings;
+
+import java.util.Set;
+
+/**
+ * Tests for the NetteFilter and NetteFilterProvider classes.
+ */
+public class NetteFilterTest extends BasePlatformTestCase {
+
+    /**
+     * Tests that the NetteFilterProvider returns the correct filters based on enabled settings.
+     */
+    public void testGetAllFilters() {
+        // Get settings
+        LatteSettings settings = LatteSettings.getInstance();
+        
+        // Save original settings
+        boolean originalApplicationSetting = settings.isEnableNetteApplication();
+        boolean originalFormsSetting = settings.isEnableNetteForms();
+        boolean originalAssetsSetting = settings.isEnableNetteAssets();
+        
+        try {
+            // Enable all packages
+            settings.setEnableNetteApplication(true);
+            settings.setEnableNetteForms(true);
+            settings.setEnableNetteAssets(true);
+            
+            // Get all filters
+            Set<NetteFilter> allFilters = NetteFilterProvider.getAllFilters();
+            
+            // Verify that filters from all packages are included
+            assertContainsFilter(allFilters, "escapeUrl", "nette/application");
+            assertContainsFilter(allFilters, "translate", "nette/forms");
+            assertContainsFilter(allFilters, "asset", "nette/assets");
+            
+            // Verify that core filters are included
+            assertContainsFilter(allFilters, "upper", "latte/core");
+            assertContainsFilter(allFilters, "lower", "latte/core");
+            assertContainsFilter(allFilters, "escape", "latte/core");
+            
+            // Disable nette/application
+            settings.setEnableNetteApplication(false);
+            
+            // Get all filters again
+            allFilters = NetteFilterProvider.getAllFilters();
+            
+            // Verify that filters from nette/application are not included
+            assertNotContainsFilter(allFilters, "escapeUrl", "nette/application");
+            assertContainsFilter(allFilters, "translate", "nette/forms");
+            assertContainsFilter(allFilters, "asset", "nette/assets");
+            
+            // Disable nette/forms
+            settings.setEnableNetteForms(false);
+            
+            // Get all filters again
+            allFilters = NetteFilterProvider.getAllFilters();
+            
+            // Verify that filters from nette/application and nette/forms are not included
+            assertNotContainsFilter(allFilters, "escapeUrl", "nette/application");
+            assertNotContainsFilter(allFilters, "translate", "nette/forms");
+            assertContainsFilter(allFilters, "asset", "nette/assets");
+            
+            // Disable nette/assets
+            settings.setEnableNetteAssets(false);
+            
+            // Get all filters again
+            allFilters = NetteFilterProvider.getAllFilters();
+            
+            // Verify that only core filters are included
+            assertNotContainsFilter(allFilters, "escapeUrl", "nette/application");
+            assertNotContainsFilter(allFilters, "translate", "nette/forms");
+            assertNotContainsFilter(allFilters, "asset", "nette/assets");
+            assertContainsFilter(allFilters, "upper", "latte/core");
+            assertContainsFilter(allFilters, "lower", "latte/core");
+            assertContainsFilter(allFilters, "escape", "latte/core");
+        } finally {
+            // Restore original settings
+            settings.setEnableNetteApplication(originalApplicationSetting);
+            settings.setEnableNetteForms(originalFormsSetting);
+            settings.setEnableNetteAssets(originalAssetsSetting);
+        }
+    }
+    
+    /**
+     * Tests that the NetteFilterProvider returns the correct filter names based on enabled settings.
+     */
+    public void testGetValidFilterNames() {
+        // Get settings
+        LatteSettings settings = LatteSettings.getInstance();
+        
+        // Save original settings
+        boolean originalApplicationSetting = settings.isEnableNetteApplication();
+        boolean originalFormsSetting = settings.isEnableNetteForms();
+        boolean originalAssetsSetting = settings.isEnableNetteAssets();
+        
+        try {
+            // Enable all packages
+            settings.setEnableNetteApplication(true);
+            settings.setEnableNetteForms(true);
+            settings.setEnableNetteAssets(true);
+            
+            // Get all filter names
+            Set<String> filterNames = NetteFilterProvider.getValidFilterNames();
+            
+            // Verify that filter names from all packages are included
+            assertTrue("Filter names should include 'escapeUrl'", filterNames.contains("escapeUrl"));
+            assertTrue("Filter names should include 'translate'", filterNames.contains("translate"));
+            assertTrue("Filter names should include 'asset'", filterNames.contains("asset"));
+            
+            // Verify that core filter names are included
+            assertTrue("Filter names should include 'upper'", filterNames.contains("upper"));
+            assertTrue("Filter names should include 'lower'", filterNames.contains("lower"));
+            assertTrue("Filter names should include 'escape'", filterNames.contains("escape"));
+            
+            // Disable all packages
+            settings.setEnableNetteApplication(false);
+            settings.setEnableNetteForms(false);
+            settings.setEnableNetteAssets(false);
+            
+            // Get all filter names again
+            filterNames = NetteFilterProvider.getValidFilterNames();
+            
+            // Verify that only core filter names are included
+            assertFalse("Filter names should not include 'escapeUrl'", filterNames.contains("escapeUrl"));
+            assertFalse("Filter names should not include 'translate'", filterNames.contains("translate"));
+            assertFalse("Filter names should not include 'asset'", filterNames.contains("asset"));
+            assertTrue("Filter names should include 'upper'", filterNames.contains("upper"));
+            assertTrue("Filter names should include 'lower'", filterNames.contains("lower"));
+            assertTrue("Filter names should include 'escape'", filterNames.contains("escape"));
+        } finally {
+            // Restore original settings
+            settings.setEnableNetteApplication(originalApplicationSetting);
+            settings.setEnableNetteForms(originalFormsSetting);
+            settings.setEnableNetteAssets(originalAssetsSetting);
+        }
+    }
+    
+    /**
+     * Asserts that the given set of filters contains a filter with the given name and package.
+     *
+     * @param filters The set of filters
+     * @param name The filter name
+     * @param packageName The package name
+     */
+    private void assertContainsFilter(Set<NetteFilter> filters, String name, String packageName) {
+        boolean found = false;
+        for (NetteFilter filter : filters) {
+            if (filter.getName().equals(name) && filter.getPackageName().equals(packageName)) {
+                found = true;
+                break;
+            }
+        }
+        assertTrue("Filters should contain '" + name + "' from '" + packageName + "'", found);
+    }
+    
+    /**
+     * Asserts that the given set of filters does not contain a filter with the given name and package.
+     *
+     * @param filters The set of filters
+     * @param name The filter name
+     * @param packageName The package name
+     */
+    private void assertNotContainsFilter(Set<NetteFilter> filters, String name, String packageName) {
+        boolean found = false;
+        for (NetteFilter filter : filters) {
+            if (filter.getName().equals(name) && filter.getPackageName().equals(packageName)) {
+                found = true;
+                break;
+            }
+        }
+        assertFalse("Filters should not contain '" + name + "' from '" + packageName + "'", found);
+    }
+}

@@ -16,7 +16,15 @@ public class NetteMacroProvider {
             new NetteMacro("plink", "Creates a permanent link", "nette/application"),
             new NetteMacro("control", "Renders a component", "nette/application"),
             new NetteMacro("snippet", "Defines a snippet for AJAX", "nette/application"),
-            new NetteMacro("snippetArea", "Defines a snippet area", "nette/application")
+            new NetteMacro("snippetArea", "Defines a snippet area", "nette/application"),
+            new NetteMacro("include", "Includes a template", "nette/application"),
+            new NetteMacro("layout", "Extends a parent template", "nette/application"),
+            new NetteMacro("block", "Defines a block", "nette/application"),
+            new NetteMacro("/block", "Closes a block", "nette/application"),
+            new NetteMacro("define", "Defines a block without printing it", "nette/application"),
+            new NetteMacro("/define", "Closes a define block", "nette/application"),
+            new NetteMacro("capture", "Captures output to a variable", "nette/application"),
+            new NetteMacro("/capture", "Closes a capture block", "nette/application")
     ));
 
     // Macros from nette/forms package
@@ -35,16 +43,50 @@ public class NetteMacroProvider {
             new NetteMacro("asset", "Includes an asset with proper versioning", "nette/assets")
     ));
 
+    // Core Latte macros
+    private static final Set<NetteMacro> CORE_MACROS = new HashSet<>(Arrays.asList(
+            new NetteMacro("if", "Conditional rendering", "latte/core"),
+            new NetteMacro("/if", "Closes an if block", "latte/core"),
+            new NetteMacro("else", "Alternative for if", "latte/core"),
+            new NetteMacro("elseif", "Alternative for if with condition", "latte/core"),
+            new NetteMacro("ifset", "Conditional rendering if variable is set", "latte/core"),
+            new NetteMacro("/ifset", "Closes an ifset block", "latte/core"),
+            new NetteMacro("foreach", "Loop through an array or collection", "latte/core"),
+            new NetteMacro("/foreach", "Closes a foreach block", "latte/core"),
+            new NetteMacro("for", "Traditional for loop", "latte/core"),
+            new NetteMacro("/for", "Closes a for block", "latte/core"),
+            new NetteMacro("while", "While loop", "latte/core"),
+            new NetteMacro("/while", "Closes a while block", "latte/core"),
+            new NetteMacro("var", "Define a variable", "latte/core"),
+            new NetteMacro("continue", "Skip to the next iteration", "latte/core"),
+            new NetteMacro("break", "Exit the loop", "latte/core")
+    ));
+
     // N:attributes from nette/application package
     private static final Set<NetteMacro> APPLICATION_ATTRIBUTES = new HashSet<>(Arrays.asList(
             new NetteMacro("n:href", "Creates a link to a presenter/action", "nette/application"),
-            new NetteMacro("n:snippet", "Defines a snippet for AJAX", "nette/application")
+            new NetteMacro("n:snippet", "Defines a snippet for AJAX", "nette/application"),
+            new NetteMacro("n:include", "Includes a template", "nette/application"),
+            new NetteMacro("n:block", "Defines a block", "nette/application")
     ));
 
     // N:attributes from nette/forms package
     private static final Set<NetteMacro> FORMS_ATTRIBUTES = new HashSet<>(Arrays.asList(
             new NetteMacro("n:name", "Binds an input to a form control", "nette/forms"),
             new NetteMacro("n:validation", "Adds validation to a form control", "nette/forms")
+    ));
+    
+    // Core Latte n:attributes
+    private static final Set<NetteMacro> CORE_ATTRIBUTES = new HashSet<>(Arrays.asList(
+            new NetteMacro("n:if", "Conditional rendering", "latte/core"),
+            new NetteMacro("n:ifset", "Conditional rendering if variable is set", "latte/core"),
+            new NetteMacro("n:foreach", "Loop through an array or collection", "latte/core"),
+            new NetteMacro("n:inner-foreach", "Inner loop", "latte/core"),
+            new NetteMacro("n:class", "Conditional class", "latte/core"),
+            new NetteMacro("n:attr", "Conditional attributes", "latte/core"),
+            new NetteMacro("n:tag", "Conditional tag", "latte/core"),
+            new NetteMacro("n:inner-if", "Conditional inner content", "latte/core"),
+            new NetteMacro("n:else", "Used with n:inner-if", "latte/core")
     ));
 
     /**
@@ -54,6 +96,9 @@ public class NetteMacroProvider {
      */
     public static Set<String> getValidMacroNames() {
         Set<String> macroNames = new HashSet<>();
+        
+        // Add core macros
+        CORE_MACROS.forEach(macro -> macroNames.add(macro.getName()));
         
         // Get settings
         LatteSettings settings = LatteSettings.getInstance();
@@ -82,6 +127,9 @@ public class NetteMacroProvider {
     public static Set<NetteMacro> getAllMacros() {
         Set<NetteMacro> macros = new HashSet<>();
         
+        // Add core macros
+        macros.addAll(CORE_MACROS);
+        
         // Get settings
         LatteSettings settings = LatteSettings.getInstance();
         
@@ -108,6 +156,9 @@ public class NetteMacroProvider {
      */
     public static Set<NetteMacro> getAllAttributes() {
         Set<NetteMacro> attributes = new HashSet<>();
+        
+        // Add core attributes
+        attributes.addAll(CORE_ATTRIBUTES);
         
         // Get settings
         LatteSettings settings = LatteSettings.getInstance();
