@@ -229,3 +229,16 @@ If the plugin is not detecting the correct versions of Nette packages, you can:
 1. Check that your composer.json file includes the correct dependencies
 2. Use the "Override detected version" option in the settings to manually select the correct version
 3. Make sure the package is enabled in the settings
+
+## Future Enhancements
+
+While the Latte Plugin currently supports many features from Latte and Nette packages, there are opportunities for enhancement to ensure complete coverage of all features and versions. See the [FUTURE_ENHANCEMENTS.md](FUTURE_ENHANCEMENTS.md) file for a detailed list of planned improvements, including:
+
+- Latte 4.0+ support
+- Additional Nette packages
+- Enhanced n:attributes support
+- Advanced filters
+- More granular version-specific features
+- Performance optimizations
+- Better integration with PHP
+- Improved testing and validation
