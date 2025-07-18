@@ -1,5 +1,5 @@
 <idea-plugin>
-    <id>org.latte.plugin</id>
+    <id>cz.hqm.latte.plugin</id>
     <name>Latte Template Support</name>
     <vendor email="support@example.com" url="http://www.example.com">Latte Plugin</vendor>
     
@@ -24,55 +24,55 @@
     
     <extensions defaultExtensionNs="com.intellij">
         <!-- File type definition -->
-        <fileType name="Latte" implementationClass="org.latte.plugin.file.LatteFileType"
+        <fileType name="Latte" implementationClass="cz.hqm.latte.plugin.file.LatteFileType"
                   fieldName="INSTANCE" language="Latte" extensions="latte"/>
                   
         <!-- Language definition -->
         <lang.parserDefinition language="Latte" 
-                               implementationClass="org.latte.plugin.lang.LatteParserDefinition"/>
+                               implementationClass="cz.hqm.latte.plugin.lang.LatteParserDefinition"/>
                                
         <!-- Syntax highlighting -->
         <lang.syntaxHighlighterFactory language="Latte"
-                                       implementationClass="org.latte.plugin.highlighting.LatteSyntaxHighlighterFactory"/>
+                                       implementationClass="cz.hqm.latte.plugin.highlighting.LatteSyntaxHighlighterFactory"/>
                                        
         <!-- Code completion -->
         <completion.contributor language="Latte"
-                                implementationClass="org.latte.plugin.completion.LatteCompletionContributor"/>
+                                implementationClass="cz.hqm.latte.plugin.completion.LatteCompletionContributor"/>
                                 
         <!-- Documentation provider -->
         <lang.documentationProvider language="Latte"
-                                    implementationClass="org.latte.plugin.documentation.LatteDocumentationProvider"/>
+                                    implementationClass="cz.hqm.latte.plugin.documentation.LatteDocumentationProvider"/>
                                     
         <!-- Color settings page for customizing syntax highlighting -->
-        <colorSettingsPage implementation="org.latte.plugin.highlighting.LatteColorSettingsPage"/>
+        <colorSettingsPage implementation="cz.hqm.latte.plugin.highlighting.LatteColorSettingsPage"/>
         
         <!-- Settings configurable for plugin options -->
         <applicationConfigurable parentId="language" 
-                                 instance="org.latte.plugin.settings.LatteSettingsConfigurable"
-                                 id="org.latte.plugin.settings.LatteSettingsConfigurable"
+                                 instance="cz.hqm.latte.plugin.settings.LatteSettingsConfigurable"
+                                 id="cz.hqm.latte.plugin.settings.LatteSettingsConfigurable"
                                  displayName="Latte"/>
                                  
         <!-- Project-level settings configurable for custom elements -->
         <projectConfigurable parentId="language" 
-                             instance="org.latte.plugin.settings.LatteCustomElementsConfigurable"
-                             id="org.latte.plugin.settings.LatteCustomElementsConfigurable"
+                             instance="cz.hqm.latte.plugin.settings.LatteCustomElementsConfigurable"
+                             id="cz.hqm.latte.plugin.settings.LatteCustomElementsConfigurable"
                              displayName="Latte Custom Elements"/>
                              
         <!-- Intention actions for adding custom elements -->
         <intentionAction>
-            <className>org.latte.plugin.intention.AddCustomTagIntentionAction</className>
+            <className>cz.hqm.latte.plugin.intention.AddCustomTagIntentionAction</className>
             <category>Latte</category>
         </intentionAction>
         <intentionAction>
-            <className>org.latte.plugin.intention.AddCustomFilterIntentionAction</className>
+            <className>cz.hqm.latte.plugin.intention.AddCustomFilterIntentionAction</className>
             <category>Latte</category>
         </intentionAction>
         <intentionAction>
-            <className>org.latte.plugin.intention.AddCustomFunctionIntentionAction</className>
+            <className>cz.hqm.latte.plugin.intention.AddCustomFunctionIntentionAction</className>
             <category>Latte</category>
         </intentionAction>
         <intentionAction>
-            <className>org.latte.plugin.intention.AddCustomVariableIntentionAction</className>
+            <className>cz.hqm.latte.plugin.intention.AddCustomVariableIntentionAction</className>
             <category>Latte</category>
         </intentionAction>
     </extensions>

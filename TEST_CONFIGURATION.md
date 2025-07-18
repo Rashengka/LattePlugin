@@ -190,5 +190,5 @@ If you encounter other issues when running tests, consider:
 
 4. **Running specific tests**:
    ```bash
-   ./gradlew test --tests "org.latte.plugin.test.YourTestClass"
+   ./gradlew test --tests "cz.hqm.latte.plugin.test.YourTestClass"
    ```

@@ -11,7 +11,7 @@ This document provides an overview of the test coverage for the Latte Plugin. It
 **Feature Description**: Highlighting for Latte macros, attributes, filters, and comments.
 
 **Test Classes**:
-- `org.latte.plugin.test.highlighting.LatteSyntaxHighlighterTest` - Tests the syntax highlighter's ability to correctly highlight different Latte elements.
+- `cz.hqm.latte.plugin.test.highlighting.LatteSyntaxHighlighterTest` - Tests the syntax highlighter's ability to correctly highlight different Latte elements.
 
 **Coverage Status**: ✅ Covered
 
@@ -20,7 +20,7 @@ This document provides an overview of the test coverage for the Latte Plugin. It
 **Feature Description**: Tokenization and parsing of Latte templates.
 
 **Test Classes**:
-- `org.latte.plugin.test.lexer.LatteErrorDetectionTest` - Tests the lexer's ability to detect errors in Latte syntax.
+- `cz.hqm.latte.plugin.test.lexer.LatteErrorDetectionTest` - Tests the lexer's ability to detect errors in Latte syntax.
 
 **Coverage Status**: ✅ Covered
 
@@ -29,7 +29,7 @@ This document provides an overview of the test coverage for the Latte Plugin. It
 **Feature Description**: Recognition of Latte files by their extension.
 
 **Test Classes**:
-- `org.latte.plugin.test.file.LatteFileTypeTest` - Tests the file type recognition for Latte files.
+- `cz.hqm.latte.plugin.test.file.LatteFileTypeTest` - Tests the file type recognition for Latte files.
 
 **Coverage Status**: ✅ Covered
 
@@ -38,9 +38,9 @@ This document provides an overview of the test coverage for the Latte Plugin. It
 **Feature Description**: Code completion for Latte macros, attributes, filters, and variables.
 
 **Test Classes**:
-- `org.latte.plugin.test.completion.NetteCompletionTest` - Tests code completion for Nette macros.
-- `org.latte.plugin.test.completion.NetteVariableCompletionTest` - Tests code completion for Nette variables.
-- `org.latte.plugin.test.completion.CustomElementsCompletionTest` - Tests code completion for custom elements.
+- `cz.hqm.latte.plugin.test.completion.NetteCompletionTest` - Tests code completion for Nette macros.
+- `cz.hqm.latte.plugin.test.completion.NetteVariableCompletionTest` - Tests code completion for Nette variables.
+- `cz.hqm.latte.plugin.test.completion.CustomElementsCompletionTest` - Tests code completion for custom elements.
 
 **Coverage Status**: ✅ Covered
 
@@ -49,8 +49,8 @@ This document provides an overview of the test coverage for the Latte Plugin. It
 **Feature Description**: Integration with Nette packages (application, forms, assets).
 
 **Test Classes**:
-- `org.latte.plugin.test.macros.NetteMacroTest` - Tests the Nette macro provider.
-- `org.latte.plugin.test.version.NettePackageDetectorTest` - Tests the Nette package detector.
+- `cz.hqm.latte.plugin.test.macros.NetteMacroTest` - Tests the Nette macro provider.
+- `cz.hqm.latte.plugin.test.version.NettePackageDetectorTest` - Tests the Nette package detector.
 
 **Coverage Status**: ✅ Covered
 
@@ -59,8 +59,8 @@ This document provides an overview of the test coverage for the Latte Plugin. It
 **Feature Description**: Management of plugin settings (Latte version, Nette packages).
 
 **Test Classes**:
-- `org.latte.plugin.test.settings.LatteSettingsTest` - Tests the Latte settings.
-- `org.latte.plugin.test.settings.LatteProjectSettingsTest` - Tests the Latte project settings for custom elements.
+- `cz.hqm.latte.plugin.test.settings.LatteSettingsTest` - Tests the Latte settings.
+- `cz.hqm.latte.plugin.test.settings.LatteProjectSettingsTest` - Tests the Latte project settings for custom elements.
 
 **Coverage Status**: ✅ Covered
 
@@ -69,15 +69,15 @@ This document provides an overview of the test coverage for the Latte Plugin. It
 **Feature Description**: Support for custom tags, filters, functions, and variables.
 
 **Test Classes**:
-- `org.latte.plugin.test.custom.CustomElementTest` - Tests the base custom element class.
-- `org.latte.plugin.test.custom.CustomTagTest` - Tests the custom tag class.
-- `org.latte.plugin.test.custom.CustomFilterTest` - Tests the custom filter class.
-- `org.latte.plugin.test.custom.CustomFunctionTest` - Tests the custom function class.
-- `org.latte.plugin.test.custom.CustomVariableTest` - Tests the custom variable class.
-- `org.latte.plugin.test.custom.CustomTagsProviderTest` - Tests the custom tags provider.
-- `org.latte.plugin.test.custom.CustomFiltersProviderTest` - Tests the custom filters provider.
-- `org.latte.plugin.test.custom.CustomFunctionsProviderTest` - Tests the custom functions provider.
-- `org.latte.plugin.test.custom.CustomVariablesProviderTest` - Tests the custom variables provider.
+- `cz.hqm.latte.plugin.test.custom.CustomElementTest` - Tests the base custom element class.
+- `cz.hqm.latte.plugin.test.custom.CustomTagTest` - Tests the custom tag class.
+- `cz.hqm.latte.plugin.test.custom.CustomFilterTest` - Tests the custom filter class.
+- `cz.hqm.latte.plugin.test.custom.CustomFunctionTest` - Tests the custom function class.
+- `cz.hqm.latte.plugin.test.custom.CustomVariableTest` - Tests the custom variable class.
+- `cz.hqm.latte.plugin.test.custom.CustomTagsProviderTest` - Tests the custom tags provider.
+- `cz.hqm.latte.plugin.test.custom.CustomFiltersProviderTest` - Tests the custom filters provider.
+- `cz.hqm.latte.plugin.test.custom.CustomFunctionsProviderTest` - Tests the custom functions provider.
+- `cz.hqm.latte.plugin.test.custom.CustomVariablesProviderTest` - Tests the custom variables provider.
 
 **Coverage Status**: ✅ Covered
 
@@ -86,7 +86,7 @@ This document provides an overview of the test coverage for the Latte Plugin. It
 **Feature Description**: Documentation for Latte macros, attributes, and filters.
 
 **Test Classes**:
-- `org.latte.plugin.test.documentation.LatteDocumentationProviderTest` - Tests the documentation provider.
+- `cz.hqm.latte.plugin.test.documentation.LatteDocumentationProviderTest` - Tests the documentation provider.
 
 **Coverage Status**: ✅ Covered
 
@@ -95,7 +95,7 @@ This document provides an overview of the test coverage for the Latte Plugin. It
 **Feature Description**: Intention actions for adding custom elements.
 
 **Test Classes**:
-- `org.latte.plugin.test.intention.AddCustomTagIntentionActionTest` - Tests the intention action for adding custom tags.
+- `cz.hqm.latte.plugin.test.intention.AddCustomTagIntentionActionTest` - Tests the intention action for adding custom tags.
 
 **Coverage Status**: ✅ Covered
 

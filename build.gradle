@@ -3,7 +3,7 @@ plugins {
     id 'org.jetbrains.intellij' version '1.15.0'
 }
 
-group 'org.latte'
+group 'cz.hqm.latte'
 version '1.0-SNAPSHOT'
 
 repositories {
@@ -92,7 +92,7 @@ test {
             'idea.no.launcher': 'true',
             'idea.suppress.known.test.exceptions': 'true',
             'idea.force.use.core.classloader': 'true',
-            'idea.use.core.classloader.for': 'org.latte.plugin',
+            'idea.use.core.classloader.for': 'cz.hqm.latte.plugin',
             'idea.use.core.classloader.for.plugin.path': 'true',
             
             // Language Injection Configuration

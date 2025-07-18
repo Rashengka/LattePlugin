@@ -24,7 +24,7 @@ To run tests directly in IntelliJ IDEA without font-related errors, you need to 
 5. Configure the test:
    - Name: `LatteSettingsTest` (or any other test name)
    - Test kind: `Class`
-   - Class: `org.latte.plugin.test.settings.LatteSettingsTest` (or the class you want to test)
+   - Class: `cz.hqm.latte.plugin.test.settings.LatteSettingsTest` (or the class you want to test)
    - VM options: Add the following VM options:
 
 ```
@@ -78,7 +78,7 @@ Now, whenever you create a new test configuration, you can select "Latte Plugin 
 If you prefer not to configure IntelliJ IDEA, you can always use the `test_runner.sh` script to run tests:
 
 ```bash
-./src/test/resources/test_runner.sh org.latte.plugin.test.settings.LatteSettingsTest
+./src/test/resources/test_runner.sh cz.hqm.latte.plugin.test.settings.LatteSettingsTest
 ```
 
 This script handles the font-related errors gracefully and provides clear output about the test results.

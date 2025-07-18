@@ -7,7 +7,7 @@ This directory contains a comprehensive test suite for the Latte Plugin for JetB
 ```
 src/test/
 ├── java/                           # Java test classes
-│   └── org/latte/plugin/test/      # Test package
+│   └── cz/hqm/latte/test/          # Test package
 │       ├── file/                   # File type tests
 │       ├── lexer/                  # Lexer and parser tests
 │       ├── highlighting/           # Syntax highlighting tests

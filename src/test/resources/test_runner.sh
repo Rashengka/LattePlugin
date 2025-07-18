@@ -2,10 +2,10 @@
 
 # Test runner script that handles font-related errors in IntelliJ platform tests
 # Usage: ./test_runner.sh [test_class] [test_method]
-# Example: ./test_runner.sh org.latte.plugin.test.completion.CustomElementsCompletionTest testCustomFunctionCompletion
+# Example: ./test_runner.sh cz.hqm.latte.plugin.test.completion.CustomElementsCompletionTest testCustomFunctionCompletion
 
 # Set default values
-TEST_CLASS=${1:-"org.latte.plugin.test.completion.CustomElementsCompletionTest"}
+TEST_CLASS=${1:-"cz.hqm.latte.plugin.test.completion.CustomElementsCompletionTest"}
 TEST_METHOD=${2:-""}
 
 # Colors for output
