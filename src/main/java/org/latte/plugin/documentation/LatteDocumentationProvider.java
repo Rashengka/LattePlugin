@@ -102,8 +102,18 @@ public class LatteDocumentationProvider extends AbstractDocumentationProvider {
         String text = element.getText();
         
         // Check if the element is a Latte macro
-        if (text.startsWith("{") && text.endsWith("}")) {
-            String macroName = text.substring(1, text.length() - 1).trim();
+        if (text.startsWith("{")) {
+            // Extract the macro name - it could be the entire macro or just the name
+            String macroContent = text;
+            if (text.endsWith("}")) {
+                macroContent = text.substring(1, text.length() - 1).trim();
+            }
+            
+            // Extract just the macro name (without parameters or content)
+            String macroName = macroContent.split("\\s+")[0].trim();
+            if (macroName.isEmpty()) {
+                return null;
+            }
             
             // Check built-in macros
             if (MACRO_DOCS.containsKey(macroName)) {
@@ -117,27 +127,76 @@ public class LatteDocumentationProvider extends AbstractDocumentationProvider {
             }
         }
         
-        // Check if the element is a Latte n:attribute
-        if (text.startsWith("n:")) {
-            String attrName = text.split("=")[0].trim();
-            
-            // Check built-in attributes
-            if (ATTRIBUTE_DOCS.containsKey(attrName)) {
-                return createDocumentation("Latte Attribute: " + attrName, ATTRIBUTE_DOCS.get(attrName));
-            }
-            
-            // Check Nette package attributes
-            String netteAttrDoc = getNetteAttributeDocumentation(attrName);
-            if (netteAttrDoc != null) {
-                return netteAttrDoc;
+        // Check if the element is a Latte n:attribute or contains an n:attribute
+        if (text.contains("n:")) {
+            // Extract the attribute name
+            int nIndex = text.indexOf("n:");
+            if (nIndex >= 0) {
+                String afterN = text.substring(nIndex);
+                String attrName;
+                
+                // Handle the case where the attribute is followed by "="
+                int equalsIndex = afterN.indexOf("=");
+                if (equalsIndex > 0) {
+                    attrName = afterN.substring(0, equalsIndex).trim();
+                } else {
+                    // Handle the case where there's no "=" (e.g., just "n:if")
+                    int spaceIndex = afterN.indexOf(" ");
+                    int quoteIndex = afterN.indexOf("\"");
+                    int endIndex = Math.min(
+                        spaceIndex > 0 ? spaceIndex : Integer.MAX_VALUE,
+                        quoteIndex > 0 ? quoteIndex : Integer.MAX_VALUE
+                    );
+                    
+                    if (endIndex < Integer.MAX_VALUE) {
+                        attrName = afterN.substring(0, endIndex).trim();
+                    } else {
+                        attrName = afterN.trim();
+                    }
+                }
+                
+                // Check built-in attributes
+                if (ATTRIBUTE_DOCS.containsKey(attrName)) {
+                    return createDocumentation("Latte Attribute: " + attrName, ATTRIBUTE_DOCS.get(attrName));
+                }
+                
+                // Check Nette package attributes
+                String netteAttrDoc = getNetteAttributeDocumentation(attrName);
+                if (netteAttrDoc != null) {
+                    return netteAttrDoc;
+                }
             }
         }
         
-        // Check if the element is a Latte filter
-        if (text.startsWith("|")) {
-            String filterName = text.substring(1).trim();
-            if (FILTER_DOCS.containsKey(filterName)) {
-                return createDocumentation("Latte Filter: " + filterName, FILTER_DOCS.get(filterName));
+        // Check if the element is a Latte filter or contains a filter
+        if (text.contains("|")) {
+            // Extract the filter name
+            int pipeIndex = text.indexOf("|");
+            if (pipeIndex >= 0) {
+                String afterPipe = text.substring(pipeIndex + 1);
+                String filterName;
+                
+                // Handle the case where there are multiple filters or parameters
+                int nextPipeIndex = afterPipe.indexOf("|");
+                int spaceIndex = afterPipe.indexOf(" ");
+                int bracketIndex = afterPipe.indexOf("}");
+                int endIndex = Math.min(
+                    nextPipeIndex > 0 ? nextPipeIndex : Integer.MAX_VALUE,
+                    Math.min(
+                        spaceIndex > 0 ? spaceIndex : Integer.MAX_VALUE,
+                        bracketIndex > 0 ? bracketIndex : Integer.MAX_VALUE
+                    )
+                );
+                
+                if (endIndex < Integer.MAX_VALUE) {
+                    filterName = afterPipe.substring(0, endIndex).trim();
+                } else {
+                    filterName = afterPipe.trim();
+                }
+                
+                if (FILTER_DOCS.containsKey(filterName)) {
+                    return createDocumentation("Latte Filter: " + filterName, FILTER_DOCS.get(filterName));
+                }
             }
         }
         

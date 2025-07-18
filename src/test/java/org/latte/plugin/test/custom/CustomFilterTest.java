@@ -1,6 +1,9 @@
 package org.latte.plugin.test.custom;
 
 import org.latte.plugin.custom.CustomFilter;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.latte.plugin.test.LattePluginTestBase;
 
 /**
@@ -11,6 +14,7 @@ public class CustomFilterTest extends LattePluginTestBase {
     /**
      * Tests the constructor and getters.
      */
+    @Test
     public void testConstructorAndGetters() {
         CustomFilter filter = new CustomFilter("testFilter", "testDescription");
         
@@ -21,6 +25,7 @@ public class CustomFilterTest extends LattePluginTestBase {
     /**
      * Tests the default constructor and setters.
      */
+    @Test
     public void testDefaultConstructorAndSetters() {
         CustomFilter filter = new CustomFilter();
         
@@ -34,6 +39,7 @@ public class CustomFilterTest extends LattePluginTestBase {
     /**
      * Tests the getTypeText method.
      */
+    @Test
     public void testGetTypeText() {
         CustomFilter filter = new CustomFilter("testFilter", "testDescription");
         
@@ -43,6 +49,7 @@ public class CustomFilterTest extends LattePluginTestBase {
     /**
      * Tests inheritance from CustomElement.
      */
+    @Test
     public void testInheritance() {
         CustomFilter filter = new CustomFilter("testFilter", "testDescription");
         

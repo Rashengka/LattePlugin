@@ -1,7 +1,10 @@
 package org.latte.plugin.test.completion;
 
 import com.intellij.codeInsight.completion.CompletionType;
-import com.intellij.testFramework.fixtures.BasePlatformTestCase;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterEach;
+import org.latte.plugin.test.LattePluginTestBase;
 import org.latte.plugin.settings.LatteSettings;
 
 import java.util.List;
@@ -9,7 +12,7 @@ import java.util.List;
 /**
  * Tests for Nette Mail variable completion in Latte templates.
  */
-public class NetteMailVariableCompletionTest extends BasePlatformTestCase {
+public class NetteMailVariableCompletionTest extends LattePluginTestBase {
 
     @Override
     protected void setUp() throws Exception {
@@ -28,6 +31,7 @@ public class NetteMailVariableCompletionTest extends BasePlatformTestCase {
     /**
      * Tests that Nette Mail variables are suggested.
      */
+    @Test
     public void testNetteMailVariables() {
         myFixture.configureByText("test.latte", "{$<caret>}");
         myFixture.complete(CompletionType.BASIC);
@@ -45,6 +49,7 @@ public class NetteMailVariableCompletionTest extends BasePlatformTestCase {
     /**
      * Tests that version-specific Mail variables are suggested.
      */
+    @Test
     public void testNetteMailVersionSpecificVariables() {
         // Set Mail version to 3
         LatteSettings settings = LatteSettings.getInstance();
@@ -78,6 +83,7 @@ public class NetteMailVariableCompletionTest extends BasePlatformTestCase {
     /**
      * Tests that variables are not suggested when Mail package is disabled.
      */
+    @Test
     public void testDisabledMailPackage() {
         // Disable Mail package
         LatteSettings settings = LatteSettings.getInstance();
@@ -103,6 +109,7 @@ public class NetteMailVariableCompletionTest extends BasePlatformTestCase {
     /**
      * Tests that Mail variables are suggested in mail templates.
      */
+    @Test
     public void testNetteMailTemplateVariables() {
         myFixture.configureByText("test.latte", "{mail}\n{$<caret>}\n{/mail}");
         myFixture.complete(CompletionType.BASIC);

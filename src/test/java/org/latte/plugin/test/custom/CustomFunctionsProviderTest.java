@@ -1,6 +1,9 @@
 package org.latte.plugin.test.custom;
 
 import com.intellij.openapi.project.Project;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.latte.plugin.custom.CustomFunction;
 import org.latte.plugin.custom.CustomFunctionsProvider;
 import org.latte.plugin.settings.LatteProjectSettings;
@@ -47,6 +50,7 @@ public class CustomFunctionsProviderTest extends LattePluginTestBase {
     /**
      * Tests getting all functions when there are no functions.
      */
+    @Test
     public void testGetAllFunctionsEmpty() {
         Set<CustomFunction> functions = CustomFunctionsProvider.getAllFunctions(project);
         
@@ -57,6 +61,7 @@ public class CustomFunctionsProviderTest extends LattePluginTestBase {
     /**
      * Tests getting all function names when there are no functions.
      */
+    @Test
     public void testGetAllFunctionNamesEmpty() {
         Set<String> functionNames = CustomFunctionsProvider.getAllFunctionNames(project);
         
@@ -67,6 +72,7 @@ public class CustomFunctionsProviderTest extends LattePluginTestBase {
     /**
      * Tests function existence check when the function doesn't exist.
      */
+    @Test
     public void testFunctionExistsFalse() {
         boolean exists = CustomFunctionsProvider.functionExists(project, "nonExistentFunction");
         
@@ -76,6 +82,7 @@ public class CustomFunctionsProviderTest extends LattePluginTestBase {
     /**
      * Tests getting a function by name when the function doesn't exist.
      */
+    @Test
     public void testGetFunctionByNameNotFound() {
         CustomFunction function = CustomFunctionsProvider.getFunctionByName(project, "nonExistentFunction");
         
@@ -85,6 +92,7 @@ public class CustomFunctionsProviderTest extends LattePluginTestBase {
     /**
      * Tests adding a function.
      */
+    @Test
     public void testAddFunction() {
         CustomFunction function = CustomFunctionsProvider.addFunction(project, "testFunction", "testDescription");
         
@@ -109,6 +117,7 @@ public class CustomFunctionsProviderTest extends LattePluginTestBase {
     /**
      * Tests removing a function.
      */
+    @Test
     public void testRemoveFunction() {
         // Add a function first
         CustomFunctionsProvider.addFunction(project, "testFunction", "testDescription");
@@ -127,6 +136,7 @@ public class CustomFunctionsProviderTest extends LattePluginTestBase {
     /**
      * Tests removing a non-existent function.
      */
+    @Test
     public void testRemoveNonExistentFunction() {
         boolean removed = CustomFunctionsProvider.removeFunction(project, "nonExistentFunction");
         
@@ -136,6 +146,7 @@ public class CustomFunctionsProviderTest extends LattePluginTestBase {
     /**
      * Tests adding multiple functions and retrieving them.
      */
+    @Test
     public void testAddMultipleFunctions() {
         CustomFunctionsProvider.addFunction(project, "function1", "description1");
         CustomFunctionsProvider.addFunction(project, "function2", "description2");
@@ -154,6 +165,7 @@ public class CustomFunctionsProviderTest extends LattePluginTestBase {
     /**
      * Tests adding a duplicate function.
      */
+    @Test
     public void testAddDuplicateFunction() {
         CustomFunctionsProvider.addFunction(project, "testFunction", "description1");
         CustomFunctionsProvider.addFunction(project, "testFunction", "description2");

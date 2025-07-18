@@ -1,7 +1,10 @@
 package org.latte.plugin.test.completion;
 
 import com.intellij.codeInsight.completion.CompletionType;
-import com.intellij.testFramework.fixtures.BasePlatformTestCase;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterEach;
+import org.latte.plugin.test.LattePluginTestBase;
 import org.latte.plugin.settings.LatteSettings;
 
 import java.util.List;
@@ -9,7 +12,7 @@ import java.util.List;
 /**
  * Tests for Nette variable completion in Latte templates.
  */
-public class NetteVariableCompletionTest extends BasePlatformTestCase {
+public class NetteVariableCompletionTest extends LattePluginTestBase {
 
     @Override
     protected void setUp() throws Exception {
@@ -31,6 +34,7 @@ public class NetteVariableCompletionTest extends BasePlatformTestCase {
     /**
      * Tests that Nette Application variables are suggested.
      */
+    @Test
     public void testNetteApplicationVariables() {
         myFixture.configureByText("test.latte", "{$<caret>}");
         myFixture.complete(CompletionType.BASIC);
@@ -50,6 +54,7 @@ public class NetteVariableCompletionTest extends BasePlatformTestCase {
     /**
      * Tests that Nette Forms variables are suggested.
      */
+    @Test
     public void testNetteFormsVariables() {
         myFixture.configureByText("test.latte", "{form testForm}\n{$<caret>}\n{/form}");
         myFixture.complete(CompletionType.BASIC);
@@ -64,6 +69,7 @@ public class NetteVariableCompletionTest extends BasePlatformTestCase {
     /**
      * Tests that Nette Database variables are suggested.
      */
+    @Test
     public void testNetteDatabaseVariables() {
         myFixture.configureByText("test.latte", "{$<caret>}");
         myFixture.complete(CompletionType.BASIC);
@@ -87,6 +93,7 @@ public class NetteVariableCompletionTest extends BasePlatformTestCase {
     /**
      * Tests that variables are not suggested when packages are disabled.
      */
+    @Test
     public void testDisabledPackages() {
         // Disable all packages
         LatteSettings settings = LatteSettings.getInstance();

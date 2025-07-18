@@ -1,6 +1,9 @@
 package org.latte.plugin.test.documentation;
 
 import com.intellij.psi.PsiElement;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.latte.plugin.documentation.LatteDocumentationProvider;
 import org.latte.plugin.macros.NetteMacro;
 import org.latte.plugin.macros.NetteMacroProvider;
@@ -22,6 +25,7 @@ public class LatteDocumentationProviderTest extends LattePluginTestBase {
     /**
      * Tests that documentation is provided for built-in Latte macros.
      */
+    @Test
     public void testBuiltInMacroDocumentation() {
         // Create a Latte file with an if macro
         myFixture.configureByText("test.latte", "{if $condition}content{/if}");
@@ -29,8 +33,15 @@ public class LatteDocumentationProviderTest extends LattePluginTestBase {
         // Get the PsiElement at the if macro
         PsiElement element = myFixture.getFile().findElementAt(1); // Position of 'i' in 'if'
         
+        // Debug output
+        System.out.println("[DEBUG_LOG] Element at position 1: " + (element != null ? element.getText() : "null"));
+        System.out.println("[DEBUG_LOG] Element class: " + (element != null ? element.getClass().getName() : "null"));
+        
         // Get documentation for the element
         String documentation = documentationProvider.generateDoc(element, null);
+        
+        // Debug output
+        System.out.println("[DEBUG_LOG] Documentation: " + documentation);
         
         // Verify documentation
         assertNotNull("Documentation should not be null", documentation);
@@ -41,6 +52,7 @@ public class LatteDocumentationProviderTest extends LattePluginTestBase {
     /**
      * Tests that documentation is provided for built-in Latte attributes.
      */
+    @Test
     public void testBuiltInAttributeDocumentation() {
         // Create a Latte file with an n:if attribute
         myFixture.configureByText("test.latte", "<div n:if=\"$condition\">content</div>");
@@ -48,8 +60,15 @@ public class LatteDocumentationProviderTest extends LattePluginTestBase {
         // Get the PsiElement at the n:if attribute
         PsiElement element = myFixture.getFile().findElementAt(5); // Position of 'i' in 'n:if'
         
+        // Debug output
+        System.out.println("[DEBUG_LOG] Element at position 5: " + (element != null ? element.getText() : "null"));
+        System.out.println("[DEBUG_LOG] Element class: " + (element != null ? element.getClass().getName() : "null"));
+        
         // Get documentation for the element
         String documentation = documentationProvider.generateDoc(element, null);
+        
+        // Debug output
+        System.out.println("[DEBUG_LOG] Documentation: " + documentation);
         
         // Verify documentation
         assertNotNull("Documentation should not be null", documentation);
@@ -60,6 +79,7 @@ public class LatteDocumentationProviderTest extends LattePluginTestBase {
     /**
      * Tests that documentation is provided for built-in Latte filters.
      */
+    @Test
     public void testBuiltInFilterDocumentation() {
         // Create a Latte file with an upper filter
         myFixture.configureByText("test.latte", "{$var|upper}");
@@ -67,8 +87,15 @@ public class LatteDocumentationProviderTest extends LattePluginTestBase {
         // Get the PsiElement at the upper filter
         PsiElement element = myFixture.getFile().findElementAt(6); // Position of 'u' in 'upper'
         
+        // Debug output
+        System.out.println("[DEBUG_LOG] Element at position 6: " + (element != null ? element.getText() : "null"));
+        System.out.println("[DEBUG_LOG] Element class: " + (element != null ? element.getClass().getName() : "null"));
+        
         // Get documentation for the element
         String documentation = documentationProvider.generateDoc(element, null);
+        
+        // Debug output
+        System.out.println("[DEBUG_LOG] Documentation: " + documentation);
         
         // Verify documentation
         assertNotNull("Documentation should not be null", documentation);
@@ -79,6 +106,7 @@ public class LatteDocumentationProviderTest extends LattePluginTestBase {
     /**
      * Tests that documentation is provided for Nette package macros.
      */
+    @Test
     public void testNetteMacroDocumentation() {
         // Enable Nette packages
         enableNettePackages();
@@ -101,6 +129,7 @@ public class LatteDocumentationProviderTest extends LattePluginTestBase {
     /**
      * Tests that documentation is provided for Nette package attributes.
      */
+    @Test
     public void testNetteAttributeDocumentation() {
         // Enable Nette packages
         enableNettePackages();
@@ -111,8 +140,15 @@ public class LatteDocumentationProviderTest extends LattePluginTestBase {
         // Get the PsiElement at the n:href attribute
         PsiElement element = myFixture.getFile().findElementAt(3); // Position of 'h' in 'n:href'
         
+        // Debug output
+        System.out.println("[DEBUG_LOG] Element at position 3: " + (element != null ? element.getText() : "null"));
+        System.out.println("[DEBUG_LOG] Element class: " + (element != null ? element.getClass().getName() : "null"));
+        
         // Get documentation for the element
         String documentation = documentationProvider.generateDoc(element, null);
+        
+        // Debug output
+        System.out.println("[DEBUG_LOG] Documentation: " + documentation);
         
         // Verify documentation
         assertNotNull("Documentation should not be null", documentation);
@@ -123,6 +159,7 @@ public class LatteDocumentationProviderTest extends LattePluginTestBase {
     /**
      * Tests that no documentation is provided for unknown elements.
      */
+    @Test
     public void testUnknownElementDocumentation() {
         // Create a Latte file with an unknown macro
         myFixture.configureByText("test.latte", "{unknownMacro}");

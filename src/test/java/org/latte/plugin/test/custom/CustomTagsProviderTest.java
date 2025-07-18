@@ -1,6 +1,9 @@
 package org.latte.plugin.test.custom;
 
 import com.intellij.openapi.project.Project;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.latte.plugin.custom.CustomTag;
 import org.latte.plugin.custom.CustomTagsProvider;
 import org.latte.plugin.settings.LatteProjectSettings;
@@ -47,6 +50,7 @@ public class CustomTagsProviderTest extends LattePluginTestBase {
     /**
      * Tests getting all tags when there are no tags.
      */
+    @Test
     public void testGetAllTagsEmpty() {
         Set<CustomTag> tags = CustomTagsProvider.getAllTags(project);
         
@@ -57,6 +61,7 @@ public class CustomTagsProviderTest extends LattePluginTestBase {
     /**
      * Tests getting all tag names when there are no tags.
      */
+    @Test
     public void testGetAllTagNamesEmpty() {
         Set<String> tagNames = CustomTagsProvider.getAllTagNames(project);
         
@@ -67,6 +72,7 @@ public class CustomTagsProviderTest extends LattePluginTestBase {
     /**
      * Tests tag existence check when the tag doesn't exist.
      */
+    @Test
     public void testTagExistsFalse() {
         boolean exists = CustomTagsProvider.tagExists(project, "nonExistentTag");
         
@@ -76,6 +82,7 @@ public class CustomTagsProviderTest extends LattePluginTestBase {
     /**
      * Tests getting a tag by name when the tag doesn't exist.
      */
+    @Test
     public void testGetTagByNameNotFound() {
         CustomTag tag = CustomTagsProvider.getTagByName(project, "nonExistentTag");
         
@@ -85,6 +92,7 @@ public class CustomTagsProviderTest extends LattePluginTestBase {
     /**
      * Tests adding a tag.
      */
+    @Test
     public void testAddTag() {
         CustomTag tag = CustomTagsProvider.addTag(project, "testTag", "testDescription");
         
@@ -109,6 +117,7 @@ public class CustomTagsProviderTest extends LattePluginTestBase {
     /**
      * Tests removing a tag.
      */
+    @Test
     public void testRemoveTag() {
         // Add a tag first
         CustomTagsProvider.addTag(project, "testTag", "testDescription");
@@ -127,6 +136,7 @@ public class CustomTagsProviderTest extends LattePluginTestBase {
     /**
      * Tests removing a non-existent tag.
      */
+    @Test
     public void testRemoveNonExistentTag() {
         boolean removed = CustomTagsProvider.removeTag(project, "nonExistentTag");
         
@@ -136,6 +146,7 @@ public class CustomTagsProviderTest extends LattePluginTestBase {
     /**
      * Tests adding multiple tags and retrieving them.
      */
+    @Test
     public void testAddMultipleTags() {
         CustomTagsProvider.addTag(project, "tag1", "description1");
         CustomTagsProvider.addTag(project, "tag2", "description2");
@@ -154,6 +165,7 @@ public class CustomTagsProviderTest extends LattePluginTestBase {
     /**
      * Tests adding a duplicate tag.
      */
+    @Test
     public void testAddDuplicateTag() {
         CustomTagsProvider.addTag(project, "testTag", "description1");
         CustomTagsProvider.addTag(project, "testTag", "description2");

@@ -145,26 +145,36 @@ public enum LatteVersion {
         }
         
         // Look for version-specific comment
-        if (content.contains("{* Latte 2.x *}")) {
+        if (content.contains("{* Latte 2.x *}") || content.contains("{* Latte 2.x specific features")) {
             return VERSION_2X;
         }
-        if (content.contains("{* Latte 3.0+ *}")) {
+        if (content.contains("{* Latte 3.0+ *}") || content.contains("{* Latte 3.0+ specific features")) {
             return VERSION_3X;
         }
-        if (content.contains("{* Latte 4.0+ *}")) {
+        if (content.contains("{* Latte 4.0+ *}") || content.contains("{* Latte 4.0+ specific features")) {
             return VERSION_4X;
         }
         
-        // Look for version-specific syntax patterns
-        // (These are simplified examples - real detection would be more sophisticated)
-        if (content.contains("{varType") || content.contains("{templateType")) {
-            return VERSION_3X; // These are 3.0+ specific macros
+        // Look for Latte 2.x specific syntax patterns
+        if (content.contains("{syntax") || content.contains("{l}") || content.contains("{r}") || 
+            content.contains("{use") || content.contains("n:ifcontent") || 
+            content.contains("|bytes") || content.contains("|dataStream") || content.contains("|url")) {
+            return VERSION_2X;
         }
         
         // Look for Latte 4.0+ specific syntax patterns
-        // These are educated guesses based on the evolution pattern
-        if (content.contains("{typeCheck") || content.contains("{strictTypes")) {
-            return VERSION_4X; // These are potential 4.0+ specific macros
+        if (content.contains("{typeCheck") || content.contains("{strictTypes") || 
+            content.contains("{asyncInclude") || content.contains("{await") || 
+            content.contains("{inject") || content.contains("|json") || 
+            content.contains("|base64") || content.contains("|format:")) {
+            return VERSION_4X;
+        }
+        
+        // Look for Latte 3.0+ specific syntax patterns
+        if (content.contains("{varType") || content.contains("{templateType") || 
+            content.contains("{parameters") || content.contains("{php") || 
+            content.contains("{do")) {
+            return VERSION_3X;
         }
         
         // Default to null (couldn't detect)

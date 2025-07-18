@@ -1,8 +1,14 @@
 ### IntelliJ IDEA ###
 out/
-build/
 !**/src/main/**/out/
 !**/src/test/**/out/
+
+### Gradle files ###
+.gradle/
+build/
+gradle-app.setting
+!gradle-wrapper.jar
+!gradle-wrapper.properties
 
 ### Eclipse ###
 .apt_generated

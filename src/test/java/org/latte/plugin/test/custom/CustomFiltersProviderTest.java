@@ -1,6 +1,9 @@
 package org.latte.plugin.test.custom;
 
 import com.intellij.openapi.project.Project;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.latte.plugin.custom.CustomFilter;
 import org.latte.plugin.custom.CustomFiltersProvider;
 import org.latte.plugin.settings.LatteProjectSettings;
@@ -47,6 +50,7 @@ public class CustomFiltersProviderTest extends LattePluginTestBase {
     /**
      * Tests getting all filters when there are no filters.
      */
+    @Test
     public void testGetAllFiltersEmpty() {
         Set<CustomFilter> filters = CustomFiltersProvider.getAllFilters(project);
         
@@ -57,6 +61,7 @@ public class CustomFiltersProviderTest extends LattePluginTestBase {
     /**
      * Tests getting all filter names when there are no filters.
      */
+    @Test
     public void testGetAllFilterNamesEmpty() {
         Set<String> filterNames = CustomFiltersProvider.getAllFilterNames(project);
         
@@ -67,6 +72,7 @@ public class CustomFiltersProviderTest extends LattePluginTestBase {
     /**
      * Tests filter existence check when the filter doesn't exist.
      */
+    @Test
     public void testFilterExistsFalse() {
         boolean exists = CustomFiltersProvider.filterExists(project, "nonExistentFilter");
         
@@ -76,6 +82,7 @@ public class CustomFiltersProviderTest extends LattePluginTestBase {
     /**
      * Tests getting a filter by name when the filter doesn't exist.
      */
+    @Test
     public void testGetFilterByNameNotFound() {
         CustomFilter filter = CustomFiltersProvider.getFilterByName(project, "nonExistentFilter");
         
@@ -85,6 +92,7 @@ public class CustomFiltersProviderTest extends LattePluginTestBase {
     /**
      * Tests adding a filter.
      */
+    @Test
     public void testAddFilter() {
         CustomFilter filter = CustomFiltersProvider.addFilter(project, "testFilter", "testDescription");
         
@@ -109,6 +117,7 @@ public class CustomFiltersProviderTest extends LattePluginTestBase {
     /**
      * Tests removing a filter.
      */
+    @Test
     public void testRemoveFilter() {
         // Add a filter first
         CustomFiltersProvider.addFilter(project, "testFilter", "testDescription");
@@ -127,6 +136,7 @@ public class CustomFiltersProviderTest extends LattePluginTestBase {
     /**
      * Tests removing a non-existent filter.
      */
+    @Test
     public void testRemoveNonExistentFilter() {
         boolean removed = CustomFiltersProvider.removeFilter(project, "nonExistentFilter");
         
@@ -136,6 +146,7 @@ public class CustomFiltersProviderTest extends LattePluginTestBase {
     /**
      * Tests adding multiple filters and retrieving them.
      */
+    @Test
     public void testAddMultipleFilters() {
         CustomFiltersProvider.addFilter(project, "filter1", "description1");
         CustomFiltersProvider.addFilter(project, "filter2", "description2");
@@ -154,6 +165,7 @@ public class CustomFiltersProviderTest extends LattePluginTestBase {
     /**
      * Tests adding a duplicate filter.
      */
+    @Test
     public void testAddDuplicateFilter() {
         CustomFiltersProvider.addFilter(project, "testFilter", "description1");
         CustomFiltersProvider.addFilter(project, "testFilter", "description2");

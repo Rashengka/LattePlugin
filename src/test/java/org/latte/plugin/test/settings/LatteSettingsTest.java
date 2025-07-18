@@ -1,6 +1,9 @@
 package org.latte.plugin.test.settings;
 
-import com.intellij.testFramework.fixtures.BasePlatformTestCase;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterEach;
+import org.latte.plugin.test.LattePluginTestBase;
 import org.latte.plugin.completion.NetteDefaultVariablesProvider;
 import org.latte.plugin.settings.LatteSettings;
 import org.latte.plugin.version.LatteVersion;
@@ -9,7 +12,7 @@ import org.latte.plugin.version.LatteVersionManager;
 /**
  * Tests for the LatteSettings class and version override functionality.
  */
-public class LatteSettingsTest extends BasePlatformTestCase {
+public class LatteSettingsTest extends LattePluginTestBase {
 
     private LatteSettings settings;
 
@@ -35,6 +38,7 @@ public class LatteSettingsTest extends BasePlatformTestCase {
     /**
      * Tests that the Latte version can be overridden.
      */
+    @Test
     public void testLatteVersionOverride() {
         // Set the current version to 2.x
         LatteVersionManager.setCurrentVersion(LatteVersion.VERSION_2X);
@@ -58,6 +62,7 @@ public class LatteSettingsTest extends BasePlatformTestCase {
     /**
      * Tests that the Nette package versions can be overridden.
      */
+    @Test
     public void testNettePackageVersionOverride() {
         // Set up the test
         settings.setSelectedNetteApplicationVersion("2");
@@ -92,6 +97,7 @@ public class LatteSettingsTest extends BasePlatformTestCase {
     /**
      * Tests that Latte 4.0+ version can be detected and overridden.
      */
+    @Test
     public void testLatteVersion4xOverride() {
         // Set the current version to 4.0+
         LatteVersionManager.setCurrentVersion(LatteVersion.VERSION_4X);
@@ -117,6 +123,7 @@ public class LatteSettingsTest extends BasePlatformTestCase {
     /**
      * Tests that package enable/disable settings work.
      */
+    @Test
     public void testPackageEnableDisable() {
         // Enable all packages
         settings.setEnableNetteApplication(true);

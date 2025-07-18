@@ -1,6 +1,9 @@
 package org.latte.plugin.test.settings;
 
 import com.intellij.openapi.project.Project;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.latte.plugin.custom.CustomTag;
 import org.latte.plugin.custom.CustomFilter;
 import org.latte.plugin.custom.CustomFunction;
@@ -39,6 +42,7 @@ public class LatteProjectSettingsTest extends LattePluginTestBase {
     /**
      * Tests getting and setting custom tags.
      */
+    @Test
     public void testCustomTags() {
         // Create test tags
         List<CustomTag> tags = new ArrayList<>();
@@ -62,6 +66,7 @@ public class LatteProjectSettingsTest extends LattePluginTestBase {
     /**
      * Tests getting and setting custom filters.
      */
+    @Test
     public void testCustomFilters() {
         // Create test filters
         List<CustomFilter> filters = new ArrayList<>();
@@ -85,6 +90,7 @@ public class LatteProjectSettingsTest extends LattePluginTestBase {
     /**
      * Tests getting and setting custom functions.
      */
+    @Test
     public void testCustomFunctions() {
         // Create test functions
         List<CustomFunction> functions = new ArrayList<>();
@@ -108,6 +114,7 @@ public class LatteProjectSettingsTest extends LattePluginTestBase {
     /**
      * Tests getting and setting custom variables.
      */
+    @Test
     public void testCustomVariables() {
         // Create test variables
         List<CustomVariable> variables = new ArrayList<>();
@@ -133,6 +140,7 @@ public class LatteProjectSettingsTest extends LattePluginTestBase {
     /**
      * Tests adding and removing custom tags.
      */
+    @Test
     public void testAddRemoveCustomTag() {
         // Add a tag
         CustomTag tag = new CustomTag("testTag", "testDescription");
@@ -154,6 +162,7 @@ public class LatteProjectSettingsTest extends LattePluginTestBase {
     /**
      * Tests adding and removing custom filters.
      */
+    @Test
     public void testAddRemoveCustomFilter() {
         // Add a filter
         CustomFilter filter = new CustomFilter("testFilter", "testDescription");
@@ -175,6 +184,7 @@ public class LatteProjectSettingsTest extends LattePluginTestBase {
     /**
      * Tests adding and removing custom functions.
      */
+    @Test
     public void testAddRemoveCustomFunction() {
         // Add a function
         CustomFunction function = new CustomFunction("testFunction", "testDescription");
@@ -196,6 +206,7 @@ public class LatteProjectSettingsTest extends LattePluginTestBase {
     /**
      * Tests adding and removing custom variables.
      */
+    @Test
     public void testAddRemoveCustomVariable() {
         // Add a variable
         CustomVariable variable = new CustomVariable("testVariable", "string", "testDescription");

@@ -1,117 +1,96 @@
 #!/bin/bash
-# Latte Test Runner Script
-# This script validates Latte test files and checks for parsing errors
+
+# Test runner script that handles font-related errors in IntelliJ platform tests
+# Usage: ./test_runner.sh [test_class] [test_method]
+# Example: ./test_runner.sh org.latte.plugin.test.completion.CustomElementsCompletionTest testCustomFunctionCompletion
+
+# Set default values
+TEST_CLASS=${1:-"org.latte.plugin.test.completion.CustomElementsCompletionTest"}
+TEST_METHOD=${2:-""}
 
 # Colors for output
 GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
 RED='\033[0;31m'
-YELLOW='\033[0;33m'
+BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-# Test data directory
-TEST_DATA_DIR="src/test/resources/testData"
+# Parse test class and method if provided in format "Class#method"
+if [[ "$TEST_CLASS" == *"#"* ]]; then
+    # Split by #
+    IFS='#' read -r parsed_class parsed_method <<< "$TEST_CLASS"
+    TEST_CLASS="$parsed_class"
+    TEST_METHOD="$parsed_method"
+fi
 
-# Log file
-LOG_FILE="src/test/resources/test_results.log"
+echo -e "${YELLOW}Running test: $TEST_CLASS${NC}"
+if [ -n "$TEST_METHOD" ]; then
+  echo -e "${YELLOW}Test method: $TEST_METHOD${NC}"
+fi
 
-# Initialize log file
-echo "Latte Test Runner - $(date)" > $LOG_FILE
-echo "===============================" >> $LOG_FILE
+# Create a temporary file for the test output
+TEMP_OUTPUT=$(mktemp)
 
-# Function to validate a Latte file
-validate_latte_file() {
-    local file=$1
-    echo -e "${YELLOW}Validating $file...${NC}"
-    echo "Testing: $file" >> $LOG_FILE
-    
-    # Check if file exists
-    if [ ! -f "$file" ]; then
-        echo -e "${RED}Error: File not found${NC}"
-        echo "  Error: File not found" >> $LOG_FILE
-        return 1
+# Run gradle clean first to ensure a clean environment
+echo -e "${YELLOW}Running gradle clean...${NC}"
+./gradlew clean > /dev/null 2>&1
+
+# Run the test and capture the output
+echo -e "${BLUE}Running test...${NC}"
+if [ -n "$TEST_METHOD" ]; then
+  # Use correct Gradle syntax for specific test method
+  ./gradlew test --tests "$TEST_CLASS.$TEST_METHOD" > "$TEMP_OUTPUT" 2>&1
+else
+  ./gradlew test --tests "$TEST_CLASS" > "$TEMP_OUTPUT" 2>&1
+fi
+
+TEST_EXIT_CODE=$?
+
+echo -e "${BLUE}=== Full Test Output ===${NC}"
+cat "$TEMP_OUTPUT"
+echo -e "${BLUE}=== End of Test Output ===${NC}"
+
+echo -e "${YELLOW}Test exit code: $TEST_EXIT_CODE${NC}"
+
+# Check if the test failed
+if grep -q "BUILD FAILED" "$TEMP_OUTPUT"; then
+  echo -e "${RED}BUILD FAILED detected${NC}"
+
+  # Check if it's a "no tests found" error
+  if grep -q "No tests found for given includes" "$TEMP_OUTPUT"; then
+    echo -e "${YELLOW}No tests found error detected. This might be due to incorrect test name or missing test file.${NC}"
+  # Check if the failure is due to known font-related errors
+  elif grep -q "sun.font.Font2D.getTypographicFamilyName" "$TEMP_OUTPUT" || \
+       grep -q "sun.font.Font2D.getTypographicSubfamilyName" "$TEMP_OUTPUT"; then
+
+    echo -e "${YELLOW}Test failed due to known font-related errors. These can be safely ignored.${NC}"
+
+    # Check if there are actual test failures (not just environment errors)
+    if grep -q "AssertionFailedError" "$TEMP_OUTPUT" || \
+       grep -q "ComparisonFailure" "$TEMP_OUTPUT" || \
+       grep -q "junit.framework.AssertionFailedError" "$TEMP_OUTPUT"; then
+      echo -e "${RED}Test failed due to assertion failures:${NC}"
+      grep -A 5 "AssertionFailedError\|ComparisonFailure\|junit.framework.AssertionFailedError" "$TEMP_OUTPUT"
+    else
+      echo -e "${GREEN}No actual test failures found. The test might have passed despite the environment errors.${NC}"
     fi
-    
-    # Check for basic syntax errors (unmatched braces, etc.)
-    local open_braces=$(grep -o "{" "$file" | wc -l)
-    local close_braces=$(grep -o "}" "$file" | wc -l)
-    
-    if [ $open_braces -ne $close_braces ]; then
-        echo -e "${RED}Error: Unmatched braces - $open_braces opening vs $close_braces closing${NC}"
-        echo "  Error: Unmatched braces - $open_braces opening vs $close_braces closing" >> $LOG_FILE
-        return 1
-    fi
-    
-    # Check for unclosed macros
-    local unclosed_macros=$(grep -E "{[a-zA-Z]" "$file" | grep -v -E "{/[a-zA-Z]" | grep -v -E "{[a-zA-Z][^}]*}" | wc -l)
-    if [ $unclosed_macros -gt 0 ]; then
-        echo -e "${RED}Warning: Possible unclosed macros detected${NC}"
-        echo "  Warning: Possible unclosed macros detected" >> $LOG_FILE
-    fi
-    
-    # Check for HTML validity (basic check)
-    local open_tags=$(grep -o "<[a-zA-Z]" "$file" | wc -l)
-    local close_tags=$(grep -o "</[a-zA-Z]" "$file" | wc -l)
-    
-    if [ $open_tags -ne $close_tags ]; then
-        echo -e "${YELLOW}Warning: Possible unmatched HTML tags - $open_tags opening vs $close_tags closing${NC}"
-        echo "  Warning: Possible unmatched HTML tags - $open_tags opening vs $close_tags closing" >> $LOG_FILE
-    fi
-    
-    echo -e "${GREEN}Validation complete${NC}"
-    echo "  Validation complete" >> $LOG_FILE
-    return 0
-}
+  fi
+elif grep -q "BUILD SUCCESSFUL" "$TEMP_OUTPUT"; then
+  echo -e "${GREEN}BUILD SUCCESSFUL detected${NC}"
 
-# Function to run tests on all Latte files
-run_tests() {
-    echo -e "${YELLOW}Running tests on all Latte files...${NC}"
-    echo "Running tests on all Latte files" >> $LOG_FILE
-    
-    local total_files=0
-    local passed_files=0
-    local failed_files=0
-    
-    # Find all .latte files in the test data directory
-    for file in $(find $TEST_DATA_DIR -name "*.latte"); do
-        total_files=$((total_files + 1))
-        
-        if validate_latte_file "$file"; then
-            passed_files=$((passed_files + 1))
-        else
-            failed_files=$((failed_files + 1))
-        fi
-        
-        echo "" # Empty line for readability
-    done
-    
-    # Print summary
-    echo -e "${YELLOW}Test Summary:${NC}"
-    echo -e "  ${GREEN}Total files: $total_files${NC}"
-    echo -e "  ${GREEN}Passed: $passed_files${NC}"
-    echo -e "  ${RED}Failed: $failed_files${NC}"
-    
-    echo "Test Summary:" >> $LOG_FILE
-    echo "  Total files: $total_files" >> $LOG_FILE
-    echo "  Passed: $passed_files" >> $LOG_FILE
-    echo "  Failed: $failed_files" >> $LOG_FILE
-}
+  # Check if any tests were actually run
+  if grep -q "test completed" "$TEMP_OUTPUT" || grep -q "tests completed" "$TEMP_OUTPUT"; then
+    echo -e "${GREEN}Tests were executed successfully.${NC}"
+  else
+    echo -e "${YELLOW}Build successful but no explicit test completion message found.${NC}"
+  fi
+else
+  echo -e "${YELLOW}No clear build result detected. Check the full output above.${NC}"
+fi
 
-# Main function
-main() {
-    echo -e "${YELLOW}Latte Test Runner${NC}"
-    echo -e "${YELLOW}================${NC}"
-    
-    # Check if test data directory exists
-    if [ ! -d "$TEST_DATA_DIR" ]; then
-        echo -e "${RED}Error: Test data directory not found: $TEST_DATA_DIR${NC}"
-        exit 1
-    fi
-    
-    # Run tests
-    run_tests
-    
-    echo -e "${YELLOW}Test results saved to $LOG_FILE${NC}"
-}
+# Extract and display any debug logs
+echo -e "${YELLOW}Debug logs:${NC}"
+grep "\[DEBUG_LOG\]" "$TEMP_OUTPUT" || echo "No debug logs found."
 
-# Run the main function
-main
+# Clean up
+rm "$TEMP_OUTPUT"

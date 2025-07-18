@@ -1,6 +1,9 @@
 package org.latte.plugin.test.custom;
 
 import org.latte.plugin.custom.CustomTag;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.latte.plugin.test.LattePluginTestBase;
 
 /**
@@ -11,6 +14,7 @@ public class CustomTagTest extends LattePluginTestBase {
     /**
      * Tests the constructor and getters.
      */
+    @Test
     public void testConstructorAndGetters() {
         CustomTag tag = new CustomTag("testTag", "testDescription");
         
@@ -21,6 +25,7 @@ public class CustomTagTest extends LattePluginTestBase {
     /**
      * Tests the default constructor and setters.
      */
+    @Test
     public void testDefaultConstructorAndSetters() {
         CustomTag tag = new CustomTag();
         
@@ -34,6 +39,7 @@ public class CustomTagTest extends LattePluginTestBase {
     /**
      * Tests the getTypeText method.
      */
+    @Test
     public void testGetTypeText() {
         CustomTag tag = new CustomTag("testTag", "testDescription");
         
@@ -43,6 +49,7 @@ public class CustomTagTest extends LattePluginTestBase {
     /**
      * Tests inheritance from CustomElement.
      */
+    @Test
     public void testInheritance() {
         CustomTag tag = new CustomTag("testTag", "testDescription");
         

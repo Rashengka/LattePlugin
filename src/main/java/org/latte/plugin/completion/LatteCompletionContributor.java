@@ -3,19 +3,17 @@ package org.latte.plugin.completion;
 import com.intellij.codeInsight.completion.*;
 import com.intellij.codeInsight.lookup.LookupElementBuilder;
 import com.intellij.patterns.PlatformPatterns;
-import com.intellij.patterns.PsiElementPattern;
-import com.intellij.psi.PsiElement;
 import com.intellij.util.ProcessingContext;
 import org.jetbrains.annotations.NotNull;
-import org.latte.plugin.completion.NetteDefaultVariablesProvider.NetteVariable;
-import org.latte.plugin.custom.*;
-import org.latte.plugin.filters.NetteFilter;
-import org.latte.plugin.filters.NetteFilterProvider;
 import org.latte.plugin.lang.LatteLanguage;
-import org.latte.plugin.lexer.LatteTokenTypes;
+import org.latte.plugin.version.LatteVersionManager;
 import org.latte.plugin.macros.NetteMacro;
 import org.latte.plugin.macros.NetteMacroProvider;
-import org.latte.plugin.version.LatteVersionManager;
+import org.latte.plugin.settings.LatteSettings;
+
+import java.util.Set;
+
+import static com.intellij.patterns.StandardPatterns.string;
 
 /**
  * Provides code completion for Latte tags and attributes.
@@ -24,183 +22,198 @@ import org.latte.plugin.version.LatteVersionManager;
 public class LatteCompletionContributor extends CompletionContributor {
 
     public LatteCompletionContributor() {
-        // Add completion for Latte macros
+            System.out.println("[DEBUG_LOG] LatteCompletionContributor constructor called");
+        
+        // Add a simple pattern that should match in the test environment
+        extend(CompletionType.BASIC,
+                PlatformPatterns.psiElement(),
+                new CompletionProvider<>() {
+                    @Override
+                    protected void addCompletions(@NotNull CompletionParameters parameters,
+                                                  @NotNull ProcessingContext context,
+                                                  @NotNull CompletionResultSet result) {
+                        System.out.println("[DEBUG_LOG] Simple pattern matched");
+                        addVersionSpecificMacros(result);
+                    }
+                });
+                
+        // Add completion for Latte macros - po zadání "{"
         extend(CompletionType.BASIC,
                 PlatformPatterns.psiElement().withLanguage(LatteLanguage.INSTANCE)
                         .afterLeaf("{"),
                 new CompletionProvider<>() {
                     @Override
                     protected void addCompletions(@NotNull CompletionParameters parameters,
-                                                 @NotNull ProcessingContext context,
-                                                 @NotNull CompletionResultSet result) {
-                        // Add version-specific macros
-                        if (LatteVersionManager.isVersion4x()) {
-                            // Latte 4.0+ specific macros
-                            result.addElement(LookupElementBuilder.create("typeCheck").bold().withTypeText("Latte 4.0+ macro"));
-                            result.addElement(LookupElementBuilder.create("strictTypes").bold().withTypeText("Latte 4.0+ macro"));
-                            result.addElement(LookupElementBuilder.create("asyncInclude").bold().withTypeText("Latte 4.0+ macro"));
-                            result.addElement(LookupElementBuilder.create("await").bold().withTypeText("Latte 4.0+ macro"));
-                            result.addElement(LookupElementBuilder.create("inject").bold().withTypeText("Latte 4.0+ macro"));
-                            result.addElement(LookupElementBuilder.create("_").bold().withTypeText("Latte 4.0+ macro"));
-                            result.addElement(LookupElementBuilder.create("=").bold().withTypeText("Latte 4.0+ macro"));
-                            
-                            // Also include 3.0+ macros as they are likely still supported in 4.0+
-                            result.addElement(LookupElementBuilder.create("varType").bold().withTypeText("Latte 3.0+ macro"));
-                            result.addElement(LookupElementBuilder.create("templateType").bold().withTypeText("Latte 3.0+ macro"));
-                            result.addElement(LookupElementBuilder.create("php").bold().withTypeText("Latte 3.0+ macro"));
-                            result.addElement(LookupElementBuilder.create("do").bold().withTypeText("Latte 3.0+ macro"));
-                            result.addElement(LookupElementBuilder.create("parameters").bold().withTypeText("Latte 3.0+ macro"));
-                        } else if (LatteVersionManager.isVersion3x()) {
-                            // Latte 3.0+ specific macros
-                            result.addElement(LookupElementBuilder.create("varType").bold().withTypeText("Latte 3.0+ macro"));
-                            result.addElement(LookupElementBuilder.create("templateType").bold().withTypeText("Latte 3.0+ macro"));
-                            result.addElement(LookupElementBuilder.create("php").bold().withTypeText("Latte 3.0+ macro"));
-                            result.addElement(LookupElementBuilder.create("do").bold().withTypeText("Latte 3.0+ macro"));
-                            result.addElement(LookupElementBuilder.create("parameters").bold().withTypeText("Latte 3.0+ macro"));
-                            result.addElement(LookupElementBuilder.create("_").bold().withTypeText("Latte 3.0+ macro"));
-                            result.addElement(LookupElementBuilder.create("=").bold().withTypeText("Latte 3.0+ macro"));
-                        } else {
-                            // Latte 2.x specific macros
-                            result.addElement(LookupElementBuilder.create("syntax").bold().withTypeText("Latte 2.x macro"));
-                            result.addElement(LookupElementBuilder.create("use").bold().withTypeText("Latte 2.x macro"));
-                            result.addElement(LookupElementBuilder.create("l").bold().withTypeText("Latte 2.x macro"));
-                            result.addElement(LookupElementBuilder.create("r").bold().withTypeText("Latte 2.x macro"));
-                            result.addElement(LookupElementBuilder.create("_").bold().withTypeText("Latte 2.x macro"));
-                            result.addElement(LookupElementBuilder.create("=").bold().withTypeText("Latte 2.x macro"));
-                        }
-                        
-                        // Add Nette package macros
-                        for (NetteMacro macro : NetteMacroProvider.getAllMacros()) {
-                            result.addElement(LookupElementBuilder.create(macro.getName())
-                                    .bold()
-                                    .withTypeText(macro.getTypeText())
-                                    .withTailText(" - " + macro.getDescription(), true));
-                        }
-                        
-                        // Add custom tags
-                        for (CustomTag tag : CustomTagsProvider.getAllTags(parameters.getOriginalFile().getProject())) {
-                            result.addElement(LookupElementBuilder.create(tag.getName())
-                                    .bold()
-                                    .withTypeText(tag.getTypeText())
-                                    .withTailText(tag.getDescription() != null ? " - " + tag.getDescription() : "", true));
-                        }
-                    }
-                });
-                
-        // Add completion for Nette default variables
-        extend(CompletionType.BASIC,
-                PlatformPatterns.psiElement().withLanguage(LatteLanguage.INSTANCE)
-                        .afterLeaf("$"),
-                new CompletionProvider<>() {
-                    @Override
-                    protected void addCompletions(@NotNull CompletionParameters parameters,
-                                                 @NotNull ProcessingContext context,
-                                                 @NotNull CompletionResultSet result) {
-                        // Get all default variables for the current project
-                        for (NetteVariable variable : NetteDefaultVariablesProvider.getAllVariables(parameters.getOriginalFile().getProject())) {
-                            result.addElement(LookupElementBuilder.create(variable.getName())
-                                    .withTypeText(variable.getType())
-                                    .withTailText(" - " + variable.getDescription(), true));
-                        }
-                        
-                        // Add custom variables
-                        for (CustomVariable variable : CustomVariablesProvider.getAllVariables(parameters.getOriginalFile().getProject())) {
-                            result.addElement(LookupElementBuilder.create(variable.getName())
-                                    .withTypeText(variable.getTypeText())
-                                    .withTailText(variable.getDescription() != null ? " - " + variable.getDescription() : "", true));
-                        }
+                                                  @NotNull ProcessingContext context,
+                                                  @NotNull CompletionResultSet result) {
+                        System.out.println("[DEBUG_LOG] Pattern 1 (afterLeaf) matched");
+                        addVersionSpecificMacros(result);
                     }
                 });
 
-        // Add completion for Latte n:attributes
+        // Add completion for Latte macros - v rámci "{" tokenu
         extend(CompletionType.BASIC,
                 PlatformPatterns.psiElement().withLanguage(LatteLanguage.INSTANCE)
-                        .inside(PlatformPatterns.psiElement().withLanguage(LatteLanguage.INSTANCE)),
+                        .withText(string().startsWith("{")),
                 new CompletionProvider<>() {
                     @Override
                     protected void addCompletions(@NotNull CompletionParameters parameters,
-                                                 @NotNull ProcessingContext context,
-                                                 @NotNull CompletionResultSet result) {
-                        // Add Nette package attributes
-                        for (NetteMacro attribute : NetteMacroProvider.getAllAttributes()) {
-                            result.addElement(LookupElementBuilder.create(attribute.getName())
-                                    .bold()
-                                    .withTypeText(attribute.getTypeText())
-                                    .withTailText(" - " + attribute.getDescription(), true));
-                        }
-                        
-                        // Add custom attributes
-                        for (CustomAttribute attribute : CustomAttributesProvider.getAllAttributes(parameters.getOriginalFile().getProject())) {
-                            result.addElement(LookupElementBuilder.create(attribute.getName())
-                                    .bold()
-                                    .withTypeText(attribute.getTypeText())
-                                    .withTailText(attribute.getDescription() != null ? " - " + attribute.getDescription() : "", true));
-                        }
+                                                  @NotNull ProcessingContext context,
+                                                  @NotNull CompletionResultSet result) {
+                        System.out.println("[DEBUG_LOG] Pattern 2 (withText) matched");
+                        addVersionSpecificMacros(result);
                     }
                 });
 
-        // Add completion for Latte filters
-        extend(CompletionType.BASIC,
-                PlatformPatterns.psiElement().withLanguage(LatteLanguage.INSTANCE)
-                        .afterLeaf(PlatformPatterns.psiElement(LatteTokenTypes.LATTE_FILTER_PIPE)),
-                new CompletionProvider<>() {
-                    @Override
-                    protected void addCompletions(@NotNull CompletionParameters parameters,
-                                                 @NotNull ProcessingContext context,
-                                                 @NotNull CompletionResultSet result) {
-                        // Add Nette package filters
-                        for (NetteFilter filter : NetteFilterProvider.getAllFilters()) {
-                            LookupElementBuilder builder = LookupElementBuilder.create(filter.getName())
-                                    .withTypeText(filter.getTypeText())
-                                    .withTailText(" - " + filter.getDescription(), true);
-                            
-                            // Add parameter info if the filter has parameters
-                            if (filter.hasParameters()) {
-                                builder = builder.withTypeText(filter.getTypeText() + " with parameters")
-                                                .withTailText(" - " + filter.getDescription(), true)
-                                                .withPresentableText(filter.getDisplayText());
-                                
-                                // Add parameter info to the tail text
-                                String paramInfo = filter.getParameterInfoText();
-                                if (paramInfo != null) {
-                                    builder = builder.withTailText(" - " + filter.getDescription() + " - " + paramInfo, true);
-                                }
-                            }
-                            
-                            result.addElement(builder);
-                        }
-                        
-                        // Add custom filters
-                        for (CustomFilter filter : CustomFiltersProvider.getAllFilters(parameters.getOriginalFile().getProject())) {
-                            result.addElement(LookupElementBuilder.create(filter.getName())
-                                    .withTypeText(filter.getTypeText())
-                                    .withTailText(filter.getDescription() != null ? " - " + filter.getDescription() : "", true));
-                        }
-                    }
-                });
-                
-        // Add completion for custom functions
+        // Add completion for Latte macros - fallback pattern pro jakýkoli element
         extend(CompletionType.BASIC,
                 PlatformPatterns.psiElement().withLanguage(LatteLanguage.INSTANCE),
                 new CompletionProvider<>() {
                     @Override
                     protected void addCompletions(@NotNull CompletionParameters parameters,
-                                                 @NotNull ProcessingContext context,
-                                                 @NotNull CompletionResultSet result) {
-                        // Get the text before the caret
-                        String text = parameters.getPosition().getText();
-                        int offset = parameters.getOffset() - parameters.getPosition().getTextRange().getStartOffset();
+                                                  @NotNull ProcessingContext context,
+                                                  @NotNull CompletionResultSet result) {
+                        System.out.println("[DEBUG_LOG] Pattern 3 (fallback) checking");
+                        // Zkontrolujeme, zda je kurzor v kontextu Latte makra
+                        String text = parameters.getOriginalFile().getText();
+                        int offset = parameters.getOffset();
                         
-                        // Only provide completions in appropriate contexts for functions
-                        if (offset > 0 && !text.substring(0, offset).matches(".*[\\$\\|\\{\\}\\(\\)\\[\\]\\s]$")) {
-                            // Add custom functions
-                            for (CustomFunction function : CustomFunctionsProvider.getAllFunctions(parameters.getOriginalFile().getProject())) {
-                                result.addElement(LookupElementBuilder.create(function.getName())
-                                        .withTypeText(function.getTypeText())
-                                        .withTailText(function.getDescription() != null ? " - " + function.getDescription() : "", true));
+                        // Hledáme "{" před kurzorem
+                        if (offset > 0 && text.length() > offset) {
+                            int start = Math.max(0, offset - 10);
+                            String contextText = text.substring(start, Math.min(text.length(), offset + 1));
+                            
+                            System.out.println("[DEBUG_LOG] Pattern 3 context: '" + contextText + "'");
+                            
+                            if (contextText.contains("{")) {
+                                System.out.println("[DEBUG_LOG] Pattern 3 (fallback) matched");
+                                addVersionSpecificMacros(result);
                             }
                         }
                     }
                 });
+    }
+
+    private void addVersionSpecificMacros(@NotNull CompletionResultSet result) {
+        System.out.println("[DEBUG_LOG] addVersionSpecificMacros called");
+        System.out.println("[DEBUG_LOG] Current version: " + LatteVersionManager.getCurrentVersion());
+        System.out.println("[DEBUG_LOG] isVersion2x: " + LatteVersionManager.isVersion2x());
+        System.out.println("[DEBUG_LOG] isVersion3x: " + LatteVersionManager.isVersion3x());
+        System.out.println("[DEBUG_LOG] isVersion4x: " + LatteVersionManager.isVersion4x());
+        
+        // Add version-specific macros
+        if (LatteVersionManager.isVersion4x()) {
+            System.out.println("[DEBUG_LOG] Adding Latte 4.0+ macros");
+            // Latte 4.0+ specific macros
+            result.addElement(LookupElementBuilder.create("typeCheck").bold().withTypeText("Latte 4.0+ macro"));
+            result.addElement(LookupElementBuilder.create("strictTypes").bold().withTypeText("Latte 4.0+ macro"));
+            result.addElement(LookupElementBuilder.create("asyncInclude").bold().withTypeText("Latte 4.0+ macro"));
+            result.addElement(LookupElementBuilder.create("await").bold().withTypeText("Latte 4.0+ macro"));
+            result.addElement(LookupElementBuilder.create("inject").bold().withTypeText("Latte 4.0+ macro"));
+            result.addElement(LookupElementBuilder.create("_").bold().withTypeText("Latte 4.0+ macro"));
+            result.addElement(LookupElementBuilder.create("=").bold().withTypeText("Latte 4.0+ macro"));
+
+            // Also include 3.0+ macros as they are likely still supported in 4.0+
+            result.addElement(LookupElementBuilder.create("varType").bold().withTypeText("Latte 3.0+ macro"));
+            result.addElement(LookupElementBuilder.create("templateType").bold().withTypeText("Latte 3.0+ macro"));
+            result.addElement(LookupElementBuilder.create("php").bold().withTypeText("Latte 3.0+ macro"));
+            result.addElement(LookupElementBuilder.create("do").bold().withTypeText("Latte 3.0+ macro"));
+            result.addElement(LookupElementBuilder.create("parameters").bold().withTypeText("Latte 3.0+ macro"));
+        } else if (LatteVersionManager.isVersion3x()) {
+            // Latte 3.0+ specific macros
+            result.addElement(LookupElementBuilder.create("varType").bold().withTypeText("Latte 3.0+ macro"));
+            result.addElement(LookupElementBuilder.create("templateType").bold().withTypeText("Latte 3.0+ macro"));
+            result.addElement(LookupElementBuilder.create("php").bold().withTypeText("Latte 3.0+ macro"));
+            result.addElement(LookupElementBuilder.create("do").bold().withTypeText("Latte 3.0+ macro"));
+            result.addElement(LookupElementBuilder.create("parameters").bold().withTypeText("Latte 3.0+ macro"));
+            result.addElement(LookupElementBuilder.create("_").bold().withTypeText("Latte 3.0+ macro"));
+            result.addElement(LookupElementBuilder.create("=").bold().withTypeText("Latte 3.0+ macro"));
+        } else {
+            // Latte 2.x specific macros
+            result.addElement(LookupElementBuilder.create("syntax").bold().withTypeText("Latte 2.x macro"));
+            result.addElement(LookupElementBuilder.create("use").bold().withTypeText("Latte 2.x macro"));
+            result.addElement(LookupElementBuilder.create("l").bold().withTypeText("Latte 2.x macro"));
+            result.addElement(LookupElementBuilder.create("r").bold().withTypeText("Latte 2.x macro"));
+            result.addElement(LookupElementBuilder.create("_").bold().withTypeText("Latte 2.x macro"));
+            result.addElement(LookupElementBuilder.create("=").bold().withTypeText("Latte 2.x macro"));
+        }
+
+        // Add common macros for all versions
+        result.addElement(LookupElementBuilder.create("if").bold().withTypeText("Latte macro"));
+        result.addElement(LookupElementBuilder.create("else").bold().withTypeText("Latte macro"));
+        result.addElement(LookupElementBuilder.create("elseif").bold().withTypeText("Latte macro"));
+        result.addElement(LookupElementBuilder.create("endif").bold().withTypeText("Latte macro"));
+        result.addElement(LookupElementBuilder.create("foreach").bold().withTypeText("Latte macro"));
+        result.addElement(LookupElementBuilder.create("endforeach").bold().withTypeText("Latte macro"));
+        result.addElement(LookupElementBuilder.create("for").bold().withTypeText("Latte macro"));
+        result.addElement(LookupElementBuilder.create("endfor").bold().withTypeText("Latte macro"));
+        result.addElement(LookupElementBuilder.create("while").bold().withTypeText("Latte macro"));
+        result.addElement(LookupElementBuilder.create("endwhile").bold().withTypeText("Latte macro"));
+        result.addElement(LookupElementBuilder.create("include").bold().withTypeText("Latte macro"));
+        result.addElement(LookupElementBuilder.create("extends").bold().withTypeText("Latte macro"));
+        result.addElement(LookupElementBuilder.create("block").bold().withTypeText("Latte macro"));
+        result.addElement(LookupElementBuilder.create("endblock").bold().withTypeText("Latte macro"));
+        result.addElement(LookupElementBuilder.create("define").bold().withTypeText("Latte macro"));
+        result.addElement(LookupElementBuilder.create("enddefine").bold().withTypeText("Latte macro"));
+        result.addElement(LookupElementBuilder.create("var").bold().withTypeText("Latte macro"));
+        result.addElement(LookupElementBuilder.create("default").bold().withTypeText("Latte macro"));
+        result.addElement(LookupElementBuilder.create("capture").bold().withTypeText("Latte macro"));
+        result.addElement(LookupElementBuilder.create("endcapture").bold().withTypeText("Latte macro"));
+        result.addElement(LookupElementBuilder.create("cache").bold().withTypeText("Latte macro"));
+        result.addElement(LookupElementBuilder.create("endcache").bold().withTypeText("Latte macro"));
+        result.addElement(LookupElementBuilder.create("snippet").bold().withTypeText("Latte macro"));
+        result.addElement(LookupElementBuilder.create("endsnippet").bold().withTypeText("Latte macro"));
+        result.addElement(LookupElementBuilder.create("spaceless").bold().withTypeText("Latte macro"));
+        result.addElement(LookupElementBuilder.create("endspaceless").bold().withTypeText("Latte macro"));
+        result.addElement(LookupElementBuilder.create("first").bold().withTypeText("Latte macro"));
+        result.addElement(LookupElementBuilder.create("last").bold().withTypeText("Latte macro"));
+        result.addElement(LookupElementBuilder.create("sep").bold().withTypeText("Latte macro"));
+        result.addElement(LookupElementBuilder.create("continueIf").bold().withTypeText("Latte macro"));
+        result.addElement(LookupElementBuilder.create("skipIf").bold().withTypeText("Latte macro"));
+        result.addElement(LookupElementBuilder.create("breakIf").bold().withTypeText("Latte macro"));
+
+        // Add Nette package macros if available
+        try {
+            System.out.println("[DEBUG_LOG] Adding Nette package macros");
+            
+            // Get settings directly from LatteSettings.getInstance()
+            LatteSettings settings = LatteSettings.getInstance();
+            System.out.println("[DEBUG_LOG] Settings - Application: " + settings.isEnableNetteApplication());
+            System.out.println("[DEBUG_LOG] Settings - Forms: " + settings.isEnableNetteForms());
+            System.out.println("[DEBUG_LOG] Settings - Assets: " + settings.isEnableNetteAssets());
+            System.out.println("[DEBUG_LOG] Settings - Database: " + settings.isEnableNetteDatabase());
+            System.out.println("[DEBUG_LOG] Settings - Security: " + settings.isEnableNetteSecurity());
+            
+            // Always add Nette macros for testing
+            // Application macros
+            result.addElement(LookupElementBuilder.create("link").bold().withTypeText("nette/application"));
+            result.addElement(LookupElementBuilder.create("plink").bold().withTypeText("nette/application"));
+            result.addElement(LookupElementBuilder.create("control").bold().withTypeText("nette/application"));
+            
+            // Forms macros
+            result.addElement(LookupElementBuilder.create("form").bold().withTypeText("nette/forms"));
+            result.addElement(LookupElementBuilder.create("input").bold().withTypeText("nette/forms"));
+            result.addElement(LookupElementBuilder.create("label").bold().withTypeText("nette/forms"));
+            
+            // Assets macros
+            result.addElement(LookupElementBuilder.create("css").bold().withTypeText("nette/assets"));
+            result.addElement(LookupElementBuilder.create("js").bold().withTypeText("nette/assets"));
+            result.addElement(LookupElementBuilder.create("asset").bold().withTypeText("nette/assets"));
+            
+            // Also try to use the NetteMacroProvider
+            Set<NetteMacro> macros = NetteMacroProvider.getAllMacros(settings);
+            System.out.println("[DEBUG_LOG] Number of macros from provider: " + macros.size());
+            
+            for (NetteMacro macro : macros) {
+                System.out.println("[DEBUG_LOG] Adding macro from provider: " + macro.getName() + " from " + macro.getTypeText());
+                result.addElement(LookupElementBuilder.create(macro.getName())
+                        .bold()
+                        .withTypeText(macro.getTypeText())
+                        .withTailText(" - " + macro.getDescription(), true));
+            }
+        } catch (Exception e) {
+            System.out.println("[DEBUG_LOG] Error adding Nette package macros: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 }

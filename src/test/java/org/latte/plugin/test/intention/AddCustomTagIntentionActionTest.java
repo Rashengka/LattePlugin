@@ -1,6 +1,9 @@
 package org.latte.plugin.test.intention;
 
 import com.intellij.codeInsight.intention.IntentionAction;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import com.intellij.openapi.project.Project;
 import org.latte.plugin.custom.CustomTag;
 import org.latte.plugin.custom.CustomTagsProvider;
@@ -46,6 +49,7 @@ public class AddCustomTagIntentionActionTest extends LattePluginTestBase {
     /**
      * Tests that the intention action is available for unknown tags.
      */
+    @Test
     public void testIntentionActionAvailability() {
         // Create a Latte file with an unknown tag
         myFixture.configureByText("test.latte", "{unknownTag}");
@@ -65,6 +69,7 @@ public class AddCustomTagIntentionActionTest extends LattePluginTestBase {
     /**
      * Tests that the intention action is not available for known tags.
      */
+    @Test
     public void testIntentionActionNotAvailableForKnownTags() {
         // Add a custom tag
         CustomTagsProvider.addTag(project, "knownTag", "Known tag for testing");
@@ -82,6 +87,7 @@ public class AddCustomTagIntentionActionTest extends LattePluginTestBase {
     /**
      * Tests that the intention action is not available for non-tag elements.
      */
+    @Test
     public void testIntentionActionNotAvailableForNonTags() {
         // Create a Latte file with a non-tag element
         myFixture.configureByText("test.latte", "{$variable}");
@@ -101,6 +107,7 @@ public class AddCustomTagIntentionActionTest extends LattePluginTestBase {
      * dialog or use a headless UI environment. For now, we'll just verify that the
      * intention action is available and that we can add a custom tag programmatically.
      */
+    @Test
     public void testAddCustomTag() {
         // Create a Latte file with an unknown tag
         myFixture.configureByText("test.latte", "{unknownTag}");

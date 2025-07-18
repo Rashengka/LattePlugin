@@ -1,6 +1,8 @@
 package org.latte.plugin.test.lexer;
 
 import com.intellij.lexer.Lexer;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import com.intellij.psi.tree.IElementType;
 import org.junit.jupiter.api.Test;
 import org.latte.plugin.lexer.LatteLexer;

@@ -1,6 +1,9 @@
 package org.latte.plugin.test.custom;
 
 import org.latte.plugin.custom.CustomVariable;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.latte.plugin.test.LattePluginTestBase;
 
 /**
@@ -11,6 +14,7 @@ public class CustomVariableTest extends LattePluginTestBase {
     /**
      * Tests the constructor and getters.
      */
+    @Test
     public void testConstructorAndGetters() {
         CustomVariable variable = new CustomVariable("testVariable", "string", "testDescription");
         
@@ -22,6 +26,7 @@ public class CustomVariableTest extends LattePluginTestBase {
     /**
      * Tests the default constructor and setters.
      */
+    @Test
     public void testDefaultConstructorAndSetters() {
         CustomVariable variable = new CustomVariable();
         
@@ -37,6 +42,7 @@ public class CustomVariableTest extends LattePluginTestBase {
     /**
      * Tests the getTypeText method with type set.
      */
+    @Test
     public void testGetTypeTextWithType() {
         CustomVariable variable = new CustomVariable("testVariable", "string", "testDescription");
         
@@ -46,6 +52,7 @@ public class CustomVariableTest extends LattePluginTestBase {
     /**
      * Tests the getTypeText method with null type.
      */
+    @Test
     public void testGetTypeTextWithNullType() {
         CustomVariable variable = new CustomVariable("testVariable", null, "testDescription");
         
@@ -55,6 +62,7 @@ public class CustomVariableTest extends LattePluginTestBase {
     /**
      * Tests the getDisplayText method.
      */
+    @Test
     public void testGetDisplayText() {
         CustomVariable variable = new CustomVariable("testVariable", "string", "testDescription");
         
@@ -64,6 +72,7 @@ public class CustomVariableTest extends LattePluginTestBase {
     /**
      * Tests inheritance from CustomElement.
      */
+    @Test
     public void testInheritance() {
         CustomVariable variable = new CustomVariable("testVariable", "string", "testDescription");
         

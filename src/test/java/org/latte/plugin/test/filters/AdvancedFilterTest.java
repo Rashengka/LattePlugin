@@ -1,6 +1,9 @@
 package org.latte.plugin.test.filters;
 
-import com.intellij.testFramework.fixtures.BasePlatformTestCase;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterEach;
+import org.latte.plugin.test.LattePluginTestBase;
 import org.latte.plugin.filters.NetteFilter;
 import org.latte.plugin.filters.NetteFilterProvider;
 
@@ -9,11 +12,12 @@ import java.util.Set;
 /**
  * Tests for the advanced filter features.
  */
-public class AdvancedFilterTest extends BasePlatformTestCase {
+public class AdvancedFilterTest extends LattePluginTestBase {
 
     /**
      * Tests that filters can have parameters.
      */
+    @Test
     public void testFilterParameters() {
         // Get all filters
         Set<NetteFilter> filters = NetteFilterProvider.getAllFilters();
@@ -49,6 +53,7 @@ public class AdvancedFilterTest extends BasePlatformTestCase {
     /**
      * Tests that filter parameters can be optional.
      */
+    @Test
     public void testOptionalFilterParameters() {
         // Create a filter with optional parameters
         NetteFilter filter = new NetteFilter("testFilter", "Test filter", "test/package",
@@ -80,6 +85,7 @@ public class AdvancedFilterTest extends BasePlatformTestCase {
     /**
      * Tests filter chaining.
      */
+    @Test
     public void testFilterChaining() {
         // Create a test template with chained filters
         String template = "{$variable|upper|truncate:30|noescape}";
@@ -96,6 +102,7 @@ public class AdvancedFilterTest extends BasePlatformTestCase {
     /**
      * Tests filter auto-completion context awareness.
      */
+    @Test
     public void testFilterAutoCompletionContextAwareness() {
         // This test would normally use the completion contributor to test
         // that filters are suggested in the right context, but for simplicity,
@@ -114,6 +121,7 @@ public class AdvancedFilterTest extends BasePlatformTestCase {
     /**
      * Tests creating a custom filter with parameters.
      */
+    @Test
     public void testCustomFilterWithParameters() {
         // Create a custom filter with parameters
         NetteFilter customFilter = new NetteFilter("customFilter", "Custom filter", "custom/package",

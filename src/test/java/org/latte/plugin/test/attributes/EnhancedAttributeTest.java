@@ -1,10 +1,13 @@
 package org.latte.plugin.test.attributes;
 
-import com.intellij.testFramework.fixtures.BasePlatformTestCase;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.latte.plugin.custom.CustomAttribute;
 import org.latte.plugin.custom.CustomAttributesProvider;
 import org.latte.plugin.lexer.LatteAttributeLexer;
 import org.latte.plugin.lexer.LatteTokenTypes;
+import org.latte.plugin.test.LattePluginTestBase;
 
 import java.util.List;
 import java.util.regex.Matcher;
@@ -13,11 +16,12 @@ import java.util.regex.Pattern;
 /**
  * Tests for the enhanced n:attributes support.
  */
-public class EnhancedAttributeTest extends BasePlatformTestCase {
+public class EnhancedAttributeTest extends LattePluginTestBase {
 
     /**
      * Tests that dynamic n:attributes are supported.
      */
+    @Test
     public void testDynamicAttributes() {
         // Create a test attribute lexer
         LatteAttributeLexer lexer = new LatteAttributeLexer();
@@ -42,6 +46,7 @@ public class EnhancedAttributeTest extends BasePlatformTestCase {
     /**
      * Tests that prefixed n:attributes are supported.
      */
+    @Test
     public void testPrefixedAttributes() {
         // Create a test attribute lexer
         LatteAttributeLexer lexer = new LatteAttributeLexer();
@@ -65,6 +70,7 @@ public class EnhancedAttributeTest extends BasePlatformTestCase {
     /**
      * Tests that the attribute name pattern supports complex attributes.
      */
+    @Test
     public void testAttributeNamePattern() {
         // Get the ATTRIBUTE_NAME_PATTERN from LatteAttributeLexer via reflection
         Pattern pattern;
@@ -99,6 +105,7 @@ public class EnhancedAttributeTest extends BasePlatformTestCase {
     /**
      * Tests that custom attributes are supported.
      */
+    @Test
     public void testCustomAttributes() {
         // Create a custom attribute
         CustomAttribute customAttribute = new CustomAttribute("n:custom-attr", "Custom attribute", "Example usage");
@@ -117,6 +124,7 @@ public class EnhancedAttributeTest extends BasePlatformTestCase {
     /**
      * Tests that the CustomAttributesProvider works correctly.
      */
+    @Test
     public void testCustomAttributesProvider() {
         // Get the project
         var project = getProject();
@@ -158,6 +166,7 @@ public class EnhancedAttributeTest extends BasePlatformTestCase {
     /**
      * Tests that adding a duplicate attribute fails.
      */
+    @Test
     public void testAddDuplicateAttribute() {
         // Get the project
         var project = getProject();

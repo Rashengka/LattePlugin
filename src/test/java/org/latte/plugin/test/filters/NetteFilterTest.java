@@ -1,6 +1,9 @@
 package org.latte.plugin.test.filters;
 
-import com.intellij.testFramework.fixtures.BasePlatformTestCase;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterEach;
+import org.latte.plugin.test.LattePluginTestBase;
 import org.latte.plugin.filters.NetteFilter;
 import org.latte.plugin.filters.NetteFilterProvider;
 import org.latte.plugin.settings.LatteSettings;
@@ -10,11 +13,12 @@ import java.util.Set;
 /**
  * Tests for the NetteFilter and NetteFilterProvider classes.
  */
-public class NetteFilterTest extends BasePlatformTestCase {
+public class NetteFilterTest extends LattePluginTestBase {
 
     /**
      * Tests that the NetteFilterProvider returns the correct filters based on enabled settings.
      */
+    @Test
     public void testGetAllFilters() {
         // Get settings
         LatteSettings settings = LatteSettings.getInstance();
@@ -109,6 +113,7 @@ public class NetteFilterTest extends BasePlatformTestCase {
     /**
      * Tests that the NetteFilterProvider returns the correct filter names based on enabled settings.
      */
+    @Test
     public void testGetValidFilterNames() {
         // Get settings
         LatteSettings settings = LatteSettings.getInstance();

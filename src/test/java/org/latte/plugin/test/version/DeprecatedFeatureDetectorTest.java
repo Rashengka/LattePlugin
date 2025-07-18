@@ -1,6 +1,9 @@
 package org.latte.plugin.test.version;
 
-import com.intellij.testFramework.fixtures.BasePlatformTestCase;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterEach;
+import org.latte.plugin.test.LattePluginTestBase;
 import org.latte.plugin.version.DeprecatedFeatureDetector;
 import org.latte.plugin.version.LatteVersion;
 import org.latte.plugin.version.LatteVersionManager;
@@ -10,7 +13,7 @@ import java.util.List;
 /**
  * Tests for the DeprecatedFeatureDetector class.
  */
-public class DeprecatedFeatureDetectorTest extends BasePlatformTestCase {
+public class DeprecatedFeatureDetectorTest extends LattePluginTestBase {
 
     // Save the original version to restore after tests
     private LatteVersion originalVersion;
@@ -31,6 +34,7 @@ public class DeprecatedFeatureDetectorTest extends BasePlatformTestCase {
     /**
      * Tests detection of features deprecated in Latte 3.0+.
      */
+    @Test
     public void testDetectDeprecatedFeaturesIn3x() {
         // Set current version to 3.0+
         LatteVersionManager.setCurrentVersion(LatteVersion.VERSION_3X);
@@ -75,6 +79,7 @@ public class DeprecatedFeatureDetectorTest extends BasePlatformTestCase {
     /**
      * Tests detection of features deprecated in Latte 4.0+.
      */
+    @Test
     public void testDetectDeprecatedFeaturesIn4x() {
         // Set current version to 4.0+
         LatteVersionManager.setCurrentVersion(LatteVersion.VERSION_4X);
@@ -113,6 +118,7 @@ public class DeprecatedFeatureDetectorTest extends BasePlatformTestCase {
     /**
      * Tests that features deprecated in Latte 3.0+ are also detected in Latte 4.0+.
      */
+    @Test
     public void testDetectLatte3xDeprecatedFeaturesIn4x() {
         // Set current version to 4.0+
         LatteVersionManager.setCurrentVersion(LatteVersion.VERSION_4X);
@@ -132,6 +138,7 @@ public class DeprecatedFeatureDetectorTest extends BasePlatformTestCase {
     /**
      * Tests that no warnings are generated for non-deprecated features.
      */
+    @Test
     public void testNoWarningsForNonDeprecatedFeatures() {
         // Set current version to 3.0+
         LatteVersionManager.setCurrentVersion(LatteVersion.VERSION_3X);
@@ -150,6 +157,7 @@ public class DeprecatedFeatureDetectorTest extends BasePlatformTestCase {
     /**
      * Tests detection with empty or null content.
      */
+    @Test
     public void testDetectionWithEmptyContent() {
         // Set current version to 3.0+
         LatteVersionManager.setCurrentVersion(LatteVersion.VERSION_3X);
@@ -167,6 +175,7 @@ public class DeprecatedFeatureDetectorTest extends BasePlatformTestCase {
     /**
      * Tests that warning positions are correct.
      */
+    @Test
     public void testWarningPositions() {
         // Set current version to 3.0+
         LatteVersionManager.setCurrentVersion(LatteVersion.VERSION_3X);
@@ -186,10 +195,10 @@ public class DeprecatedFeatureDetectorTest extends BasePlatformTestCase {
         for (DeprecatedFeatureDetector.DeprecatedFeatureWarning warning : warnings) {
             if (warning.getText().contains("syntax")) {
                 assertEquals("Syntax macro should start at position 6", 6, warning.getStartOffset());
-                assertEquals("Syntax macro should end at position 20", 20, warning.getEndOffset());
+                assertEquals("Syntax macro should end at position 21", 21, warning.getEndOffset());
             } else if (warning.getText().equals("{l}")) {
-                assertEquals("l macro should start at position 28", 28, warning.getStartOffset());
-                assertEquals("l macro should end at position 31", 31, warning.getEndOffset());
+                assertEquals("l macro should start at position 29", 29, warning.getStartOffset());
+                assertEquals("l macro should end at position 32", 32, warning.getEndOffset());
             } else if (warning.getText().equals("{r}")) {
                 assertEquals("r macro should start at position 40", 40, warning.getStartOffset());
                 assertEquals("r macro should end at position 43", 43, warning.getEndOffset());

@@ -40,6 +40,128 @@ test {
         showStandardStreams = true
         exceptionFormat = "full"
     }
+
+    // Configure memory settings for test execution
+    minHeapSize = '512m'
+    maxHeapSize = '1024m'
+
+    // Set test execution timeout
+    timeout = Duration.ofMinutes(5)
+
+    // Add JVM arguments for module access, logging config, and error suppression
+    jvmArgs = [
+            // Module access
+            '--add-exports=java.desktop/sun.font=ALL-UNNAMED',
+            '--add-opens=java.desktop/sun.font=ALL-UNNAMED',
+            '--add-opens=java.base/java.lang=ALL-UNNAMED',
+
+            // Logging configuration at JVM level
+            '-Djava.util.logging.config.file=' + project.file('src/test/resources/test-log.properties').absolutePath,
+            '-Djava.util.logging.manager=java.util.logging.LogManager',
+
+            // Suppress specific error classes at JVM level
+            '-Dcom.intellij.openapi.vfs.newvfs.persistent.VfsLog.level=OFF',
+            '-Dcom.intellij.openapi.editor.impl.FontFamilyServiceImpl.level=OFF',
+            '-Dcom.intellij.ui.util.StyleSheetUtil.level=OFF',
+            '-Djava.util.logging.LogManager.level=SEVERE',
+
+            // IntelliJ configuration at JVM level
+            '-Didea.platform.prefix=PlatformTestCaseTest',
+            '-Didea.suppress.known.test.exceptions=true',
+            '-Didea.ignore.vfs.log.version.mismatch=true',
+            '-Didea.headless.enable.font.checking=false',
+            '-Didea.use.headless.ui=true',
+            '-Didea.ui.skip.css.missing.warning=true',
+            '-Didea.font.system.disable=true',
+            '-Djava.awt.headless=true',
+
+            // Suppress specific warnings
+            '-Dsun.java2d.noddraw=true',
+            '-Dsun.java2d.d3d=false',
+            '-Dsun.java2d.opengl=false',
+            '-Dswing.bufferPerWindow=false'
+    ]
+
+    systemProperties([
+            // Java Logging Configuration
+            'java.util.logging.manager': 'java.util.logging.LogManager',
+            'java.util.logging.config.file': project.file('src/test/resources/test-log.properties').absolutePath,
+
+            // IntelliJ Platform Configuration
+            'idea.platform.prefix': 'PlatformTestCaseTest',
+            'idea.no.launcher': 'true',
+            'idea.suppress.known.test.exceptions': 'true',
+            'idea.force.use.core.classloader': 'true',
+            'idea.use.core.classloader.for': 'org.latte.plugin',
+            'idea.use.core.classloader.for.plugin.path': 'true',
+
+            // UI and Headless Configuration
+            'idea.use.headless.ui': 'true',
+            'idea.headless.enable.font.checking': 'false',
+            'idea.use.mock.ui': 'true',
+            'idea.use.minimal.fonts': 'true',
+            'awt.toolkit': 'sun.awt.CToolkit',
+            'java.awt.headless': 'true',
+            'swing.bufferPerWindow': 'false',
+
+            // CSS and UI Warnings Suppression
+            'idea.ui.skip.css.missing.warning': 'true',
+            'idea.disable.css.validation': 'true',
+            'idea.ui.disable.css.loading': 'true',
+            'idea.ui.css.lazy.loading': 'false',
+            'idea.ui.stylesheet.cache.enabled': 'false',
+            'idea.ui.component.validate.on.add': 'false',
+
+            // VFS and File System Configuration
+            'idea.use.native.fs.for.win': 'false',
+            'idea.ignore.vfs.log.version.mismatch': 'true',
+
+            // Performance and Memory Configuration
+            'idea.max.intellisense.filesize': '2500',
+            'idea.cycle.buffer.size': '1024',
+            'idea.tests.overwrite.temp.jdk': 'true',
+
+            // Graphics and Rendering Configuration
+            'sun.java2d.noddraw': 'true',
+            'sun.java2d.d3d': 'false',
+            'sun.java2d.opengl': 'false',
+            'sun.java2d.pmoffscreen': 'false',
+
+            // Logging Configuration
+            'logback.configurationFile': 'logback-test.xml',
+            'idea.log.config.file': 'logback-test.xml',
+            'idea.log.path': 'build/idea-test-logs',
+
+            // Error Suppression - Configuration File Warnings
+            'java.util.logging.config.file.missing.ok': 'true',
+            'idea.ignore.missing.config.files': 'true',
+
+            // Font System Error Suppression
+            'idea.font.system.disable': 'true',
+            'sun.font.useJDKFontMetrics': 'false',
+            'idea.use.system.fonts': 'false'
+    ])
+
+    doFirst {
+        println "=== JVM Arguments for tests ==="
+        jvmArgs.each { arg ->
+            println "  $arg"
+        }
+        println ""
+
+        println "=== System Properties ==="
+        systemProperties.each { key, value ->
+            println "  $key = $value"
+        }
+        println ""
+
+        println "=== Test Log File Check ==="
+        def testLogFile = project.file('src/test/resources/test-log.properties')
+        println "  test-log.properties exists: ${testLogFile.exists()}"
+        println "  test-log.properties path: ${testLogFile.absolutePath}"
+        println "================================"
+        println ""
+    }
 }
 
 runPluginVerifier {

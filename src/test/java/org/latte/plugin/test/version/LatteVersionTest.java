@@ -1,6 +1,9 @@
 package org.latte.plugin.test.version;
 
-import com.intellij.testFramework.fixtures.BasePlatformTestCase;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterEach;
+import org.latte.plugin.test.LattePluginTestBase;
 import org.latte.plugin.version.LatteVersion;
 
 import java.io.File;
@@ -11,7 +14,7 @@ import java.nio.file.Paths;
 /**
  * Tests for the LatteVersion class, particularly the version detection functionality.
  */
-public class LatteVersionTest extends BasePlatformTestCase {
+public class LatteVersionTest extends LattePluginTestBase {
 
     private String latte2xContent;
     private String latte3xContent;
@@ -30,6 +33,7 @@ public class LatteVersionTest extends BasePlatformTestCase {
     /**
      * Tests detection of Latte 2.x version from content.
      */
+    @Test
     public void testDetectVersion2x() {
         LatteVersion version = LatteVersion.detectVersionFromContent(latte2xContent);
         assertEquals("Should detect Latte 2.x", LatteVersion.VERSION_2X, version);
@@ -38,6 +42,7 @@ public class LatteVersionTest extends BasePlatformTestCase {
     /**
      * Tests detection of Latte 3.0+ version from content.
      */
+    @Test
     public void testDetectVersion3x() {
         LatteVersion version = LatteVersion.detectVersionFromContent(latte3xContent);
         assertEquals("Should detect Latte 3.0+", LatteVersion.VERSION_3X, version);
@@ -46,6 +51,7 @@ public class LatteVersionTest extends BasePlatformTestCase {
     /**
      * Tests detection of Latte 4.0+ version from content with version comment.
      */
+    @Test
     public void testDetectVersion4xFromComment() {
         LatteVersion version = LatteVersion.detectVersionFromContent("{* Latte 4.0+ *}\n<p>Test</p>");
         assertEquals("Should detect Latte 4.0+ from comment", LatteVersion.VERSION_4X, version);
@@ -54,6 +60,7 @@ public class LatteVersionTest extends BasePlatformTestCase {
     /**
      * Tests detection of Latte 4.0+ version from content with specific syntax.
      */
+    @Test
     public void testDetectVersion4xFromSyntax() {
         LatteVersion version = LatteVersion.detectVersionFromContent("<p>{typeCheck}</p>");
         assertEquals("Should detect Latte 4.0+ from typeCheck macro", LatteVersion.VERSION_4X, version);
@@ -65,6 +72,7 @@ public class LatteVersionTest extends BasePlatformTestCase {
     /**
      * Tests detection of Latte 4.0+ version from the test file.
      */
+    @Test
     public void testDetectVersion4xFromTestFile() {
         LatteVersion version = LatteVersion.detectVersionFromContent(latte4xContent);
         assertEquals("Should detect Latte 4.0+ from test file", LatteVersion.VERSION_4X, version);
@@ -73,6 +81,7 @@ public class LatteVersionTest extends BasePlatformTestCase {
     /**
      * Tests handling of null or empty content.
      */
+    @Test
     public void testDetectVersionWithNullOrEmpty() {
         LatteVersion version = LatteVersion.detectVersionFromContent(null);
         assertNull("Should return null for null content", version);
@@ -84,6 +93,7 @@ public class LatteVersionTest extends BasePlatformTestCase {
     /**
      * Tests handling of content with no version indicators.
      */
+    @Test
     public void testDetectVersionWithNoIndicators() {
         LatteVersion version = LatteVersion.detectVersionFromContent("<p>Hello, world!</p>");
         assertNull("Should return null for content with no version indicators", version);

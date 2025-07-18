@@ -1,6 +1,9 @@
 package org.latte.plugin.test.custom;
 
 import com.intellij.openapi.project.Project;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.latte.plugin.custom.CustomVariable;
 import org.latte.plugin.custom.CustomVariablesProvider;
 import org.latte.plugin.settings.LatteProjectSettings;
@@ -47,6 +50,7 @@ public class CustomVariablesProviderTest extends LattePluginTestBase {
     /**
      * Tests getting all variables when there are no variables.
      */
+    @Test
     public void testGetAllVariablesEmpty() {
         Set<CustomVariable> variables = CustomVariablesProvider.getAllVariables(project);
         
@@ -57,6 +61,7 @@ public class CustomVariablesProviderTest extends LattePluginTestBase {
     /**
      * Tests getting all variable names when there are no variables.
      */
+    @Test
     public void testGetAllVariableNamesEmpty() {
         Set<String> variableNames = CustomVariablesProvider.getAllVariableNames(project);
         
@@ -67,6 +72,7 @@ public class CustomVariablesProviderTest extends LattePluginTestBase {
     /**
      * Tests variable existence check when the variable doesn't exist.
      */
+    @Test
     public void testVariableExistsFalse() {
         boolean exists = CustomVariablesProvider.variableExists(project, "nonExistentVariable");
         
@@ -76,6 +82,7 @@ public class CustomVariablesProviderTest extends LattePluginTestBase {
     /**
      * Tests getting a variable by name when the variable doesn't exist.
      */
+    @Test
     public void testGetVariableByNameNotFound() {
         CustomVariable variable = CustomVariablesProvider.getVariableByName(project, "nonExistentVariable");
         
@@ -85,6 +92,7 @@ public class CustomVariablesProviderTest extends LattePluginTestBase {
     /**
      * Tests adding a variable with a type.
      */
+    @Test
     public void testAddVariableWithType() {
         CustomVariable variable = CustomVariablesProvider.addVariable(project, "testVariable", "string", "testDescription");
         
@@ -112,6 +120,7 @@ public class CustomVariablesProviderTest extends LattePluginTestBase {
     /**
      * Tests adding a variable without a type.
      */
+    @Test
     public void testAddVariableWithoutType() {
         CustomVariable variable = CustomVariablesProvider.addVariable(project, "testVariable", null, "testDescription");
         
@@ -139,6 +148,7 @@ public class CustomVariablesProviderTest extends LattePluginTestBase {
     /**
      * Tests removing a variable.
      */
+    @Test
     public void testRemoveVariable() {
         // Add a variable first
         CustomVariablesProvider.addVariable(project, "testVariable", "string", "testDescription");
@@ -157,6 +167,7 @@ public class CustomVariablesProviderTest extends LattePluginTestBase {
     /**
      * Tests removing a non-existent variable.
      */
+    @Test
     public void testRemoveNonExistentVariable() {
         boolean removed = CustomVariablesProvider.removeVariable(project, "nonExistentVariable");
         
@@ -166,6 +177,7 @@ public class CustomVariablesProviderTest extends LattePluginTestBase {
     /**
      * Tests adding multiple variables and retrieving them.
      */
+    @Test
     public void testAddMultipleVariables() {
         CustomVariablesProvider.addVariable(project, "variable1", "string", "description1");
         CustomVariablesProvider.addVariable(project, "variable2", "int", "description2");
@@ -193,6 +205,7 @@ public class CustomVariablesProviderTest extends LattePluginTestBase {
     /**
      * Tests adding a duplicate variable.
      */
+    @Test
     public void testAddDuplicateVariable() {
         CustomVariablesProvider.addVariable(project, "testVariable", "string", "description1");
         CustomVariablesProvider.addVariable(project, "testVariable", "int", "description2");

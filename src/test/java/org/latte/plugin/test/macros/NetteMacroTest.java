@@ -1,6 +1,9 @@
 package org.latte.plugin.test.macros;
 
-import com.intellij.testFramework.fixtures.BasePlatformTestCase;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterEach;
+import org.latte.plugin.test.LattePluginTestBase;
 import org.latte.plugin.macros.NetteMacro;
 import org.latte.plugin.macros.NetteMacroProvider;
 import org.latte.plugin.settings.LatteSettings;
@@ -10,11 +13,12 @@ import java.util.Set;
 /**
  * Tests for the NetteMacro and NetteMacroProvider classes.
  */
-public class NetteMacroTest extends BasePlatformTestCase {
+public class NetteMacroTest extends LattePluginTestBase {
 
     /**
      * Tests that the NetteMacroProvider returns the correct macros based on enabled settings.
      */
+    @Test
     public void testGetAllMacros() {
         // Get settings
         LatteSettings settings = LatteSettings.getInstance();
@@ -95,6 +99,7 @@ public class NetteMacroTest extends BasePlatformTestCase {
     /**
      * Tests that the NetteMacroProvider returns the correct attributes based on enabled settings.
      */
+    @Test
     public void testGetAllAttributes() {
         // Get settings
         LatteSettings settings = LatteSettings.getInstance();
@@ -158,6 +163,7 @@ public class NetteMacroTest extends BasePlatformTestCase {
     /**
      * Tests that the NetteMacroProvider returns the correct macro names based on enabled settings.
      */
+    @Test
     public void testGetValidMacroNames() {
         // Get settings
         LatteSettings settings = LatteSettings.getInstance();

@@ -1,6 +1,9 @@
 package org.latte.plugin.test.version;
 
-import com.intellij.testFramework.fixtures.BasePlatformTestCase;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterEach;
+import org.latte.plugin.test.LattePluginTestBase;
 import org.latte.plugin.version.LatteVersion;
 import org.latte.plugin.version.VersionMigrationHelper;
 
@@ -9,11 +12,12 @@ import java.util.List;
 /**
  * Tests for the VersionMigrationHelper class.
  */
-public class VersionMigrationHelperTest extends BasePlatformTestCase {
+public class VersionMigrationHelperTest extends LattePluginTestBase {
 
     /**
      * Tests migration from Latte 2.x to Latte 3.0+.
      */
+    @Test
     public void testMigrationFrom2xTo3x() {
         // Test syntax macro migration
         String content = "{syntax double}\nHello World\n{/syntax}";
@@ -31,6 +35,7 @@ public class VersionMigrationHelperTest extends BasePlatformTestCase {
     /**
      * Tests migration from Latte 3.x to Latte 4.0+.
      */
+    @Test
     public void testMigrationFrom3xTo4x() {
         // Test ifCurrent macro migration
         String content = "{ifCurrent Homepage:default}\nActive\n{/ifCurrent}";
@@ -48,6 +53,7 @@ public class VersionMigrationHelperTest extends BasePlatformTestCase {
     /**
      * Tests migration from Latte 2.x to Latte 4.0+.
      */
+    @Test
     public void testMigrationFrom2xTo4x() {
         // Test combined migrations
         String content = "{syntax double}\n{ifCurrent Homepage:default}\n{l}variable{r}\n{status 404}\n{/ifCurrent}";
@@ -59,6 +65,7 @@ public class VersionMigrationHelperTest extends BasePlatformTestCase {
     /**
      * Tests getting migration rules.
      */
+    @Test
     public void testGetMigrationRules() {
         // Test getting rules from 2.x to 3.x
         List<VersionMigrationHelper.MigrationRule> rules2xTo3x = 
@@ -86,6 +93,7 @@ public class VersionMigrationHelperTest extends BasePlatformTestCase {
     /**
      * Tests migration with empty or null content.
      */
+    @Test
     public void testMigrationWithEmptyContent() {
         // Test with null content
         String result = VersionMigrationHelper.migrateContent(null, LatteVersion.VERSION_2X, LatteVersion.VERSION_3X);
@@ -99,6 +107,7 @@ public class VersionMigrationHelperTest extends BasePlatformTestCase {
     /**
      * Tests migration with unsupported version pair.
      */
+    @Test
     public void testMigrationWithUnsupportedVersionPair() {
         // Create a custom content
         String content = "{syntax double}\nHello World\n{/syntax}";

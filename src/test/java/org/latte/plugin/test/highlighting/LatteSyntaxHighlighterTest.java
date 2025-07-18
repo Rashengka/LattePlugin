@@ -1,6 +1,9 @@
 package org.latte.plugin.test.highlighting;
 
 import com.intellij.lexer.Lexer;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import com.intellij.openapi.editor.colors.TextAttributesKey;
 import com.intellij.psi.tree.IElementType;
 import org.latte.plugin.highlighting.LatteSyntaxHighlighter;
@@ -23,6 +26,7 @@ public class LatteSyntaxHighlighterTest extends LattePluginTestBase {
     /**
      * Tests that the highlighter returns the correct lexer.
      */
+    @Test
     public void testGetHighlightingLexer() {
         Lexer lexer = highlighter.getHighlightingLexer();
         assertNotNull("Highlighting lexer should not be null", lexer);
@@ -31,6 +35,7 @@ public class LatteSyntaxHighlighterTest extends LattePluginTestBase {
     /**
      * Tests that the highlighter returns the correct text attribute keys for macro tokens.
      */
+    @Test
     public void testMacroHighlighting() {
         // Test macro start/end highlighting
         TextAttributesKey[] macroStartKeys = highlighter.getTokenHighlights(LatteTokenTypes.LATTE_MACRO_START);
@@ -50,6 +55,7 @@ public class LatteSyntaxHighlighterTest extends LattePluginTestBase {
     /**
      * Tests that the highlighter returns the correct text attribute keys for attribute tokens.
      */
+    @Test
     public void testAttributeHighlighting() {
         // Test attribute name highlighting
         TextAttributesKey[] attributeNameKeys = highlighter.getTokenHighlights(LatteTokenTypes.LATTE_ATTRIBUTE_NAME);
@@ -65,6 +71,7 @@ public class LatteSyntaxHighlighterTest extends LattePluginTestBase {
     /**
      * Tests that the highlighter returns the correct text attribute keys for filter tokens.
      */
+    @Test
     public void testFilterHighlighting() {
         // Test filter pipe highlighting
         TextAttributesKey[] filterPipeKeys = highlighter.getTokenHighlights(LatteTokenTypes.LATTE_FILTER_PIPE);
@@ -80,6 +87,7 @@ public class LatteSyntaxHighlighterTest extends LattePluginTestBase {
     /**
      * Tests that the highlighter returns the correct text attribute keys for comment tokens.
      */
+    @Test
     public void testCommentHighlighting() {
         // Test comment start highlighting
         TextAttributesKey[] commentStartKeys = highlighter.getTokenHighlights(LatteTokenTypes.LATTE_COMMENT_START);
@@ -100,6 +108,7 @@ public class LatteSyntaxHighlighterTest extends LattePluginTestBase {
     /**
      * Tests that the highlighter returns the correct text attribute keys for error tokens.
      */
+    @Test
     public void testErrorHighlighting() {
         // Test macro error highlighting
         TextAttributesKey[] macroErrorKeys = highlighter.getTokenHighlights(LatteTokenTypes.LATTE_ERROR_INVALID_MACRO_NAME);
@@ -125,6 +134,7 @@ public class LatteSyntaxHighlighterTest extends LattePluginTestBase {
     /**
      * Tests that the highlighter returns empty keys for unknown token types.
      */
+    @Test
     public void testUnknownTokenHighlighting() {
         // Create a mock token type
         IElementType unknownType = new IElementType("UNKNOWN", null);

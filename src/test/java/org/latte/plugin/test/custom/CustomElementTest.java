@@ -1,6 +1,9 @@
 package org.latte.plugin.test.custom;
 
 import org.latte.plugin.custom.CustomElement;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.latte.plugin.test.LattePluginTestBase;
 
 /**
@@ -11,6 +14,7 @@ public class CustomElementTest extends LattePluginTestBase {
     /**
      * Tests the constructor and getters.
      */
+    @Test
     public void testConstructorAndGetters() {
         CustomElement element = new CustomElement("testName", "testDescription");
         
@@ -21,6 +25,7 @@ public class CustomElementTest extends LattePluginTestBase {
     /**
      * Tests the default constructor and setters.
      */
+    @Test
     public void testDefaultConstructorAndSetters() {
         CustomElement element = new CustomElement();
         
@@ -34,6 +39,7 @@ public class CustomElementTest extends LattePluginTestBase {
     /**
      * Tests the getDisplayText method.
      */
+    @Test
     public void testGetDisplayText() {
         CustomElement element = new CustomElement("testName", "testDescription");
         
@@ -43,6 +49,7 @@ public class CustomElementTest extends LattePluginTestBase {
     /**
      * Tests the equals method.
      */
+    @Test
     public void testEquals() {
         CustomElement element1 = new CustomElement("testName", "testDescription");
         CustomElement element2 = new CustomElement("testName", "differentDescription");
@@ -57,6 +64,7 @@ public class CustomElementTest extends LattePluginTestBase {
     /**
      * Tests the hashCode method.
      */
+    @Test
     public void testHashCode() {
         CustomElement element1 = new CustomElement("testName", "testDescription");
         CustomElement element2 = new CustomElement("testName", "differentDescription");
