@@ -1,10 +1,8 @@
 package org.latte.plugin.test.intention;
 
 import com.intellij.codeInsight.intention.IntentionAction;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import com.intellij.openapi.project.Project;
+import org.junit.jupiter.api.Test;
 import org.latte.plugin.custom.CustomTag;
 import org.latte.plugin.custom.CustomTagsProvider;
 import org.latte.plugin.intention.AddCustomTagIntentionAction;
@@ -61,9 +59,9 @@ public class AddCustomTagIntentionActionTest extends LattePluginTestBase {
         assertNotNull("Intentions should not be null", intentions);
         assertFalse("Intentions should not be empty", intentions.isEmpty());
         assertEquals("Should have one intention", 1, intentions.size());
-        assertEquals("Intention should be AddCustomTagIntentionAction", 
-                     AddCustomTagIntentionAction.class.getName(), 
-                     intentions.get(0).getClass().getName());
+        assertEquals("Intention text should be 'Add as custom Latte tag'", 
+                     "Add as custom Latte tag", 
+                     intentions.get(0).getText());
     }
     
     /**

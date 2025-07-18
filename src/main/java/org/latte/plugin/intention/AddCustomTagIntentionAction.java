@@ -51,15 +51,27 @@ public class AddCustomTagIntentionAction extends PsiElementBaseIntentionAction i
     
     @Override
     public boolean isAvailable(@NotNull Project project, Editor editor, @NotNull PsiElement element) {
+        // Get the element text
+        String elementText = element.getText();
+        
+        // Check if the element text looks like a Latte tag (starts with { and doesn't contain $ or /)
+        boolean looksLikeTag = elementText.startsWith("{") && 
+                              !elementText.contains("$") && 
+                              !elementText.contains("/") &&
+                              !elementText.contains("#");
+        
         // Check if the element is a potential tag
-        if (element.getNode() != null && 
-            (element.getNode().getElementType() == LatteTokenTypes.LATTE_MACRO_NAME ||
-             element.getNode().getElementType() == LatteTokenTypes.LATTE_MACRO_CONTENT)) {
+        if (looksLikeTag || 
+            (element.getNode() != null && 
+             (element.getNode().getElementType() == LatteTokenTypes.LATTE_MACRO_NAME ||
+              element.getNode().getElementType() == LatteTokenTypes.LATTE_MACRO_CONTENT))) {
             
-            String tagName = element.getText().replaceAll("[{}/]", "").trim();
+            String tagName = elementText.replaceAll("[{}/]", "").trim();
             
             // Check if the tag name is not empty and doesn't already exist
-            return !tagName.isEmpty() && !CustomTagsProvider.tagExists(project, tagName);
+            boolean tagExists = CustomTagsProvider.tagExists(project, tagName);
+            
+            return !tagName.isEmpty() && !tagExists;
         }
         
         return false;

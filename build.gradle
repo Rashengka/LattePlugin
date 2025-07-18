@@ -94,6 +94,15 @@ test {
             'idea.force.use.core.classloader': 'true',
             'idea.use.core.classloader.for': 'org.latte.plugin',
             'idea.use.core.classloader.for.plugin.path': 'true',
+            
+            // Language Injection Configuration
+            'idea.disable.language.injection': 'true',
+            'idea.ignore.duplicated.injectors': 'true',
+            'idea.injected.language.manager.disabled': 'true',
+            'idea.skip.injected.language.setup': 'true',
+            'idea.test.no.injected.language': 'true',
+            'idea.test.light.injected.language.manager': 'true',
+            'idea.test.disable.language.injection': 'true',
 
             // UI and Headless Configuration
             'idea.use.headless.ui': 'true',
