@@ -18,6 +18,55 @@ import java.util.regex.Pattern;
  */
 public class EnhancedAttributeTest extends LattePluginTestBase {
 
+
+    @Override
+    protected void setUp() throws Exception {
+        // Konfigurace Java Util Logging pro potlačení warnings
+        configureLogging();
+
+        // Nastavení systémových vlastností pro testovací prostředí
+        System.setProperty("idea.test.mode", "true");
+        System.setProperty("idea.is.unit.test", "true");
+        System.setProperty("idea.platform.prefix", "Idea");
+
+        // Potlačení JUL configuration warnings
+        System.setProperty("java.util.logging.config.file", "");
+        System.setProperty("java.util.logging.manager", "java.util.logging.LogManager");
+
+        // Volání původní setUp metody z nadtřídy
+        super.setUp();
+    }
+
+    /**
+     * Konfiguruje Java Util Logging pro potlačení verbose výstupů během testů.
+     */
+    private void configureLogging() {
+        // Získáme root logger
+        java.util.logging.Logger rootLogger = java.util.logging.Logger.getLogger("");
+
+        // Nastavíme úroveň na WARNING nebo vyšší
+        rootLogger.setLevel(java.util.logging.Level.WARNING);
+
+        // Nakonfigurujeme handlery
+        java.util.logging.Handler[] handlers = rootLogger.getHandlers();
+        for (java.util.logging.Handler handler : handlers) {
+            handler.setLevel(java.util.logging.Level.WARNING);
+            // Nastavíme jednoduchý formát pro méně verbose výstup
+            if (handler instanceof java.util.logging.ConsoleHandler) {
+                handler.setFormatter(new java.util.logging.SimpleFormatter());
+            }
+        }
+
+        // Specifické loggery pro IntelliJ komponenty
+        java.util.logging.Logger.getLogger("com.intellij").setLevel(java.util.logging.Level.WARNING);
+        java.util.logging.Logger.getLogger("org.jetbrains").setLevel(java.util.logging.Level.WARNING);
+        java.util.logging.Logger.getLogger("com.jetbrains").setLevel(java.util.logging.Level.WARNING);
+
+        // Potlačíme verbose výstupy specifické pro testování
+        java.util.logging.Logger.getLogger("com.intellij.testFramework").setLevel(java.util.logging.Level.WARNING);
+        java.util.logging.Logger.getLogger("com.intellij.idea").setLevel(java.util.logging.Level.WARNING);
+    }
+
     /**
      * Tests that dynamic n:attributes are supported.
      */

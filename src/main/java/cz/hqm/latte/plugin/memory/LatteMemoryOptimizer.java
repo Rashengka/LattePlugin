@@ -175,9 +175,11 @@ public final class LatteMemoryOptimizer {
      * Class representing segmented template content.
      */
     public static class TemplateSegments {
-        private final String fullContent;
         private final String[] segments;
         private final int[] segmentOffsets;
+        private final int totalLength;
+        private final int hashCode;
+        private SoftReference<String> fullContentRef; // Soft reference to allow GC when memory is low
         
         /**
          * Constructor for a single segment.
@@ -185,9 +187,11 @@ public final class LatteMemoryOptimizer {
          * @param content The content of the template
          */
         TemplateSegments(@NotNull String content) {
-            this.fullContent = content;
             this.segments = new String[] { content };
             this.segmentOffsets = new int[] { 0 };
+            this.totalLength = content.length();
+            this.hashCode = content.hashCode();
+            this.fullContentRef = new SoftReference<>(content);
         }
         
         /**
@@ -197,9 +201,13 @@ public final class LatteMemoryOptimizer {
          * @param segments The segments of the template
          */
         TemplateSegments(@NotNull String fullContent, @NotNull String[] segments) {
-            this.fullContent = fullContent;
             this.segments = segments;
             this.segmentOffsets = new int[segments.length];
+            this.hashCode = fullContent.hashCode();
+            
+            // For test compatibility, store a soft reference to the original content
+            // This allows exact matching in tests while still allowing GC when memory is low
+            this.fullContentRef = new SoftReference<>(fullContent);
             
             // Calculate offsets for each segment
             int offset = 0;
@@ -207,16 +215,36 @@ public final class LatteMemoryOptimizer {
                 segmentOffsets[i] = offset;
                 offset += segments[i].length();
             }
+            this.totalLength = offset;
         }
         
         /**
          * Gets the full content of the template.
+         * If the full content has been garbage collected, it will be reconstructed from segments.
          *
          * @return The full content
          */
         @NotNull
         public String getFullContent() {
-            return fullContent;
+            String content = fullContentRef.get();
+            if (content != null) {
+                return content;
+            }
+            
+            // If the full content has been garbage collected, reconstruct it from segments
+            if (segments.length == 1) {
+                content = segments[0];
+            } else {
+                StringBuilder builder = new StringBuilder(totalLength);
+                for (String segment : segments) {
+                    builder.append(segment);
+                }
+                content = builder.toString();
+            }
+            
+            // Update the soft reference
+            fullContentRef = new SoftReference<>(content);
+            return content;
         }
         
         /**
@@ -258,7 +286,28 @@ public final class LatteMemoryOptimizer {
          * @return True if the segments are valid for the content, false otherwise
          */
         public boolean isValidFor(@NotNull String content) {
-            return fullContent.equals(content);
+            // Quick check using length and hash code first
+            if (content.length() != totalLength || content.hashCode() != hashCode) {
+                return false;
+            }
+            
+            // For small content or single segment, do a direct comparison
+            if (segments.length == 1) {
+                return segments[0].equals(content);
+            }
+            
+            // For large content with multiple segments, avoid reconstructing the full string
+            // by checking each segment against the corresponding part of the content
+            for (int i = 0; i < segments.length; i++) {
+                int start = segmentOffsets[i];
+                int end = (i < segments.length - 1) ? segmentOffsets[i + 1] : totalLength;
+                String contentPart = content.substring(start, end);
+                if (!segments[i].equals(contentPart)) {
+                    return false;
+                }
+            }
+            
+            return true;
         }
         
         /**
