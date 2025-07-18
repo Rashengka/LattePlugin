@@ -19,6 +19,14 @@ public class CustomFunctionsProvider {
     private static final Set<CustomFunction> testFunctions = new HashSet<>();
     
     /**
+     * Clears all test functions.
+     * This method is intended for use in test environments to ensure a clean state between tests.
+     */
+    public static void clearTestFunctions() {
+        testFunctions.clear();
+    }
+    
+    /**
      * Gets all custom functions for the specified project.
      * In test environments, returns functions from both the project settings and the test functions set.
      *
@@ -104,8 +112,19 @@ public class CustomFunctionsProvider {
             // Ignore exceptions in test environments
         }
         
-        // Also add to testFunctions set to ensure it's available in test environments
-        testFunctions.add(function);
+        // Check if a function with the same name already exists in the testFunctions set
+        boolean exists = false;
+        for (CustomFunction existingFunction : testFunctions) {
+            if (existingFunction.getName().equals(name)) {
+                exists = true;
+                break;
+            }
+        }
+        
+        // Only add to testFunctions set if a function with the same name doesn't already exist
+        if (!exists) {
+            testFunctions.add(function);
+        }
         
         return function;
     }

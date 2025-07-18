@@ -22,10 +22,17 @@ public class AdvancedFilterTest extends LattePluginTestBase {
         // Get all filters
         Set<NetteFilter> filters = NetteFilterProvider.getAllFilters();
         
+        System.out.println("[DEBUG_LOG] Total filters: " + filters.size());
+        
         // Find filters with parameters
         boolean foundFilterWithParameters = false;
         for (NetteFilter filter : filters) {
+            System.out.println("[DEBUG_LOG] Filter: " + filter.getName() + ", Package: " + filter.getPackageName() + ", Has Parameters: " + filter.hasParameters());
             if (filter.hasParameters()) {
+                System.out.println("[DEBUG_LOG] Found filter with parameters: " + filter.getName());
+                System.out.println("[DEBUG_LOG] Parameters count: " + filter.getParameters().size());
+                System.out.println("[DEBUG_LOG] Parameter info: " + filter.getParameterInfoText());
+                
                 foundFilterWithParameters = true;
                 
                 // Verify that the filter has parameter information
@@ -35,6 +42,7 @@ public class AdvancedFilterTest extends LattePluginTestBase {
                 
                 // Verify that the display text includes parameter information
                 String displayText = filter.getDisplayText();
+                System.out.println("[DEBUG_LOG] Display text: " + displayText);
                 assertTrue("Display text should include parameter information", 
                         displayText.contains("(") && displayText.contains(")"));
                 

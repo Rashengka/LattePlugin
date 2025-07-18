@@ -173,6 +173,8 @@ public class NetteFilterTest extends LattePluginTestBase {
             assertFalse("Filter names should not include 'translate'", filterNames.contains("translate"));
             assertFalse("Filter names should not include 'asset'", filterNames.contains("asset"));
             assertFalse("Filter names should not include 'table'", filterNames.contains("table"));
+            
+            // Note: Core filters are always included, unlike macros and attributes
             assertTrue("Filter names should include 'upper'", filterNames.contains("upper"));
             assertTrue("Filter names should include 'lower'", filterNames.contains("lower"));
             assertTrue("Filter names should include 'escape'", filterNames.contains("escape"));

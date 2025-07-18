@@ -137,13 +137,13 @@ public class NettePackageDetector {
      * @return The major version of the package, or DEFAULT_VERSION if not detected
      */
     public static int getPackageVersion(Project project, String packageName) {
+        if (project == null) {
+            return DEFAULT_VERSION;
+        }
+        
         // Special case for nette/assets which only has version 1
         if (NETTE_ASSETS.equals(packageName)) {
             return 1;
-        }
-        
-        if (project == null) {
-            return DEFAULT_VERSION;
         }
 
         // Check cache first

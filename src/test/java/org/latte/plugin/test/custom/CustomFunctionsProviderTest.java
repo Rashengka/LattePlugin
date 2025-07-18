@@ -37,6 +37,9 @@ public class CustomFunctionsProviderTest extends LattePluginTestBase {
         
         // Clear the functions for testing
         settings.setCustomFunctions(new ArrayList<>());
+        
+        // Clear the test functions to ensure a clean state
+        CustomFunctionsProvider.clearTestFunctions();
     }
     
     @Override
@@ -171,6 +174,13 @@ public class CustomFunctionsProviderTest extends LattePluginTestBase {
         CustomFunctionsProvider.addFunction(project, "testFunction", "description2");
         
         Set<CustomFunction> functions = CustomFunctionsProvider.getAllFunctions(project);
+        
+        // Debug logging to see what functions are in the set
+        System.out.println("[DEBUG_LOG] Number of functions: " + functions.size());
+        for (CustomFunction f : functions) {
+            System.out.println("[DEBUG_LOG] Function: " + f.getName() + ", Description: " + f.getDescription());
+        }
+        
         assertEquals("Should have 1 function (no duplicates)", 1, functions.size());
         
         // The first function should be preserved

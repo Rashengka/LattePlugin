@@ -1,8 +1,8 @@
 package org.latte.plugin.test.parser;
 
 import com.intellij.openapi.util.TextRange;
-import org.junit.jupiter.api.AfterEach;
 import com.intellij.openapi.vfs.VirtualFile;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.latte.plugin.parser.LatteIncrementalParser;
@@ -39,12 +39,8 @@ public class LatteIncrementalParserTest extends LattePluginTestBase {
     /**
      * Tests that the parser correctly identifies the entire file as changed when it's first seen.
      */
-    
-    
     @Test
     public void testFirstTimeParseWholeFile() throws Exception {
-        // Initialize test environment
-        setUp();
         
         String content = "{block content}\nHello, world!\n{/block}";
         
@@ -63,12 +59,8 @@ public class LatteIncrementalParserTest extends LattePluginTestBase {
     /**
      * Tests that the parser correctly identifies changed parts of a file.
      */
-    
-    
     @Test
     public void testParseChangedParts() throws Exception {
-        // Initialize test environment
-        setUp();
         
         String originalContent = "{block content}\nHello, world!\n{/block}";
         String modifiedContent = "{block content}\nHello, modified world!\n{/block}";
@@ -94,12 +86,8 @@ public class LatteIncrementalParserTest extends LattePluginTestBase {
     /**
      * Tests that the parser correctly expands changes to include complete Latte constructs.
      */
-    
-    
     @Test
     public void testExpandChangesToCompleteLatteConstructs() throws Exception {
-        // Initialize test environment
-        setUp();
         
         String originalContent = "{block content}\nHello, world!\n{/block}";
         String modifiedContent = "{block content}\nHello, {if true}modified{/if} world!\n{/block}";
@@ -124,12 +112,8 @@ public class LatteIncrementalParserTest extends LattePluginTestBase {
     /**
      * Tests that the parser correctly handles multiple changes.
      */
-    
-    
     @Test
     public void testMultipleChanges() throws Exception {
-        // Initialize test environment
-        setUp();
         
         String originalContent = "{block content}\nHello, world!\n{/block}";
         String modifiedContent = "{block content}\nHello, {if true}modified{/if} world!\n{/block}\n{block footer}\nFooter\n{/block}";
@@ -154,12 +138,8 @@ public class LatteIncrementalParserTest extends LattePluginTestBase {
     /**
      * Tests that the parser correctly handles clearing the last known content.
      */
-    
-    
     @Test
     public void testClearLastKnownContent() throws Exception {
-        // Initialize test environment
-        setUp();
         
         String content = "{block content}\nHello, world!\n{/block}";
         

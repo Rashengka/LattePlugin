@@ -9,6 +9,8 @@ import org.latte.plugin.settings.LatteSettings;
 import org.latte.plugin.version.LatteVersion;
 import org.latte.plugin.version.LatteVersionManager;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 /**
  * Tests for the LatteSettings class and version override functionality.
  */
@@ -129,6 +131,10 @@ public class LatteSettingsTest extends LattePluginTestBase {
         settings.setEnableNetteApplication(true);
         settings.setEnableNetteForms(true);
         settings.setEnableNetteAssets(true);
+        settings.setEnableNetteDatabase(true);
+        settings.setEnableNetteSecurity(true);
+        settings.setEnableNetteMail(true);
+        settings.setEnableNetteHttp(true);
         
         // Get variables for the current project
         int allEnabledCount = NetteDefaultVariablesProvider.getAllVariables(getProject()).size();
@@ -153,8 +159,12 @@ public class LatteSettingsTest extends LattePluginTestBase {
         assertTrue("Disabling nette/forms should reduce variable count further", 
                   formsDisabledCount < applicationDisabledCount);
         
-        // Disable nette/assets
+        // Disable all remaining packages
         settings.setEnableNetteAssets(false);
+        settings.setEnableNetteDatabase(false);
+        settings.setEnableNetteSecurity(false);
+        settings.setEnableNetteMail(false);
+        settings.setEnableNetteHttp(false);
         
         // Get variables again
         int allDisabledCount = NetteDefaultVariablesProvider.getAllVariables(getProject()).size();

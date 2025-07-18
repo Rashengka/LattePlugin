@@ -51,13 +51,30 @@ public class NetteFilterProvider {
             new NetteFilter("firstUpper", "Converts the first character to uppercase", "latte/core"),
             new NetteFilter("capitalize", "Converts the first character of each word to uppercase", "latte/core"),
             new NetteFilter("escape", "Escapes a string for use inside HTML", "latte/core"),
-            new NetteFilter("escapeUrl", "Escapes a string for use inside URL", "latte/core"),
+            // Removed "escapeUrl" from core filters as it's part of the application package
             new NetteFilter("noescape", "Prints a variable without escaping", "latte/core"),
-            new NetteFilter("truncate", "Shortens a string to the given maximum length", "latte/core"),
-            new NetteFilter("substring", "Returns part of a string", "latte/core"),
+            // Added parameters to the following filters
+            new NetteFilter("truncate", "Shortens a string to the given maximum length", "latte/core",
+                    Arrays.asList(
+                            new NetteFilter.FilterParameter("length", "int", "Maximum length", false),
+                            new NetteFilter.FilterParameter("append", "string", "String to append if truncated", true)
+                    )),
+            new NetteFilter("substring", "Returns part of a string", "latte/core",
+                    Arrays.asList(
+                            new NetteFilter.FilterParameter("start", "int", "Start position", false),
+                            new NetteFilter.FilterParameter("length", "int", "Length of substring", true)
+                    )),
             new NetteFilter("trim", "Strips whitespace from the beginning and end of a string", "latte/core"),
-            new NetteFilter("padLeft", "Pads a string to a certain length with another string from the left", "latte/core"),
-            new NetteFilter("padRight", "Pads a string to a certain length with another string from the right", "latte/core"),
+            new NetteFilter("padLeft", "Pads a string to a certain length with another string from the left", "latte/core",
+                    Arrays.asList(
+                            new NetteFilter.FilterParameter("length", "int", "Target length", false),
+                            new NetteFilter.FilterParameter("padString", "string", "String to pad with", true)
+                    )),
+            new NetteFilter("padRight", "Pads a string to a certain length with another string from the right", "latte/core",
+                    Arrays.asList(
+                            new NetteFilter.FilterParameter("length", "int", "Target length", false),
+                            new NetteFilter.FilterParameter("padString", "string", "String to pad with", true)
+                    )),
             new NetteFilter("replace", "Replaces all occurrences of the search string with the replacement", "latte/core"),
             new NetteFilter("stripHtml", "Removes HTML tags and converts HTML entities to text", "latte/core"),
             new NetteFilter("strip", "Removes HTML tags", "latte/core"),
