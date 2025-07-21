@@ -10,6 +10,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import cz.hqm.latte.plugin.psi.LatteFile;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
@@ -28,6 +29,9 @@ public final class LatteCacheManager {
     // Maximum age of cache entries in milliseconds (30 minutes)
     private static final long MAX_CACHE_AGE = TimeUnit.MINUTES.toMillis(30);
     
+    // Minimum time between validity checks in milliseconds (1 second)
+    private static final long MIN_CHECK_INTERVAL = TimeUnit.SECONDS.toMillis(1);
+    
     // The project this cache manager is associated with
     private final Project project;
     
@@ -41,7 +45,13 @@ public final class LatteCacheManager {
      */
     public LatteCacheManager(Project project) {
         this.project = project;
-        this.templateCache = new ConcurrentHashMap<>();
+        // Use LinkedHashMap with access order to implement LRU cache efficiently
+        this.templateCache = new LinkedHashMap<String, CacheEntry>(16, 0.75f, true) {
+            @Override
+            protected boolean removeEldestEntry(Map.Entry<String, CacheEntry> eldest) {
+                return size() > MAX_CACHE_SIZE;
+            }
+        };
     }
     
     /**
@@ -63,16 +73,33 @@ public final class LatteCacheManager {
     @Nullable
     public LatteFile getCachedTemplate(@NotNull VirtualFile file) {
         String filePath = file.getPath();
-        CacheEntry entry = templateCache.get(filePath);
+        CacheEntry entry;
         
-        // Check if entry exists and is valid
-        if (entry != null && isEntryValid(entry, file)) {
-            // Update last access time
-            entry.lastAccessTime = System.currentTimeMillis();
-            return entry.template;
+        // Use synchronized block only for the get operation to minimize contention
+        synchronized (templateCache) {
+            entry = templateCache.get(filePath);
         }
         
-        return null;
+        if (entry == null) {
+            return null;
+        }
+        
+        long currentTime = System.currentTimeMillis();
+        
+        // Only check validity if enough time has passed since the last check
+        // This reduces the overhead of frequent validity checks
+        if (currentTime - entry.lastValidityCheckTime > MIN_CHECK_INTERVAL) {
+            if (!isEntryValid(entry, file)) {
+                synchronized (templateCache) {
+                    templateCache.remove(filePath);
+                }
+                return null;
+            }
+            entry.lastValidityCheckTime = currentTime;
+        }
+        
+        // The LinkedHashMap will automatically update access order
+        return entry.template;
     }
     
     /**
@@ -88,16 +115,10 @@ public final class LatteCacheManager {
         // Create new cache entry
         CacheEntry entry = new CacheEntry(template, file.getModificationStamp(), currentTime, currentTime);
         
-        // Add to cache
-        templateCache.put(filePath, entry);
-        
-        // Ensure cache doesn't exceed maximum size
-        if (templateCache.size() > MAX_CACHE_SIZE) {
-            // Remove least recently used entry
-            String oldestKey = findOldestEntry();
-            if (oldestKey != null) {
-                templateCache.remove(oldestKey);
-            }
+        // Add to cache with synchronization to ensure thread safety
+        synchronized (templateCache) {
+            templateCache.put(filePath, entry);
+            // The LinkedHashMap will automatically handle LRU eviction
         }
     }
     
@@ -107,14 +128,18 @@ public final class LatteCacheManager {
      * @param file The virtual file to invalidate the cache for
      */
     public void invalidateCache(@NotNull VirtualFile file) {
-        templateCache.remove(file.getPath());
+        synchronized (templateCache) {
+            templateCache.remove(file.getPath());
+        }
     }
     
     /**
      * Clears the entire cache.
      */
     public void clearCache() {
-        templateCache.clear();
+        synchronized (templateCache) {
+            templateCache.clear();
+        }
     }
     
     /**
@@ -137,30 +162,6 @@ public final class LatteCacheManager {
     }
     
     /**
-     * Finds the least recently used entry in the cache.
-     *
-     * @return The key of the least recently used entry, or null if the cache is empty
-     */
-    @Nullable
-    private String findOldestEntry() {
-        if (templateCache.isEmpty()) {
-            return null;
-        }
-        
-        String oldestKey = null;
-        long oldestTime = Long.MAX_VALUE;
-        
-        for (Map.Entry<String, CacheEntry> entry : templateCache.entrySet()) {
-            if (entry.getValue().lastAccessTime < oldestTime) {
-                oldestTime = entry.getValue().lastAccessTime;
-                oldestKey = entry.getKey();
-            }
-        }
-        
-        return oldestKey;
-    }
-    
-    /**
      * Class representing a cache entry.
      */
     private static class CacheEntry {
@@ -168,12 +169,14 @@ public final class LatteCacheManager {
         final long modificationStamp;
         final long creationTime;
         long lastAccessTime;
+        long lastValidityCheckTime;
         
         CacheEntry(LatteFile template, long modificationStamp, long creationTime, long lastAccessTime) {
             this.template = template;
             this.modificationStamp = modificationStamp;
             this.creationTime = creationTime;
             this.lastAccessTime = lastAccessTime;
+            this.lastValidityCheckTime = lastAccessTime; // Initialize validity check time
         }
     }
 }

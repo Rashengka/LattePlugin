@@ -369,6 +369,59 @@ You can configure the Nette package support in the plugin settings:
 
 The plugin provides code completion for default variables from Nette packages. When you type `$` in a Latte template, the plugin will suggest the available variables based on the enabled packages and their versions.
 
+### Navigation to PHP Methods
+
+The plugin supports navigation from Latte templates to PHP methods in presenters and controls:
+
+- From `n:href` attributes to presenter action methods
+- From `{link}` and `{plink}` macros to presenter action methods
+- From signal handlers (with `!` suffix) to handle methods
+- Automatic generation of missing methods with appropriate parameters
+
+### Component Autocomplete and Navigation
+
+The plugin provides autocomplete and navigation for components:
+
+- Autocomplete for component names in `{control}` macros
+- Navigation from `{control}` macros to component factory methods (`createComponentXXX`)
+- Proper capitalization handling for component names
+- Smart component detection based on both method name and return type:
+  - Detects methods that start with `createComponent` (but not exactly `createComponent()`)
+  - Identifies components by checking if the method returns `\Nette\Application\UI\Control`, `\Nette\ComponentModel\Component`, or a class that extends them
+  - Supports methods with any name that return a Control or Component
+  - Supports custom control classes that extend the base Control or Component classes
+
+### Form Autocomplete and Navigation
+
+The plugin provides autocomplete and navigation for forms:
+
+- Autocomplete for form names in `{form}` macros
+- Navigation from `{form}` macros to form factory methods
+- Proper capitalization handling for form names
+- Smart form detection based on both method name and return type:
+  - Detects methods that start with `createComponent` (but not exactly `createComponent()`)
+  - Identifies forms by checking if the method returns `\Nette\Application\UI\Form` or a class that extends it
+  - Supports methods with any name that return a Form (not just those ending with "Form")
+  - Supports custom form classes that extend the base Form class
+
+### Template Inclusion and Inheritance
+
+The plugin supports template inclusion and inheritance with navigation:
+
+- Navigation from `{include}` tags to included templates
+- Navigation from `{include #blockName}` to defined blocks
+- Support for `{includeBlock}` with version awareness
+- Support for `{sandbox}` tags
+- Support for block inheritance and `{define}` blocks
+
+### Type Macros and Type Checking
+
+The plugin provides support for type macros and type checking:
+
+- Support for `{varType}`, `{templateType}`, and other type-related macros
+- Navigation from type references to PHP classes
+- Type checking for variables and parameters
+
 ### Version-Specific Features
 
 Some features may be specific to certain versions of Nette packages. The plugin will provide appropriate code completion and other features based on the detected or selected versions.
@@ -389,13 +442,16 @@ For nette/database specific issues:
 
 ## Future Enhancements
 
-While the Latte Plugin currently supports many features from Latte and Nette packages, there are opportunities for enhancement to ensure complete coverage of all features and versions. See the [FUTURE_ENHANCEMENTS.md](FUTURE_ENHANCEMENTS.md) file for a detailed list of planned improvements, including:
+The Latte Plugin now supports a comprehensive set of features from Latte and Nette packages, including:
 
-- Latte 4.0+ support
-- Additional Nette packages
-- Enhanced n:attributes support
-- Advanced filters
-- More granular version-specific features
+- ✓ Latte 4.0+ support
+- ✓ Additional Nette packages
+- ✓ Enhanced n:attributes support
+- ✓ Advanced filters
+- ✓ More granular version-specific features
+- ✓ Better integration with PHP (navigation, autocomplete, type checking)
+
+See the [FUTURE_ENHANCEMENTS.md](FUTURE_ENHANCEMENTS.md) file for a detailed list of implemented features and future improvements, including:
+
 - Performance optimizations
-- Better integration with PHP
 - Improved testing and validation

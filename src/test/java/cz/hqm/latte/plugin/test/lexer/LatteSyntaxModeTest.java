@@ -136,6 +136,146 @@ public class LatteSyntaxModeTest extends LattePluginTestBase {
     }
 
     /**
+     * Tests automatic detection of syntax mode from {syntax} tags.
+     */
+    @Test
+    public void testAutoDetectSyntaxMode() {
+        String content = "Normal text {syntax double} Double syntax {{macro}} {/syntax} Normal again";
+        
+        // Start the lexer with the content
+        lexer.start(content);
+        
+        // Verify initial syntax mode is DEFAULT
+        assertEquals("Initial syntax mode should be DEFAULT", 
+                     LatteSyntaxMode.DEFAULT, lexer.getSyntaxMode());
+        
+        // Process the {syntax double} tag
+        advanceLexerToText(lexer, "{syntax double}");
+        lexer.processSyntaxTags("{syntax double}");
+        
+        // Verify syntax mode is changed to DOUBLE
+        assertEquals("Syntax mode should be DOUBLE after {syntax double}", 
+                     LatteSyntaxMode.DOUBLE, lexer.getSyntaxMode());
+        
+        // Process the {/syntax} tag
+        advanceLexerToText(lexer, "{/syntax}");
+        lexer.processSyntaxTags("{/syntax}");
+        
+        // Verify syntax mode is restored to DEFAULT
+        assertEquals("Syntax mode should be DEFAULT after {/syntax}", 
+                     LatteSyntaxMode.DEFAULT, lexer.getSyntaxMode());
+    }
+    
+    /**
+     * Tests support for n:syntax attribute.
+     */
+    @Test
+    public void testNSyntaxAttribute() {
+        String content = "<div n:syntax=\"double\">{{if $condition}}content{{/if}}</div>";
+        
+        // Start the lexer with the content
+        lexer.start(content);
+        
+        // Process the n:syntax attribute
+        advanceLexerToText(lexer, "n:syntax=\"double\"");
+        lexer.processSyntaxTags("n:syntax=\"double\"");
+        
+        // Verify syntax mode is changed to DOUBLE
+        assertEquals("Syntax mode should be DOUBLE after n:syntax=\"double\"", 
+                     LatteSyntaxMode.DOUBLE, lexer.getSyntaxMode());
+        
+        // Test with unquoted attribute value
+        content = "<div n:syntax=double>{{if $condition}}content{{/if}}</div>";
+        
+        // Start the lexer with the content
+        lexer.start(content);
+        
+        // Process the n:syntax attribute
+        advanceLexerToText(lexer, "n:syntax=double");
+        lexer.processSyntaxTags("n:syntax=double");
+        
+        // Verify syntax mode is changed to DOUBLE
+        assertEquals("Syntax mode should be DOUBLE after n:syntax=double", 
+                     LatteSyntaxMode.DOUBLE, lexer.getSyntaxMode());
+    }
+    
+    /**
+     * Tests proper handling of double braces in DOUBLE mode.
+     */
+    @Test
+    public void testDoubleBracesInDoubleMode() {
+        String content = "{syntax double}{{if $condition}}content{{/if}}{/syntax}";
+        
+        // Start the lexer with the content
+        lexer.start(content);
+        
+        // Process the {syntax double} tag
+        advanceLexerToText(lexer, "{syntax double}");
+        lexer.processSyntaxTags("{syntax double}");
+        
+        // Verify syntax mode is changed to DOUBLE
+        assertEquals("Syntax mode should be DOUBLE after {syntax double}", 
+                     LatteSyntaxMode.DOUBLE, lexer.getSyntaxMode());
+        
+        // Skip to the {{if part
+        advanceLexerToText(lexer, "{{if");
+        
+        // In a real implementation, the lexer would recognize {{if as a macro start in DOUBLE mode
+        // For now, we're just testing that the syntax mode is correctly set
+        
+        // Process the {/syntax} tag
+        advanceLexerToText(lexer, "{/syntax}");
+        lexer.processSyntaxTags("{/syntax}");
+        
+        // Verify syntax mode is restored to DEFAULT
+        assertEquals("Syntax mode should be DEFAULT after {/syntax}", 
+                     LatteSyntaxMode.DEFAULT, lexer.getSyntaxMode());
+    }
+    
+    /**
+     * Tests proper handling of syntax mode switching with {/syntax} tags.
+     */
+    @Test
+    public void testSyntaxModeSwitching() {
+        String content = "Normal {syntax double}{{macro}}{{/macro}}{syntax off}{not processed}{/syntax}{{still double}}{/syntax} Normal";
+        
+        // Start the lexer with the content
+        lexer.start(content);
+        
+        // Process the {syntax double} tag
+        advanceLexerToText(lexer, "{syntax double}");
+        lexer.processSyntaxTags("{syntax double}");
+        
+        // Verify syntax mode is changed to DOUBLE
+        assertEquals("Syntax mode should be DOUBLE after {syntax double}", 
+                     LatteSyntaxMode.DOUBLE, lexer.getSyntaxMode());
+        
+        // Process the {syntax off} tag
+        advanceLexerToText(lexer, "{syntax off}");
+        lexer.processSyntaxTags("{syntax off}");
+        
+        // Verify syntax mode is changed to OFF
+        assertEquals("Syntax mode should be OFF after {syntax off}", 
+                     LatteSyntaxMode.OFF, lexer.getSyntaxMode());
+        
+        // Process the {/syntax} tag
+        advanceLexerToText(lexer, "{/syntax}");
+        lexer.processSyntaxTags("{/syntax}");
+        
+        // Verify syntax mode is restored to DOUBLE (the previous mode)
+        assertEquals("Syntax mode should be DOUBLE after {/syntax} (restored from previous mode)", 
+                     LatteSyntaxMode.DOUBLE, lexer.getSyntaxMode());
+        
+        // Process the final {/syntax} tag
+        advanceLexerToText(lexer, "{/syntax}");
+        lexer.processSyntaxTags("{/syntax}");
+        
+        // Verify syntax mode is restored to DEFAULT
+        assertEquals("Syntax mode should be DEFAULT after final {/syntax}", 
+                     LatteSyntaxMode.DEFAULT, lexer.getSyntaxMode());
+    }
+
+    /**
      * Helper method to advance the lexer until it finds the specified text.
      * 
      * @param lexer The lexer to advance

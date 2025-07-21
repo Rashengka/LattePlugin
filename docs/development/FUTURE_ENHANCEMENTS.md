@@ -64,29 +64,96 @@ Implemented more granular version-specific features:
 - **Deprecated Features**: Added warnings for deprecated features in newer versions by creating a DeprecatedFeatureDetector
 - **Version Migration**: Added tools to help migrate between versions by developing a VersionMigrationHelper
 
-### 6. Performance Optimizations
+### 6. Performance Optimizations (Implemented)
 
-Optimize performance for large templates:
+Optimized performance for large templates:
 
-- **Caching**: Better caching of parsed templates
-- **Incremental Parsing**: Support for incremental parsing of templates
-- **Memory Usage**: Reduce memory usage for large templates
+- **Caching**: Implemented better caching of parsed templates in the LatteCacheManager class
+- **Incremental Parsing**: Added support for incremental parsing of templates in the LatteIncrementalParser class
+- **Memory Usage**: Reduced memory usage for large templates through the LatteMemoryOptimizer class
 
-### 7. Integration with PHP
+See PERFORMANCE_OPTIMIZATIONS.md for detailed information about the implementation.
 
-Improve integration with PHP code:
+### 7. Integration with PHP (Implemented)
 
+Improved integration with PHP code:
+
+- **Navigation to PHP Methods**: Added support for navigation from Latte templates to PHP methods in presenters and controls
+- **Component Autocomplete**: Added support for autocomplete of component names in {control} macros
+- **Component Navigation**: Added support for navigation from {control} macros to component factory methods
+- **Template Inclusion and Inheritance**: Added support for template inclusion and inheritance with navigation between templates and blocks
+- **Type Macros and Type Checking**: Added support for {varType}, {templateType}, and other type-related macros with navigation to PHP classes
 - **PHP Type Hints**: Better support for PHP type hints in templates
 - **PHP Variables**: Smarter detection of PHP variables available in templates
 - **PHP Functions**: Better support for PHP functions used in templates
 
-### 8. Testing and Validation
+### 8. NEON File Support
+``
+Add support for NEON (Nette Object Notation) files:
+
+- **Standalone NEON Support**: 
+  - **Syntax Highlighting**: Add syntax highlighting for NEON files
+  - **Code Completion**: Provide code completion for NEON syntax elements
+  - **Error Detection**: Detect and highlight syntax errors in NEON files
+  - **Formatting**: Add code formatting for NEON files
+  - **Structure View**: Provide a structure view for NEON files
+
+- **Nette Integration**:
+  - **Configuration Navigation**: Add navigation from Latte templates to NEON configuration files
+  - **Service Autocompletion**: Provide autocompletion for service names defined in NEON files
+  - **Parameter Autocompletion**: Provide autocompletion for parameters defined in NEON files
+  - **Presenter Mapping**: Support for presenter mapping defined in NEON files
+  - **Route Definition**: Support for route definitions in NEON files
+
+- **Advanced Features**:
+  - **Refactoring Support**: Add refactoring support for NEON files (rename, move, etc.)
+  - **Find Usages**: Add find usages support for elements defined in NEON files
+  - **Documentation**: Provide documentation for NEON syntax and features
+  - **Quick Fixes**: Add quick fixes for common NEON issues
+
+### 9. Enhanced IDE Integration
+
+Improve integration with IDE features:
+
+- **Live Templates**: Add more live templates for common Latte patterns
+- **Intentions**: Add more intention actions for common Latte operations
+- **Inspections**: Add more inspections to detect potential issues in templates
+- **Quick Documentation**: Enhance quick documentation for Latte macros, filters, and n:attributes
+- **Parameter Info**: Improve parameter info for macros and filters
+- **Code Folding**: Add code folding for Latte blocks and macros
+- **Color Settings**: Add more customizable color settings for Latte syntax elements
+
+### 10. Advanced Debugging Support
+
+Enhance debugging capabilities:
+
+- **Breakpoints**: Add support for breakpoints in Latte templates
+- **Variable Inspection**: Add support for inspecting variables in templates during debugging
+- **Step Through**: Add support for stepping through template execution
+- **Conditional Breakpoints**: Add support for conditional breakpoints in templates
+- **Watches**: Add support for watches in templates
+- **Debug Information**: Add more debug information for template execution
+
+### 11. Custom Template Engine Support
+
+Add support for custom template engines based on Latte:
+
+- **Custom Macro Detection**: Automatically detect custom macros from project code
+- **Custom Filter Detection**: Automatically detect custom filters from project code
+- **Custom n:attribute Detection**: Automatically detect custom n:attributes from project code
+- **Extension Points**: Add more extension points for custom template engines
+- **Configuration**: Add more configuration options for custom template engines
+
+### 12. Testing and Validation
 
 Enhance testing and validation:
 
 - **Test Coverage**: Increase test coverage for all features
 - **Validation**: Better validation of templates against Latte syntax
 - **Error Reporting**: Improved error reporting for template errors
+- **Test Templates**: Add support for testing templates
+- **Validation Rules**: Add more validation rules for templates
+- **Quick Fixes**: Add quick fixes for common template errors
 
 ## Implementation Priorities
 
@@ -96,12 +163,18 @@ Enhance testing and validation:
    - Version-specific features ✓
    - Additional Nette packages ✓
    - Advanced filters ✓
+   - Integration with PHP ✓
+   - Performance optimizations ✓
 
-2. **Medium Priority**:
-   - Integration with PHP
+2. **High Priority**:
+   - NEON file support
 
-3. **Low Priority**:
-   - Performance optimizations
+3. **Medium Priority**:
+   - Enhanced IDE integration
+   - Advanced debugging support
+   - Custom template engine support
+
+4. **Low Priority**:
    - Testing and validation enhancements
 
 ## Conclusion

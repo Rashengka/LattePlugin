@@ -5,6 +5,7 @@ import com.intellij.lexer.EmptyLexer;
 import com.intellij.psi.tree.IElementType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import java.util.Stack;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -17,8 +18,8 @@ public class LatteLexer extends LayeredLexer {
     // Current syntax mode
     private LatteSyntaxMode syntaxMode = LatteSyntaxMode.DEFAULT;
     
-    // Previous syntax mode (used to restore the mode after {/syntax})
-    private LatteSyntaxMode previousSyntaxMode = LatteSyntaxMode.DEFAULT;
+    // Stack of previous syntax modes (used to restore the mode after {/syntax})
+    private Stack<LatteSyntaxMode> syntaxModeStack = new Stack<>();
     
     // Pattern for matching syntax tag parameters - {syntax double} or {syntax off}
     private static final Pattern SYNTAX_PARAM_PATTERN = Pattern.compile("\\{syntax\\s+([a-zA-Z0-9_]+)\\}");
@@ -74,9 +75,9 @@ public class LatteLexer extends LayeredLexer {
      * @param parameter The syntax mode parameter ("double", "off", or any other value for DEFAULT)
      */
     public void setSyntaxMode(String parameter) {
-        // Store the current mode as the previous mode before changing it
+        // Push the current mode onto the stack before changing it
         // This allows us to restore the previous mode when {/syntax} is encountered
-        previousSyntaxMode = syntaxMode;
+        syntaxModeStack.push(syntaxMode);
         
         if ("double".equalsIgnoreCase(parameter)) {
             // Double braces mode: {{macro}}
@@ -90,7 +91,8 @@ public class LatteLexer extends LayeredLexer {
             syntaxMode = LatteSyntaxMode.DEFAULT;
         }
         
-        System.out.println("DEBUG: Set syntax mode to " + syntaxMode + ", previous mode was " + previousSyntaxMode);
+        System.out.println("DEBUG: Set syntax mode to " + syntaxMode + ", previous mode was " + 
+                          (syntaxModeStack.isEmpty() ? LatteSyntaxMode.DEFAULT : syntaxModeStack.peek()));
     }
     
     /**
@@ -119,9 +121,15 @@ public class LatteLexer extends LayeredLexer {
         // Case 2: Check for {/syntax} tag
         Matcher endSyntaxMatcher = SYNTAX_END_PATTERN.matcher(text);
         if (endSyntaxMatcher.find()) {
-            // Restore the previous syntax mode that was stored when {syntax} was processed
-            syntaxMode = previousSyntaxMode;
-            System.out.println("DEBUG: Restoring syntax mode to previous mode: " + syntaxMode);
+            // Restore the previous syntax mode from the stack
+            if (!syntaxModeStack.isEmpty()) {
+                syntaxMode = syntaxModeStack.pop();
+                System.out.println("DEBUG: Restoring syntax mode to previous mode: " + syntaxMode);
+            } else {
+                // If the stack is empty, default to DEFAULT mode
+                syntaxMode = LatteSyntaxMode.DEFAULT;
+                System.out.println("DEBUG: Stack is empty, restoring to DEFAULT mode");
+            }
             return;
         }
         

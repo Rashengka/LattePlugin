@@ -74,6 +74,84 @@ Verify that:
 2. Verify that HTML tag completion works
 3. Verify that HTML attribute completion works
 
+### 6. Test Navigation to PHP Methods
+
+1. Create a PHP file with a presenter class (e.g., `ProductPresenter.php`)
+2. Add action methods like `actionDetail()` and signal handlers like `handleDelete()`
+3. In your Latte file, add links to these methods:
+   ```latte
+   <a n:href="Product:detail">Detail</a>
+   <a href="{link delete!}">Delete</a>
+   <a href="{plink Product:detail}">Permanent Link</a>
+   ```
+4. Place the cursor on `Product:detail` or `delete!` and press Ctrl+B (or Cmd+B on Mac)
+5. Verify that navigation to the corresponding PHP method works
+
+### 7. Test Component Autocomplete and Navigation
+
+1. Create a PHP file with a presenter class that has component factory methods:
+   ```php
+   protected function createComponentProductList() {
+       return new \Nette\Application\UI\Control();
+   }
+   ```
+2. In your Latte file, add a control macro:
+   ```latte
+   {control productList}
+   ```
+3. Type `{control` and press Ctrl+Space to verify component name completion
+4. Place the cursor on `productList` and press Ctrl+B (or Cmd+B on Mac)
+5. Verify that navigation to the component factory method works
+
+### 8. Test Template Inclusion and Inheritance
+
+1. Create multiple Latte files with blocks and includes:
+   ```latte
+   {* parent.latte *}
+   {block content}{/block}
+
+   {* child.latte *}
+   {layout 'parent.latte'}
+   {block content}Child content{/block}
+
+   {* blocks.latte *}
+   {define modal}Modal content{/define}
+
+   {* main.latte *}
+   {include 'blocks.latte'}
+   {include #modal}
+   ```
+2. Place the cursor on file paths or block names and press Ctrl+B (or Cmd+B on Mac)
+3. Verify that navigation between templates and blocks works
+
+### 9. Test Type Macros and Type Checking
+
+1. Add type macros to your Latte file:
+   ```latte
+   {varType $user: \App\Model\User}
+   {templateType \App\Templates\ProductTemplate}
+   {var $count = 5}
+   ```
+2. Place the cursor on type references and press Ctrl+B (or Cmd+B on Mac)
+3. Verify that navigation to the referenced PHP classes works
+
+### 10. Test Version-Specific Features
+
+1. Create Latte files with version-specific features:
+   ```latte
+   {* Latte 2.x *}
+   {syntax double}
+   {{$variable}}
+
+   {* Latte 3.x+ *}
+   {switch $value}
+     {case 1}One{/case}
+     {case 2}Two{/case}
+     {default}Other{/default}
+   {/switch}
+   ```
+2. Verify that syntax highlighting and code completion work for version-specific features
+
 ## Reporting Issues
 
 If you encounter any issues during testing, please report them on the [GitHub Issues page](https://github.com/Rashengka/LattePlugin/issues) with the following information:

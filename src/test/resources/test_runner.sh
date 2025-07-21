@@ -97,7 +97,7 @@ echo -e "${YELLOW}Running gradle clean...${NC}"
 ./gradlew clean > /dev/null 2>&1
 
 # Build the gradle command with options
-GRADLE_CMD="./gradlew test"
+GRADLE_CMD="./gradlew check"
 
 # Add test specification
 if [ -n "$TEST_METHOD" ]; then

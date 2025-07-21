@@ -15,10 +15,10 @@ These errors occur because IntelliJ IDEA 2023.1.5 tries to access internal JDK A
 
 ### Solution
 
-To address these issues, the following system properties have been added to the test task in `build.gradle`:
+To address these issues, the following system properties have been added to the check task in `build.gradle`:
 
 ```gradle
-test {
+check {
     // Run tests in headless mode to avoid font-related errors
     systemProperty 'java.awt.headless', 'true'
     // Force IntelliJ to use core fonts instead of system fonts
@@ -150,10 +150,10 @@ For more details on Java installation and configuration, see [JAVA_INSTALL.md](J
 
 ## Other Test Configuration
 
-The test task is configured to use JUnit 4 and to log detailed information about test execution:
+The check task is configured to use JUnit 4 and to log detailed information about test execution:
 
 ```gradle
-test {
+check {
     useJUnit()
     testLogging {
         events "passed", "skipped", "failed", "standardOut", "standardError"
@@ -185,10 +185,10 @@ If you encounter other issues when running tests, consider:
 
 3. **Running with debug logging**:
    ```bash
-   ./gradlew test --debug
+   ./gradlew check --debug
    ```
 
 4. **Running specific tests**:
    ```bash
-   ./gradlew test --tests "cz.hqm.latte.plugin.test.YourTestClass"
+   ./gradlew check --tests "cz.hqm.latte.plugin.test.YourTestClass"
    ```

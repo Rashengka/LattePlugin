@@ -242,6 +242,43 @@ public class NetteMacroProvider {
             macros.addAll(SECURITY_MACROS);
         }
         
+        // Add version-specific macros only if at least one package is enabled
+        // and only add macros that correspond to enabled packages
+        if (anyPackageEnabled) {
+            // Get all version-specific macros
+            Set<NetteMacro> versionSpecificMacros = LatteVersionSpecificMacroProvider.getAllMacrosForCurrentVersion();
+            
+            // Filter macros based on enabled packages
+            Set<NetteMacro> filteredMacros = new HashSet<>();
+            for (NetteMacro macro : versionSpecificMacros) {
+                String packageName = macro.getPackageName();
+                
+                // Add core macros
+                if ("latte/latte".equals(packageName) || "latte/core".equals(packageName)) {
+                    filteredMacros.add(macro);
+                }
+                // Add package-specific macros only if the package is enabled
+                else if ("nette/application".equals(packageName) && settings.isEnableNetteApplication()) {
+                    filteredMacros.add(macro);
+                }
+                else if ("nette/forms".equals(packageName) && settings.isEnableNetteForms()) {
+                    filteredMacros.add(macro);
+                }
+                else if ("nette/assets".equals(packageName) && settings.isEnableNetteAssets()) {
+                    filteredMacros.add(macro);
+                }
+                else if ("nette/database".equals(packageName) && settings.isEnableNetteDatabase()) {
+                    filteredMacros.add(macro);
+                }
+                else if ("nette/security".equals(packageName) && settings.isEnableNetteSecurity()) {
+                    filteredMacros.add(macro);
+                }
+            }
+            
+            // Add filtered macros
+            macros.addAll(filteredMacros);
+        }
+        
         return macros;
     }
 
@@ -299,6 +336,43 @@ public class NetteMacroProvider {
         // Only add security attributes if at least one other package is enabled
         if (settings.isEnableNetteSecurity() && anyPackageEnabled) {
             attributes.addAll(SECURITY_ATTRIBUTES);
+        }
+        
+        // Add version-specific attributes only if at least one package is enabled
+        // and only add attributes that correspond to enabled packages
+        if (anyPackageEnabled) {
+            // Get all version-specific attributes
+            Set<NetteMacro> versionSpecificAttributes = LatteVersionSpecificMacroProvider.getNAttributes();
+            
+            // Filter attributes based on enabled packages
+            Set<NetteMacro> filteredAttributes = new HashSet<>();
+            for (NetteMacro attribute : versionSpecificAttributes) {
+                String packageName = attribute.getPackageName();
+                
+                // Add core attributes
+                if ("latte/latte".equals(packageName) || "latte/core".equals(packageName)) {
+                    filteredAttributes.add(attribute);
+                }
+                // Add package-specific attributes only if the package is enabled
+                else if ("nette/application".equals(packageName) && settings.isEnableNetteApplication()) {
+                    filteredAttributes.add(attribute);
+                }
+                else if ("nette/forms".equals(packageName) && settings.isEnableNetteForms()) {
+                    filteredAttributes.add(attribute);
+                }
+                else if ("nette/assets".equals(packageName) && settings.isEnableNetteAssets()) {
+                    filteredAttributes.add(attribute);
+                }
+                else if ("nette/database".equals(packageName) && settings.isEnableNetteDatabase()) {
+                    filteredAttributes.add(attribute);
+                }
+                else if ("nette/security".equals(packageName) && settings.isEnableNetteSecurity()) {
+                    filteredAttributes.add(attribute);
+                }
+            }
+            
+            // Add filtered attributes
+            attributes.addAll(filteredAttributes);
         }
         
         return attributes;

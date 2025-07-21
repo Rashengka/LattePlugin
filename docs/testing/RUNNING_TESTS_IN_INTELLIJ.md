@@ -11,7 +11,7 @@ java.lang.NoSuchMethodError: 'java.lang.String sun.font.Font2D.getTypographicFam
 
 These errors occur when IntelliJ IDEA accesses internal JDK APIs that are not available in the current JDK. While these errors can be safely ignored (as they don't affect the actual test logic), they can cause tests to fail when run directly in IntelliJ IDEA.
 
-The `test_runner.sh` script handles these errors gracefully, but when running tests directly in IntelliJ IDEA, additional configuration is needed.
+The `test_runner.sh` script (which now uses the Gradle 'check' task instead of 'test' task) handles these errors gracefully, but when running tests directly in IntelliJ IDEA, additional configuration is needed.
 
 ## Solution: Configure IntelliJ IDEA Run Configuration
 
@@ -81,7 +81,7 @@ If you prefer not to configure IntelliJ IDEA, you can always use the `test_runne
 ./src/test/resources/test_runner.sh cz.hqm.latte.plugin.test.settings.LatteSettingsTest
 ```
 
-This script handles the font-related errors gracefully and provides clear output about the test results.
+This script uses the Gradle 'check' task (instead of 'test' task) to run tests, handles font-related errors gracefully, and provides clear output about the test results.
 
 ## Troubleshooting
 

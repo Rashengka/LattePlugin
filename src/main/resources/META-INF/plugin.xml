@@ -39,9 +39,22 @@
         <completion.contributor language="Latte"
                                 implementationClass="cz.hqm.latte.plugin.completion.LatteCompletionContributor"/>
                                 
+        <!-- Nette component completion -->
+        <completion.contributor language="Latte"
+                                implementationClass="cz.hqm.latte.plugin.completion.NetteComponentCompletionContributor"/>
+                                
+        <!-- Nette form completion -->
+        <completion.contributor language="Latte"
+                                implementationClass="cz.hqm.latte.plugin.completion.NetteFormCompletionContributor"/>
+                                
         <!-- Documentation provider -->
         <lang.documentationProvider language="Latte"
                                     implementationClass="cz.hqm.latte.plugin.documentation.LatteDocumentationProvider"/>
+                                    
+        <!-- Navigation providers -->
+        <gotoDeclarationHandler implementation="cz.hqm.latte.plugin.navigation.LattePhpNavigationProvider"/>
+        <gotoDeclarationHandler implementation="cz.hqm.latte.plugin.inclusion.LatteTemplateInclusionNavigationProvider"/>
+        <gotoDeclarationHandler implementation="cz.hqm.latte.plugin.types.LatteTypeNavigationProvider"/>
                                     
         <!-- Color settings page for customizing syntax highlighting -->
         <colorSettingsPage implementation="cz.hqm.latte.plugin.highlighting.LatteColorSettingsPage"/>
