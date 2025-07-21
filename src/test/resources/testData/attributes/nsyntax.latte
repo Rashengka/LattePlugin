@@ -1,0 +1,40 @@
+{* Test file for n:syntax attribute *}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>n:syntax Test</title>
+</head>
+<body>
+    <h1>Testing n:syntax Attribute</h1>
+    
+    {* Test n:syntax="double" *}
+    <div n:syntax="double">
+        <p>Inside double syntax mode: {{$variable}}</p>
+        <p>Nested tags: {{if $condition}}Condition is true{{/if}}</p>
+    </div>
+    
+    {* Test n:syntax="off" *}
+    <div n:syntax="off">
+        <p>Inside off syntax mode: {$variable} should be treated as plain text</p>
+        <p>Latte macros like {if $condition}this{/if} should be ignored</p>
+    </div>
+    
+    {* Test interaction with {syntax} tags *}
+    <div n:syntax="double">
+        <p>Starting with double syntax: {{$variable1}}</p>
+        {syntax off}
+        <p>Switched to off syntax: {$variable2} should be plain text</p>
+        {/syntax}
+        <p>Back to double syntax: {{$variable3}}</p>
+    </div>
+    
+    {* Test unquoted attribute value *}
+    <div n:syntax=double>
+        <p>Unquoted double syntax: {{$variable}}</p>
+    </div>
+    
+    {* Test default syntax after all n:syntax elements *}
+    <p>Back to default syntax: {$variable}</p>
+</body>
+</html>

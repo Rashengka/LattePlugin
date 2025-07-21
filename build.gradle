@@ -155,6 +155,11 @@ test {
     ])
 
     doFirst {
+        System.clearProperty("idea.ignore.duplicated.injectors")
+        System.clearProperty("idea.disable.language.injection")
+
+        forkEvery = 1
+
         println "=== JVM Arguments for tests ==="
         jvmArgs.each { arg ->
             println "  $arg"

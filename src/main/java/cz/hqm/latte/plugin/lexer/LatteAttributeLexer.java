@@ -16,6 +16,28 @@ import java.util.regex.Pattern;
  * Handles tokenization of Latte attributes and detects syntax errors.
  */
 public class LatteAttributeLexer extends LexerBase {
+    // Reference to the parent lexer to access the syntax mode
+    private LatteLexer parentLexer;
+    
+    // Current attribute name being processed
+    private String currentAttributeName;
+    
+    /**
+     * Default constructor.
+     */
+    public LatteAttributeLexer() {
+        this(null);
+    }
+    
+    /**
+     * Constructor with parent lexer.
+     * 
+     * @param parentLexer The parent lexer
+     */
+    public LatteAttributeLexer(LatteLexer parentLexer) {
+        this.parentLexer = parentLexer;
+        this.currentAttributeName = null;
+    }
     // Valid attribute prefixes
     private static final Set<String> VALID_ATTRIBUTE_PREFIXES = new HashSet<>(Arrays.asList(
             "n:", "n:inner-", "n:tag-", "n:class-", "n:attr-", 
@@ -27,7 +49,7 @@ public class LatteAttributeLexer extends LexerBase {
     private static final Set<String> VALID_ATTRIBUTE_NAMES = new HashSet<>(Arrays.asList(
             "n:if", "n:ifset", "n:foreach", "n:inner-foreach", "n:class", "n:attr", "n:tag",
             "n:snippet", "n:block", "n:include", "n:inner-if", "n:inner-ifset", "n:ifcontent",
-            "n:href", "n:name", "n:nonce"
+            "n:href", "n:name", "n:nonce", "n:syntax"
     ));
     
     // Patterns for matching different parts of an attribute
@@ -106,27 +128,41 @@ public class LatteAttributeLexer extends LexerBase {
     private void handleInitialState() {
         // Check for attribute name
         String text = buffer.subSequence(position, endOffset).toString();
+        System.out.println("DEBUG: handleInitialState processing text: " + text);
         Matcher matcher = ATTRIBUTE_NAME_PATTERN.matcher(text);
         
         if (matcher.find()) {
             String attrName = matcher.group(1);
+            System.out.println("DEBUG: Found attribute name: " + attrName);
             position += matcher.end();
+            
+            // Store the current attribute name for later use
+            currentAttributeName = attrName;
+            System.out.println("DEBUG: Set currentAttributeName to: " + currentAttributeName);
             
             // Check if it's a valid attribute name
             // For the specific test case "n:invalid", we need to explicitly mark it as invalid
             if (attrName.equals("n:invalid")) {
                 tokenType = LatteTokenTypes.LATTE_ERROR_INVALID_ATTRIBUTE_SYNTAX;
+                System.out.println("DEBUG: Invalid attribute name: n:invalid");
             } else if (VALID_ATTRIBUTE_NAMES.contains(attrName) || 
                     VALID_ATTRIBUTE_PREFIXES.stream().anyMatch(prefix -> attrName.startsWith(prefix))) {
                 tokenType = LatteTokenTypes.LATTE_ATTRIBUTE_NAME;
+                System.out.println("DEBUG: Valid attribute name: " + attrName);
+                if (attrName.equals("n:syntax")) {
+                    System.out.println("DEBUG: Found n:syntax attribute!");
+                }
             } else {
                 tokenType = LatteTokenTypes.LATTE_ERROR_INVALID_ATTRIBUTE_SYNTAX;
+                System.out.println("DEBUG: Invalid attribute name: " + attrName);
             }
             
             tokenEnd = position;
             state = STATE_AFTER_NAME;
             return;
         }
+        
+        System.out.println("DEBUG: No attribute name found in text: " + text);
         
         // If not an attribute name, skip to the end
         position = endOffset;
@@ -195,6 +231,19 @@ public class LatteAttributeLexer extends LexerBase {
                     foundClosingQuote = true;
                     tokenType = LatteTokenTypes.LATTE_ATTRIBUTE_VALUE;
                     tokenEnd = position;
+            
+                    // Check if this is an n:syntax attribute and update the syntax mode
+                    if ("n:syntax".equals(currentAttributeName) && parentLexer != null) {
+                        String attributeValue = buffer.subSequence(tokenStart, tokenEnd).toString();
+                        System.out.println("DEBUG: Found n:syntax attribute with value: " + attributeValue);
+                        System.out.println("DEBUG: Current attribute name: " + currentAttributeName);
+                        System.out.println("DEBUG: Parent lexer is " + (parentLexer != null ? "not null" : "null"));
+                        parentLexer.setSyntaxMode(attributeValue);
+                        System.out.println("DEBUG: After setting syntax mode, mode is: " + parentLexer.getSyntaxMode());
+                    } else {
+                        System.out.println("DEBUG: Not updating syntax mode. currentAttributeName=" + currentAttributeName + ", parentLexer=" + (parentLexer != null ? "not null" : "null"));
+                    }
+            
                     position++;  // Skip the closing quote
                     state = STATE_AFTER_VALUE;
                     break;
@@ -223,6 +272,19 @@ public class LatteAttributeLexer extends LexerBase {
         if (position > valueStart) {
             tokenType = LatteTokenTypes.LATTE_ATTRIBUTE_VALUE;
             tokenEnd = position;
+            
+            // Check if this is an n:syntax attribute and update the syntax mode
+            if ("n:syntax".equals(currentAttributeName) && parentLexer != null) {
+                String attributeValue = buffer.subSequence(valueStart, position).toString();
+                System.out.println("DEBUG: Found n:syntax attribute with unquoted value: " + attributeValue);
+                System.out.println("DEBUG: Current attribute name: " + currentAttributeName);
+                System.out.println("DEBUG: Parent lexer is " + (parentLexer != null ? "not null" : "null"));
+                parentLexer.setSyntaxMode(attributeValue);
+                System.out.println("DEBUG: After setting syntax mode, mode is: " + parentLexer.getSyntaxMode());
+            } else {
+                System.out.println("DEBUG: Not updating syntax mode (unquoted). currentAttributeName=" + currentAttributeName + ", parentLexer=" + (parentLexer != null ? "not null" : "null"));
+            }
+            
             state = STATE_AFTER_VALUE;
         } else {
             tokenType = LatteTokenTypes.LATTE_ERROR_INVALID_ATTRIBUTE_SYNTAX;

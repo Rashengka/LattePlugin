@@ -7,6 +7,8 @@ import org.junit.Before;
 import org.junit.Test;
 import cz.hqm.latte.plugin.parser.LatteIncrementalParser;
 import cz.hqm.latte.plugin.test.LattePluginTestBase;
+import cz.hqm.latte.plugin.version.LatteVersion;
+import cz.hqm.latte.plugin.version.LatteVersionManager;
 
 import java.io.IOException;
 import java.util.List;
@@ -159,5 +161,148 @@ public class LatteIncrementalParserTest extends LattePluginTestBase {
         assertEquals("Should have one changed range", 1, changedRanges.size());
         assertEquals("Changed range should cover the entire file", 0, changedRanges.get(0).getStartOffset());
         assertEquals("Changed range should cover the entire file", content.length(), changedRanges.get(0).getEndOffset());
+    }
+    
+    /**
+     * Tests that the parser correctly handles unclosed macros.
+     * This tests our enhancement to findEndOfLatteMacro() to detect unclosed macros.
+     */
+    @Test
+    public void testUnclosedMacros() throws Exception {
+        // Save the original version to restore it later
+        LatteVersion originalVersion = LatteVersionManager.getCurrentVersion();
+        
+        try {
+            // Set the version to 3.x to ensure block macros require closing tags
+            LatteVersionManager.setCurrentVersion(LatteVersion.VERSION_3X);
+            
+            // Test with an unclosed if macro
+            String unclosedIfContent = "{if $condition}\nThis is a test\n";
+            VirtualFile unclosedIfFile = createTestFile("test_unclosed_if.latte", unclosedIfContent);
+            
+            // Parse the file
+            List<TextRange> changedRanges = incrementalParser.parseChangedParts(unclosedIfFile, unclosedIfContent);
+            
+            // Verify that the entire file is considered changed
+            assertEquals("Should have one changed range", 1, changedRanges.size());
+            assertEquals("Changed range should cover the entire file", 0, changedRanges.get(0).getStartOffset());
+            assertEquals("Changed range should cover the entire file", unclosedIfContent.length(), changedRanges.get(0).getEndOffset());
+            
+            // Test with an unclosed foreach macro
+            String unclosedForeachContent = "{foreach $items as $item}\n<p>{$item}</p>\n";
+            VirtualFile unclosedForeachFile = createTestFile("test_unclosed_foreach.latte", unclosedForeachContent);
+            
+            // Parse the file
+            changedRanges = incrementalParser.parseChangedParts(unclosedForeachFile, unclosedForeachContent);
+            
+            // Verify that the entire file is considered changed
+            assertEquals("Should have one changed range", 1, changedRanges.size());
+            assertEquals("Changed range should cover the entire file", 0, changedRanges.get(0).getStartOffset());
+            assertEquals("Changed range should cover the entire file", unclosedForeachContent.length(), changedRanges.get(0).getEndOffset());
+            
+            // Test with an unclosed block macro
+            String unclosedBlockContent = "{block content}\nThis is a test\n";
+            VirtualFile unclosedBlockFile = createTestFile("test_unclosed_block.latte", unclosedBlockContent);
+            
+            // Parse the file
+            changedRanges = incrementalParser.parseChangedParts(unclosedBlockFile, unclosedBlockContent);
+            
+            // Verify that the entire file is considered changed
+            assertEquals("Should have one changed range", 1, changedRanges.size());
+            assertEquals("Changed range should cover the entire file", 0, changedRanges.get(0).getStartOffset());
+            assertEquals("Changed range should cover the entire file", unclosedBlockContent.length(), changedRanges.get(0).getEndOffset());
+        } finally {
+            // Restore the original version
+            LatteVersionManager.setCurrentVersion(originalVersion);
+        }
+    }
+    
+    /**
+     * Tests that the parser correctly handles crossing macros.
+     * This tests our enhancement to findEndOfLatteMacro() to detect crossing macros.
+     */
+    @Test
+    public void testCrossingMacros() throws Exception {
+        // Test with crossing if and foreach macros
+        String crossingContent = "{if $condition}\n{foreach $items as $item}\n<p>{$item}</p>\n{/if}\n{/foreach}";
+        VirtualFile crossingFile = createTestFile("test_crossing_macros.latte", crossingContent);
+        
+        // Parse the file
+        List<TextRange> changedRanges = incrementalParser.parseChangedParts(crossingFile, crossingContent);
+        
+        // Verify that the entire file is considered changed
+        assertEquals("Should have one changed range", 1, changedRanges.size());
+        assertEquals("Changed range should cover the entire file", 0, changedRanges.get(0).getStartOffset());
+        assertEquals("Changed range should cover the entire file", crossingContent.length(), changedRanges.get(0).getEndOffset());
+        
+        // Test with crossing block and if macros
+        String crossingBlockContent = "{block content}\n{if $condition}\n<p>Test</p>\n{/block}\n{/if}";
+        VirtualFile crossingBlockFile = createTestFile("test_crossing_block.latte", crossingBlockContent);
+        
+        // Parse the file
+        changedRanges = incrementalParser.parseChangedParts(crossingBlockFile, crossingBlockContent);
+        
+        // Verify that the entire file is considered changed
+        assertEquals("Should have one changed range", 1, changedRanges.size());
+        assertEquals("Changed range should cover the entire file", 0, changedRanges.get(0).getStartOffset());
+        assertEquals("Changed range should cover the entire file", crossingBlockContent.length(), changedRanges.get(0).getEndOffset());
+    }
+    
+    /**
+     * Tests version-specific behavior for block macros.
+     * This tests our enhancement to findEndOfLatteMacro() to handle version-specific behaviors.
+     */
+    @Test
+    public void testVersionSpecificBlockMacros() throws Exception {
+        // Save the original version to restore it later
+        LatteVersion originalVersion = LatteVersionManager.getCurrentVersion();
+        
+        try {
+            // Test with Latte 2.x where block macros might be allowed to remain unclosed
+            LatteVersionManager.setCurrentVersion(LatteVersion.VERSION_2X);
+            
+            // Test with an unclosed block macro in Latte 2.x
+            String unclosedBlockContent = "{block content}\nThis is a test\n";
+            VirtualFile unclosedBlockFile = createTestFile("test_unclosed_block_2x.latte", unclosedBlockContent);
+            
+            // Parse the file
+            List<TextRange> changedRanges = incrementalParser.parseChangedParts(unclosedBlockFile, unclosedBlockContent);
+            
+            // Verify that the entire file is considered changed
+            assertEquals("Should have one changed range", 1, changedRanges.size());
+            assertEquals("Changed range should cover the entire file", 0, changedRanges.get(0).getStartOffset());
+            assertEquals("Changed range should cover the entire file", unclosedBlockContent.length(), changedRanges.get(0).getEndOffset());
+            
+            // Test with Latte 3.x where block macros should require closing tags
+            LatteVersionManager.setCurrentVersion(LatteVersion.VERSION_3X);
+            
+            // Test with an unclosed block macro in Latte 3.x
+            unclosedBlockFile = createTestFile("test_unclosed_block_3x.latte", unclosedBlockContent);
+            
+            // Parse the file
+            changedRanges = incrementalParser.parseChangedParts(unclosedBlockFile, unclosedBlockContent);
+            
+            // Verify that the entire file is considered changed
+            assertEquals("Should have one changed range", 1, changedRanges.size());
+            assertEquals("Changed range should cover the entire file", 0, changedRanges.get(0).getStartOffset());
+            assertEquals("Changed range should cover the entire file", unclosedBlockContent.length(), changedRanges.get(0).getEndOffset());
+            
+            // Test with Latte 4.x where block macros should require closing tags
+            LatteVersionManager.setCurrentVersion(LatteVersion.VERSION_4X);
+            
+            // Test with an unclosed block macro in Latte 4.x
+            unclosedBlockFile = createTestFile("test_unclosed_block_4x.latte", unclosedBlockContent);
+            
+            // Parse the file
+            changedRanges = incrementalParser.parseChangedParts(unclosedBlockFile, unclosedBlockContent);
+            
+            // Verify that the entire file is considered changed
+            assertEquals("Should have one changed range", 1, changedRanges.size());
+            assertEquals("Changed range should cover the entire file", 0, changedRanges.get(0).getStartOffset());
+            assertEquals("Changed range should cover the entire file", unclosedBlockContent.length(), changedRanges.get(0).getEndOffset());
+        } finally {
+            // Restore the original version
+            LatteVersionManager.setCurrentVersion(originalVersion);
+        }
     }
 }

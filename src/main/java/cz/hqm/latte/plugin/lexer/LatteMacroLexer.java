@@ -18,6 +18,49 @@ import java.util.regex.Pattern;
  * Handles tokenization of Latte macros and detects syntax errors.
  */
 public class LatteMacroLexer extends LexerBase {
+    
+    // Reference to the parent lexer to access the current syntax mode
+    private LatteLexer parentLexer;
+    
+    // Current syntax mode, default to DEFAULT if parent lexer is not available
+    private LatteSyntaxMode syntaxMode = LatteSyntaxMode.DEFAULT;
+    
+    /**
+     * Default constructor.
+     */
+    public LatteMacroLexer() {
+        this(null);
+    }
+    
+    /**
+     * Constructor with parent lexer.
+     * 
+     * @param parentLexer The parent lexer
+     */
+    public LatteMacroLexer(LatteLexer parentLexer) {
+        this.parentLexer = parentLexer;
+    }
+    
+    /**
+     * Gets the current syntax mode.
+     * 
+     * @return The current syntax mode
+     */
+    public LatteSyntaxMode getSyntaxMode() {
+        if (parentLexer != null) {
+            return parentLexer.getSyntaxMode();
+        }
+        return syntaxMode;
+    }
+    
+    /**
+     * Sets the current syntax mode.
+     * 
+     * @param mode The syntax mode to set
+     */
+    public void setSyntaxMode(LatteSyntaxMode mode) {
+        this.syntaxMode = mode;
+    }
     // Built-in macro names (common macros in Latte)
     private static final Set<String> BUILT_IN_MACRO_NAMES = new HashSet<>(Arrays.asList(
             "if", "else", "elseif", "ifset", "ifCurrent", "foreach", "for", "while",
@@ -64,6 +107,76 @@ public class LatteMacroLexer extends LexerBase {
         advance();
     }
     
+    /**
+     * Checks if the current position is at the start of a macro based on the current syntax mode.
+     * 
+     * @param position The position to check
+     * @return True if the position is at the start of a macro, false otherwise
+     */
+    private boolean isAtMacroStart(int position) {
+        if (position >= endOffset - 1) {
+            return false;
+        }
+        
+        LatteSyntaxMode mode = getSyntaxMode();
+        
+        switch (mode) {
+            case DEFAULT:
+                // In default mode, macros start with a single brace
+                return buffer.charAt(position) == '{' && buffer.charAt(position + 1) != '{';
+                
+            case DOUBLE:
+                // In double mode, macros start with double braces
+                return position < endOffset - 2 && 
+                       buffer.charAt(position) == '{' && 
+                       buffer.charAt(position + 1) == '{';
+                
+            case OFF:
+                // In off mode, only {/syntax} is recognized as a macro
+                if (position < endOffset - 8 && buffer.charAt(position) == '{') {
+                    String potentialTag = buffer.subSequence(position, Math.min(position + 9, endOffset)).toString();
+                    return potentialTag.startsWith("{/syntax}");
+                }
+                return false;
+                
+            default:
+                return buffer.charAt(position) == '{' && buffer.charAt(position + 1) != '{';
+        }
+    }
+    
+    /**
+     * Checks if the current position is at the end of a macro based on the current syntax mode.
+     * 
+     * @param position The position to check
+     * @return True if the position is at the end of a macro, false otherwise
+     */
+    private boolean isAtMacroEnd(int position) {
+        if (position >= endOffset) {
+            return false;
+        }
+        
+        LatteSyntaxMode mode = getSyntaxMode();
+        
+        switch (mode) {
+            case DEFAULT:
+                // In default mode, macros end with a single brace
+                return buffer.charAt(position) == '}';
+                
+            case DOUBLE:
+                // In double mode, macros end with double braces
+                return position < endOffset - 1 && 
+                       buffer.charAt(position) == '}' && 
+                       buffer.charAt(position + 1) == '}';
+                
+            case OFF:
+                // In off mode, only {/syntax} is recognized as a macro
+                return buffer.charAt(position) == '}';
+                
+            default:
+                return buffer.charAt(position) == '}';
+        }
+    }
+    
     @Override
     public void advance() {
         if (position >= endOffset) {
@@ -73,6 +186,40 @@ public class LatteMacroLexer extends LexerBase {
         }
         
         tokenStart = position;
+        
+        // Get the current syntax mode
+        LatteSyntaxMode mode = getSyntaxMode();
+        
+        // Special handling for OFF mode - treat everything as plain text until {/syntax}
+        if (mode == LatteSyntaxMode.OFF) {
+            // Check if we're at the {/syntax} tag
+            if (position < endOffset - 8 && buffer.charAt(position) == '{') {
+                String potentialTag = buffer.subSequence(position, Math.min(position + 9, endOffset)).toString();
+                if (potentialTag.startsWith("{/syntax}")) {
+                    // We found the end syntax tag, process it normally
+                    // This will be handled by the LatteLexer to switch back to DEFAULT mode
+                } else {
+                    // Not the end syntax tag, treat as plain text
+                    // Find the next potential {/syntax} tag or end of buffer
+                    int endPos = position;
+                    while (endPos < endOffset) {
+                        if (endPos < endOffset - 8 && buffer.charAt(endPos) == '{') {
+                            String tag = buffer.subSequence(endPos, Math.min(endPos + 9, endOffset)).toString();
+                            if (tag.startsWith("{/syntax}")) {
+                                break;
+                            }
+                        }
+                        endPos++;
+                    }
+                    
+                    // Return all text up to the potential end tag or end of buffer
+                    tokenType = LatteTokenTypes.LATTE_MACRO_CONTENT;
+                    position = endPos;
+                    tokenEnd = position;
+                    return;
+                }
+            }
+        }
         
         // For the test case where we're directly passing the macro name without the opening brace
         if (position == startOffset) {
@@ -96,10 +243,19 @@ public class LatteMacroLexer extends LexerBase {
             }
         }
         
-        // Check for macro end
-        if (buffer.charAt(position) == '}') {
+        // Check for macro end based on syntax mode
+        if (isAtMacroEnd(position)) {
             tokenType = LatteTokenTypes.LATTE_MACRO_END;
-            tokenEnd = ++position;
+            
+            // In DOUBLE mode, we need to advance past both closing braces
+            if (mode == LatteSyntaxMode.DOUBLE && position < endOffset - 1 && 
+                buffer.charAt(position) == '}' && buffer.charAt(position + 1) == '}') {
+                position += 2;
+            } else {
+                position++;
+            }
+            
+            tokenEnd = position;
             return;
         }
         
@@ -155,12 +311,12 @@ public class LatteMacroLexer extends LexerBase {
         
         // Handle macro content
         while (position < endOffset) {
-            char c = buffer.charAt(position);
-            
-            // Stop at macro end
-            if (c == '}') {
+            // Stop at macro end based on syntax mode
+            if (isAtMacroEnd(position)) {
                 break;
             }
+            
+            char c = buffer.charAt(position);
             
             // Handle pipe for filters
             if (c == '|') {
@@ -201,7 +357,7 @@ public class LatteMacroLexer extends LexerBase {
                     // Invalid filter syntax
                     tokenType = LatteTokenTypes.LATTE_ERROR_INVALID_FILTER_SYNTAX;
                     // Advance to the next pipe or the end of the macro
-                    while (position < endOffset && buffer.charAt(position) != '|' && buffer.charAt(position) != '}') {
+                    while (position < endOffset && buffer.charAt(position) != '|' && !isAtMacroEnd(position)) {
                         position++;
                     }
                     tokenEnd = position;

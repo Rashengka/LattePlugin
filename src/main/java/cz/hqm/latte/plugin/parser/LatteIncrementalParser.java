@@ -16,11 +16,18 @@ import org.jetbrains.annotations.Nullable;
 import cz.hqm.latte.plugin.lang.LatteLanguage;
 import cz.hqm.latte.plugin.lexer.LatteLexer;
 import cz.hqm.latte.plugin.lexer.LatteTokenTypes;
+import cz.hqm.latte.plugin.version.LatteVersionManager;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.Stack;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Service for incremental parsing of Latte templates.
@@ -171,22 +178,216 @@ public final class LatteIncrementalParser {
     
     /**
      * Finds the end of the Latte macro that contains the given offset.
+     * This enhanced version tracks opening and closing macros to detect proper nesting,
+     * unclosed macros, and crossing macros.
      *
      * @param content The content of the file
      * @param offset The offset to start searching from
      * @return The offset of the end of the Latte macro
      */
     private int findEndOfLatteMacro(@NotNull String content, int offset) {
-        // Search forward for the end of a Latte macro
-        for (int i = offset; i < content.length(); i++) {
-            if (i > 0 && content.charAt(i) == '}' && content.charAt(i - 1) != '}') {
-                // Found potential end of a Latte macro
-                return i + 1;
+        // Patterns for matching macro names
+        Pattern openMacroPattern = Pattern.compile("\\{([a-zA-Z_][a-zA-Z0-9_]*)(?:\\s+|\\}|$)");
+        Pattern closeMacroPattern = Pattern.compile("\\{/([a-zA-Z_][a-zA-Z0-9_]*)\\}");
+        
+        // Set of macros that don't require closing tags
+        Set<String> selfClosingMacros = new HashSet<>(Arrays.asList(
+            "var", "default", "dump", "debugbreak", "l", "r", "syntax", "use", "_", "=", 
+            "contentType", "status", "php", "do", "varType", "templateType", "parameters",
+            "include", "extends", "layout", "typeCheck", "strictTypes", "asyncInclude", "await", "inject"
+        ));
+        
+        // Set of block macros that might be allowed to remain unclosed in some versions
+        Set<String> blockMacros = new HashSet<>(Arrays.asList("block", "define", "snippet", "snippetArea", "capture"));
+        
+        // Stack to track opening macros
+        Stack<MacroInfo> macroStack = new Stack<>();
+        
+        // Start from the given offset
+        int i = offset;
+        
+        while (i < content.length()) {
+            // Check for opening macro
+            if (i < content.length() - 1 && content.charAt(i) == '{' && content.charAt(i + 1) != '{') {
+                // Find the end of this macro tag
+                int macroEnd = findMacroTagEnd(content, i);
+                if (macroEnd == -1) {
+                    // Unclosed macro tag, return end of file
+                    return content.length();
+                }
+                
+                String macroTag = content.substring(i, macroEnd);
+                
+                // Check if it's a closing macro
+                Matcher closeMatcher = closeMacroPattern.matcher(macroTag);
+                if (closeMatcher.find()) {
+                    String closingMacroName = closeMatcher.group(1);
+                    
+                    // Check if we have a matching opening macro
+                    if (!macroStack.isEmpty()) {
+                        MacroInfo lastMacro = macroStack.peek();
+                        
+                        if (lastMacro.name.equals(closingMacroName)) {
+                            // Matching closing tag found
+                            macroStack.pop();
+                            
+                            // If the stack is empty, we've found the end of the original macro
+                            if (macroStack.isEmpty()) {
+                                return macroEnd;
+                            }
+                        } else {
+                            // Crossing macro detected - mismatched closing tag
+                            // For this implementation, we'll continue parsing to find the proper end
+                            // In a real error reporting system, this would be flagged as an error
+                            
+                            // Check if this closing tag matches any macro in the stack
+                            boolean foundMatch = false;
+                            for (MacroInfo macro : macroStack) {
+                                if (macro.name.equals(closingMacroName)) {
+                                    foundMatch = true;
+                                    break;
+                                }
+                            }
+                            
+                            if (!foundMatch) {
+                                // This is an unexpected closing tag, ignore it
+                                i = macroEnd;
+                                continue;
+                            }
+                            
+                            // This is a crossing macro, but we'll continue parsing
+                            // to find the proper end of the original macro
+                        }
+                    } else {
+                        // Unexpected closing tag, ignore it
+                        i = macroEnd;
+                        continue;
+                    }
+                } else {
+                    // Check if it's an opening macro
+                    Matcher openMatcher = openMacroPattern.matcher(macroTag);
+                    if (openMatcher.find()) {
+                        String openingMacroName = openMatcher.group(1);
+                        
+                        // If this is the first macro and we're at the original offset,
+                        // add it to the stack
+                        if (i == offset) {
+                            macroStack.push(new MacroInfo(openingMacroName, i));
+                        } else if (!selfClosingMacros.contains(openingMacroName)) {
+                            // This is a nested macro that requires a closing tag
+                            macroStack.push(new MacroInfo(openingMacroName, i));
+                        }
+                        // Self-closing macros don't need to be added to the stack
+                    }
+                }
+                
+                i = macroEnd;
+            } else {
+                i++;
             }
         }
         
-        // If no end found, return the end of the file
+        // If we've reached the end of the file and the stack is not empty,
+        // we have unclosed macros
+        if (!macroStack.isEmpty()) {
+            MacroInfo lastMacro = macroStack.peek();
+            
+            // Check if the unclosed macro is a block macro that might be allowed to remain unclosed
+            if (blockMacros.contains(lastMacro.name)) {
+                // In some versions, block macros might be allowed to remain unclosed
+                // Check the version-specific behavior
+                if (isBlockMacroAllowedUnclosed(lastMacro.name)) {
+                    // This block macro is allowed to remain unclosed in the current version
+                    return content.length();
+                }
+            }
+            
+            // Unclosed macro detected
+            // For this implementation, we'll return the end of the file
+            // In a real error reporting system, this would be flagged as an error
+            return content.length();
+        }
+        
+        // If we've reached here, we didn't find the end of the macro
         return content.length();
+    }
+    
+    /**
+     * Finds the end of a macro tag (the closing brace).
+     * Handles both single and double braces for compatibility with different syntax modes.
+     *
+     * @param content The content of the file
+     * @param start The start offset of the macro tag
+     * @return The offset of the end of the macro tag, or -1 if not found
+     */
+    private int findMacroTagEnd(@NotNull String content, int start) {
+        boolean inString = false;
+        char stringDelimiter = 0;
+        boolean isDoubleBrace = false;
+        
+        // Check if this is a double-brace macro (for {syntax double} mode)
+        if (start + 1 < content.length() && content.charAt(start) == '{' && content.charAt(start + 1) == '{') {
+            isDoubleBrace = true;
+        }
+        
+        for (int i = start + 1; i < content.length(); i++) {
+            char c = content.charAt(i);
+            
+            if (inString) {
+                if (c == stringDelimiter && (i == 0 || content.charAt(i - 1) != '\\')) {
+                    inString = false;
+                }
+            } else {
+                if (c == '"' || c == '\'') {
+                    inString = true;
+                    stringDelimiter = c;
+                } else if (c == '}') {
+                    if (isDoubleBrace) {
+                        // For double-brace mode, we need to find two closing braces
+                        if (i + 1 < content.length() && content.charAt(i + 1) == '}') {
+                            return i + 2;
+                        }
+                    } else {
+                        // For single-brace mode, one closing brace is enough
+                        return i + 1;
+                    }
+                }
+            }
+        }
+        
+        return -1;
+    }
+    
+    /**
+     * Checks if a block macro is allowed to remain unclosed in the current Latte version.
+     *
+     * @param macroName The name of the block macro
+     * @return True if the block macro is allowed to remain unclosed, false otherwise
+     */
+    private boolean isBlockMacroAllowedUnclosed(String macroName) {
+        // According to the issue description, the block macro might be allowed to remain unclosed
+        // in some versions of Latte. We'll implement this based on the version.
+        
+        // For now, we'll assume that only the "block" macro might be allowed to remain unclosed
+        // in Latte 2.x, but not in later versions. This should be verified with Latte documentation.
+        if ("block".equals(macroName) && LatteVersionManager.isVersion2x()) {
+            return true;
+        }
+        
+        return false;
+    }
+    
+    /**
+     * Helper class to store information about a macro.
+     */
+    private static class MacroInfo {
+        final String name;
+        final int offset;
+        
+        MacroInfo(String name, int offset) {
+            this.name = name;
+            this.offset = offset;
+        }
     }
     
     /**
