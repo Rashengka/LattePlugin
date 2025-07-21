@@ -1,53 +1,24 @@
 package cz.hqm.latte.plugin.test;
 
 import com.intellij.testFramework.fixtures.BasePlatformTestCase;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInfo;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 import cz.hqm.latte.plugin.test.util.TestErrorHandler;
 import java.io.File;
-import java.lang.reflect.Method;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.Assert.*;
 
 /**
  * Base class for all Latte plugin tests.
  * Extends BasePlatformTestCase which provides the necessary infrastructure for testing IntelliJ IDEA plugins.
- * Adapted to work with JUnit 5 annotations and assertions.
+ * Uses JUnit 4 annotations and assertions.
  */
 public abstract class LattePluginTestBase extends BasePlatformTestCase {
 
     static {
         // Start redirecting standard error as early as possible
         TestErrorHandler.startRedirecting();
-    }
-
-    /**
-     * JUnit 5 setup method that calls the JUnit 3 setUp method.
-     * This allows tests to use either JUnit 3 or JUnit 5 style.
-     */
-    @BeforeEach
-    public void setUpJUnit5(TestInfo testInfo) throws Exception {
-        // Get the test method name from TestInfo
-        String methodName = testInfo.getTestMethod().map(Method::getName).orElse(null);
-        if (methodName != null) {
-            // Set the name for JUnit 3 compatibility
-            setName(methodName);
-        }
-        
-        // Call the JUnit 3 setUp method
-        setUp();
-    }
-
-    /**
-     * JUnit 5 teardown method that calls the JUnit 3 tearDown method.
-     * This allows tests to use either JUnit 3 or JUnit 5 style.
-     */
-    @AfterEach
-    public void tearDownJUnit5() throws Exception {
-        // Call the JUnit 3 tearDown method
-        tearDown();
     }
 
     @Override

@@ -2,7 +2,7 @@ package cz.hqm.latte.plugin.test.intention;
 
 import com.intellij.codeInsight.intention.IntentionAction;
 import com.intellij.openapi.project.Project;
-import org.junit.jupiter.api.Test;
+import org.junit.Test;
 import cz.hqm.latte.plugin.custom.CustomTag;
 import cz.hqm.latte.plugin.custom.CustomTagsProvider;
 import cz.hqm.latte.plugin.intention.AddCustomTagIntentionAction;

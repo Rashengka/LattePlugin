@@ -1,8 +1,8 @@
 package cz.hqm.latte.plugin.test.version;
 
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.AfterEach;
+import org.junit.Test;
+import org.junit.Before;
+import org.junit.After;
 import cz.hqm.latte.plugin.test.LattePluginTestBase;
 import cz.hqm.latte.plugin.version.NettePackageDetector;
 

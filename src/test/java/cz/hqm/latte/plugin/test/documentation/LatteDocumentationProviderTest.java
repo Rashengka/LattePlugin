@@ -1,9 +1,9 @@
 package cz.hqm.latte.plugin.test.documentation;
 
 import com.intellij.psi.PsiElement;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 import cz.hqm.latte.plugin.documentation.LatteDocumentationProvider;
 import cz.hqm.latte.plugin.macros.NetteMacro;
 import cz.hqm.latte.plugin.macros.NetteMacroProvider;

@@ -3,11 +3,11 @@ package cz.hqm.latte.plugin.test.cache;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.ReadAction;
 import com.intellij.openapi.project.Project;
-import org.junit.jupiter.api.AfterEach;
+import org.junit.After;
 import com.intellij.openapi.vfs.VirtualFile;
 import org.jetbrains.annotations.NotNull;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.Before;
+import org.junit.Test;
 import cz.hqm.latte.plugin.cache.LatteCacheManager;
 import cz.hqm.latte.plugin.psi.LatteFile;
 import cz.hqm.latte.plugin.test.LattePluginTestBase;
@@ -23,7 +23,7 @@ public class LatteCacheManagerTest extends LattePluginTestBase {
     private LatteCacheManager cacheManager;
     private VirtualFile testFile;
 
-    @BeforeEach
+    @Before
     @Override
     protected void setUp() throws Exception {
         super.setUp();

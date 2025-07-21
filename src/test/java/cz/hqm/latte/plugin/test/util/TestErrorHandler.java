@@ -1,17 +1,17 @@
 package cz.hqm.latte.plugin.test.util;
 
 import java.io.ByteArrayOutputStream;
-import org.junit.jupiter.api.Test;
+import org.junit.Test;
 import java.io.PrintStream;
-import org.junit.jupiter.api.Test;
+import org.junit.Test;
 import java.util.Arrays;
-import org.junit.jupiter.api.Test;
+import org.junit.Test;
 import java.util.List;
-import org.junit.jupiter.api.Test;
+import org.junit.Test;
 import java.util.regex.Matcher;
-import org.junit.jupiter.api.Test;
+import org.junit.Test;
 import java.util.regex.Pattern;
-import org.junit.jupiter.api.Test;
+import org.junit.Test;
 
 /**
  * Utility class for handling and formatting error messages during test execution.

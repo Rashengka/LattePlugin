@@ -2,16 +2,16 @@ package cz.hqm.latte.plugin.test.parser;
 
 import com.intellij.openapi.util.TextRange;
 import com.intellij.openapi.vfs.VirtualFile;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 import cz.hqm.latte.plugin.parser.LatteIncrementalParser;
 import cz.hqm.latte.plugin.test.LattePluginTestBase;
 
 import java.io.IOException;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.Assert.*;
 
 /**
  * Tests for the LatteIncrementalParser class.

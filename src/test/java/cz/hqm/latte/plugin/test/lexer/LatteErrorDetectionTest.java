@@ -1,18 +1,18 @@
 package cz.hqm.latte.plugin.test.lexer;
 
 import com.intellij.lexer.Lexer;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.After;
+import org.junit.Before;
 import com.intellij.psi.tree.IElementType;
-import org.junit.jupiter.api.Test;
+import org.junit.Test;
 import cz.hqm.latte.plugin.lexer.LatteLexer;
 import cz.hqm.latte.plugin.lexer.LatteMacroLexer;
 import cz.hqm.latte.plugin.lexer.LatteAttributeLexer;
 import cz.hqm.latte.plugin.lexer.LatteTokenTypes;
 import cz.hqm.latte.plugin.test.LattePluginTestBase;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 /**
  * Tests for Latte error detection functionality.

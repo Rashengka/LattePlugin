@@ -1,8 +1,8 @@
 package cz.hqm.latte.plugin.test.attributes;
 
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.Test;
+import org.junit.After;
+import org.junit.Before;
 import cz.hqm.latte.plugin.custom.CustomAttribute;
 import cz.hqm.latte.plugin.custom.CustomAttributesProvider;
 import cz.hqm.latte.plugin.lexer.LatteAttributeLexer;

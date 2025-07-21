@@ -1,9 +1,8 @@
 package cz.hqm.latte.plugin.test.settings;
 
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.TestInfo;
+import org.junit.Test;
+import org.junit.Before;
+import org.junit.After;
 import cz.hqm.latte.plugin.test.LattePluginTestBase;
 import cz.hqm.latte.plugin.completion.NetteDefaultVariablesProvider;
 import cz.hqm.latte.plugin.completion.NetteDefaultVariablesProvider.NetteVariable;
@@ -14,7 +13,7 @@ import cz.hqm.latte.plugin.version.LatteVersionManager;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.Assert.*;
 
 /**
  * Tests for the LatteSettings class and version override functionality.
@@ -23,9 +22,9 @@ public class LatteSettingsTest extends LattePluginTestBase {
 
     private LatteSettings settings;
 
-    @BeforeEach
+    @Before
     @Override
-    protected void setUp() throws Exception {
+    public void setUp() throws Exception {
         // Skip calling super.setUp() to avoid language injector conflicts
         // super.setUp();
         
@@ -49,9 +48,9 @@ public class LatteSettingsTest extends LattePluginTestBase {
         // This avoids language injector conflicts
     }
     
-    @AfterEach
+    @After
     @Override
-    protected void tearDown() throws Exception {
+    public void tearDown() throws Exception {
         // Skip calling super.tearDown() to avoid language injector conflicts
         // super.tearDown();
         

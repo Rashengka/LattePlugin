@@ -1,57 +1,46 @@
-# Solution Summary: Running Tests in IntelliJ IDEA
+# JUnit 4 Migration Solution Summary
 
-## Issue Description
+## Problem
+The project was experiencing the "Test events were not received" error when running tests with Gradle. This error was caused by a mix of JUnit 4 and JUnit 5 annotations and configurations in the test files.
 
-The issue was that the `LatteSettingsTest` class was failing when run directly through IntelliJ IDEA, even though it passed when run through the `test_runner.sh` script. The error messages were related to font handling in the IntelliJ platform:
+## Solution
+The solution was to standardize all tests to use JUnit 4 consistently, as requested in the issue description: "prosím převeď všechny testy na jednotné JUnit 4" (please convert all tests to unified JUnit 4).
 
-```
-java.lang.NoSuchMethodError: 'java.lang.String sun.font.Font2D.getTypographicFamilyName()'
-```
+### Changes Made
 
-## Root Cause Analysis
+1. **Updated build.gradle**:
+   - Changed test configuration to use JUnit 4: `useJUnit()` instead of `useJUnitPlatform()`
+   - Commented out JUnit 5 dependencies and kept only JUnit 4 dependency
 
-After thorough investigation, we determined that:
+2. **Updated LattePluginTestBase.java**:
+   - Replaced JUnit 5 imports with JUnit 4 imports
+   - Removed JUnit 5 bridge methods
+   - Updated class documentation to reflect JUnit 4 usage
 
-1. The tests themselves are correct and the test logic is sound
-2. The failures were due to environment-specific issues, particularly font-related errors that occur when IntelliJ IDEA accesses internal JDK APIs not available in the current JDK
-3. The `test_runner.sh` script was handling these errors gracefully by:
-   - Running a clean build before tests
-   - Capturing and analyzing the output
-   - Distinguishing between actual test failures and environment-related errors
-4. When running tests directly in IntelliJ IDEA, these environment-related errors were not being handled properly, causing the tests to fail
+3. **Updated all test files**:
+   - Created and ran a script (`convert_to_junit4.sh`) to convert all test files from JUnit 5 to JUnit 4
+   - Replaced JUnit 5 imports with JUnit 4 imports
+   - Replaced JUnit 5 annotations with JUnit 4 annotations
+   - Changed method visibility from `protected` to `public` for methods annotated with `@Before` or `@After`
+   - Removed `TestInfo` parameter from setup methods
 
-## Solution Implemented
+4. **Fixed specific issues**:
+   - Removed `ErrorFormattingExtension.java` which was a JUnit 5 extension not used in the codebase
+   - Fixed JUnit 5 assertions imports in `LatteErrorDetectionTest.java`
+   - Fixed method names in `LattePerformanceBenchmarkTest.java` to match JUnit 4 lifecycle methods
 
-We created a comprehensive guide (`RUNNING_TESTS_IN_INTELLIJ.md`) that explains how to run the Latte Plugin tests directly in IntelliJ IDEA while avoiding the font-related errors. The solution involves:
+### Verification
+All tests now run successfully with JUnit 4, and the "Test events were not received" error has been resolved.
 
-1. Creating an IntelliJ IDEA run configuration with specific VM options that suppress the font-related errors
-2. Creating a template configuration to avoid adding the VM options every time
-3. Providing an alternative approach using the `test_runner.sh` script
-4. Including troubleshooting tips for common issues
+## Benefits
+1. **Consistency**: All tests now use JUnit 4 consistently, making the codebase more maintainable.
+2. **Compatibility**: JUnit 4 is fully compatible with IntelliJ Platform testing framework, particularly `BasePlatformTestCase`.
+3. **Reliability**: The "Test events were not received" error has been resolved, ensuring that test results are properly reported.
 
-The VM options included in the guide are derived from the `build.gradle` file and are designed to handle and suppress the font-related errors in the same way that the `test_runner.sh` script does.
+## Future Considerations
+If there's a need to use JUnit 5 features in the future, a more comprehensive migration to JUnit 5 would be required, including:
+1. Updating the IntelliJ Platform testing framework to support JUnit 5
+2. Updating all test files to use JUnit 5 consistently
+3. Updating the build.gradle file to use JUnit 5 platform
 
-## Verification
-
-The solution has been verified by:
-
-1. Confirming that the tests pass when run through the `test_runner.sh` script
-2. Providing clear instructions for running tests directly in IntelliJ IDEA with the necessary VM options
-
-## Recommendations
-
-1. Use the provided IntelliJ IDEA run configuration template when running tests directly in the IDE
-2. Alternatively, continue using the `test_runner.sh` script for running tests
-3. Remember that font-related errors can be safely ignored as they don't affect the actual test logic
-4. Consider updating the project documentation to clarify that these errors are expected and can be ignored
-
-## Future Improvements
-
-For future development, consider:
-
-1. Creating a custom JUnit 5 extension for better error handling
-2. Improving isolation of tests from IntelliJ's font subsystem
-3. Exploring newer IntelliJ platform versions that might have better handling of these issues
-4. Adding automated CI/CD configurations that handle these environment-specific errors gracefully
-
-By following the instructions in the `RUNNING_TESTS_IN_INTELLIJ.md` guide, developers should now be able to run the tests directly in IntelliJ IDEA without encountering the font-related errors that were causing the tests to fail.
+For now, JUnit 4 provides all the necessary functionality for testing the Latte plugin.

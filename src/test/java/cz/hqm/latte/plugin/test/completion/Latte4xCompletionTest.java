@@ -1,7 +1,7 @@
 package cz.hqm.latte.plugin.test.completion;
 
 import com.intellij.codeInsight.completion.CompletionType;
-import org.junit.jupiter.api.Test;
+import org.junit.Test;
 import cz.hqm.latte.plugin.test.LattePluginTestBase;
 import cz.hqm.latte.plugin.version.LatteVersion;
 import cz.hqm.latte.plugin.version.LatteVersionManager;

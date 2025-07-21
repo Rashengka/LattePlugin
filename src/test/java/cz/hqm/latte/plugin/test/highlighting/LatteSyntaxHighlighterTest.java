@@ -1,9 +1,9 @@
 package cz.hqm.latte.plugin.test.highlighting;
 
 import com.intellij.lexer.Lexer;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 import com.intellij.openapi.editor.colors.TextAttributesKey;
 import com.intellij.psi.tree.IElementType;
 import cz.hqm.latte.plugin.highlighting.LatteSyntaxHighlighter;

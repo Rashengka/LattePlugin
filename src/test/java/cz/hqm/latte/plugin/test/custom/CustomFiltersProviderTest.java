@@ -1,9 +1,9 @@
 package cz.hqm.latte.plugin.test.custom;
 
 import com.intellij.openapi.project.Project;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 import cz.hqm.latte.plugin.custom.CustomFilter;
 import cz.hqm.latte.plugin.custom.CustomFiltersProvider;
 import cz.hqm.latte.plugin.settings.LatteProjectSettings;

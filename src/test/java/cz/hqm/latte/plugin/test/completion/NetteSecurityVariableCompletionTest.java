@@ -1,9 +1,9 @@
 package cz.hqm.latte.plugin.test.completion;
 
 import com.intellij.codeInsight.completion.CompletionType;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.AfterEach;
+import org.junit.Test;
+import org.junit.Before;
+import org.junit.After;
 import cz.hqm.latte.plugin.test.LattePluginTestBase;
 import cz.hqm.latte.plugin.settings.LatteSettings;
 
