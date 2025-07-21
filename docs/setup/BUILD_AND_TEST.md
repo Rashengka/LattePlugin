@@ -186,7 +186,7 @@ The built plugin will be available at `build/distributions/LattePlugin-1.0-SNAPS
 
 ## Running Tests
 
-The plugin uses JUnit 5 for testing. You can run the tests using Gradle:
+The plugin uses JUnit 4 for testing (as of July 2025, the project was converted from JUnit 5 to JUnit 4 for better compatibility with the IntelliJ Platform). You can run the tests using Gradle:
 
 1. **Using Gradle directly**:
    ```

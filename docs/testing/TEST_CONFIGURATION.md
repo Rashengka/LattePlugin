@@ -150,11 +150,11 @@ For more details on Java installation and configuration, see [JAVA_INSTALL.md](J
 
 ## Other Test Configuration
 
-The test task is configured to use JUnit Platform and to log detailed information about test execution:
+The test task is configured to use JUnit 4 and to log detailed information about test execution:
 
 ```gradle
 test {
-    useJUnitPlatform()
+    useJUnit()
     testLogging {
         events "passed", "skipped", "failed", "standardOut", "standardError"
         showStandardStreams = true
@@ -164,7 +164,7 @@ test {
 ```
 
 This configuration ensures that:
-- Tests are run using the JUnit Platform (JUnit 5)
+- Tests are run using JUnit 4 (as of July 2025, the project was converted from JUnit 5 to JUnit 4 for better compatibility with the IntelliJ Platform)
 - Detailed logs are generated for test execution, including standard output and standard error
 - Full exception details are included in the logs
 
