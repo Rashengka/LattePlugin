@@ -4,12 +4,16 @@ import com.intellij.lexer.Lexer;
 import com.intellij.openapi.editor.DefaultLanguageHighlighterColors;
 import com.intellij.openapi.editor.HighlighterColors;
 import com.intellij.openapi.editor.colors.TextAttributesKey;
+import com.intellij.openapi.editor.markup.TextAttributes;
 import com.intellij.openapi.fileTypes.SyntaxHighlighterBase;
 import com.intellij.psi.TokenType;
 import com.intellij.psi.tree.IElementType;
 import org.jetbrains.annotations.NotNull;
-import cz.hqm.latte.plugin.lexer.LatteLexer;
+import cz.hqm.latte.plugin.lexer.LatteLexerFactory;
 import cz.hqm.latte.plugin.lexer.LatteTokenTypes;
+
+import java.awt.Color;
+import java.awt.Font;
 
 import static com.intellij.openapi.editor.colors.TextAttributesKey.createTextAttributesKey;
 
@@ -18,27 +22,77 @@ import static com.intellij.openapi.editor.colors.TextAttributesKey.createTextAtt
  * Handles Latte-specific syntax highlighting.
  */
 public class LatteSyntaxHighlighter extends SyntaxHighlighterBase {
+    // Define custom text attributes for Latte syntax elements
+    private static final TextAttributes MACRO_ATTRIBUTES = new TextAttributes(
+            new Color(255, 204, 0), // Bright yellow for macro delimiters
+            null, 
+            null, 
+            null, 
+            Font.BOLD
+    );
+    
+    private static final TextAttributes MACRO_NAME_ATTRIBUTES = new TextAttributes(
+            new Color(102, 204, 255), // Light blue for macro names
+            null, 
+            null, 
+            null, 
+            Font.BOLD
+    );
+    
+    private static final TextAttributes ATTRIBUTE_ATTRIBUTES = new TextAttributes(
+            new Color(255, 153, 0), // Orange for attributes
+            null, 
+            null, 
+            null, 
+            Font.PLAIN
+    );
+    
+    private static final TextAttributes FILTER_ATTRIBUTES = new TextAttributes(
+            new Color(153, 204, 0), // Light green for filters
+            null, 
+            null, 
+            null, 
+            Font.PLAIN
+    );
+    
+    private static final TextAttributes COMMENT_ATTRIBUTES = new TextAttributes(
+            new Color(128, 128, 128), // Gray for comments
+            null, 
+            null, 
+            null, 
+            Font.ITALIC
+    );
+    
     // Define text attribute keys for Latte syntax elements
     public static final TextAttributesKey LATTE_MACRO =
-            createTextAttributesKey("LATTE_MACRO", DefaultLanguageHighlighterColors.KEYWORD);
+            createTextAttributesKey("LATTE_MACRO", MACRO_ATTRIBUTES);
     public static final TextAttributesKey LATTE_MACRO_NAME =
-            createTextAttributesKey("LATTE_MACRO_NAME", DefaultLanguageHighlighterColors.KEYWORD);
+            createTextAttributesKey("LATTE_MACRO_NAME", MACRO_NAME_ATTRIBUTES);
     public static final TextAttributesKey LATTE_ATTRIBUTE =
-            createTextAttributesKey("LATTE_ATTRIBUTE", DefaultLanguageHighlighterColors.METADATA);
+            createTextAttributesKey("LATTE_ATTRIBUTE", ATTRIBUTE_ATTRIBUTES);
     public static final TextAttributesKey LATTE_FILTER =
-            createTextAttributesKey("LATTE_FILTER", DefaultLanguageHighlighterColors.INSTANCE_FIELD);
+            createTextAttributesKey("LATTE_FILTER", FILTER_ATTRIBUTES);
     public static final TextAttributesKey LATTE_COMMENT =
-            createTextAttributesKey("LATTE_COMMENT", DefaultLanguageHighlighterColors.BLOCK_COMMENT);
+            createTextAttributesKey("LATTE_COMMENT", COMMENT_ATTRIBUTES);
+    
+    // Define custom text attributes for error elements
+    private static final TextAttributes ERROR_ATTRIBUTES = new TextAttributes(
+            new Color(255, 0, 0), // Bright red for errors
+            null, 
+            null, 
+            null, 
+            Font.BOLD
+    );
     
     // Define text attribute keys for Latte error elements
     public static final TextAttributesKey BAD_CHARACTER =
-            createTextAttributesKey("LATTE_BAD_CHARACTER", HighlighterColors.BAD_CHARACTER);
+            createTextAttributesKey("LATTE_BAD_CHARACTER", ERROR_ATTRIBUTES);
     public static final TextAttributesKey ERROR_MACRO =
-            createTextAttributesKey("LATTE_ERROR_MACRO", HighlighterColors.BAD_CHARACTER);
+            createTextAttributesKey("LATTE_ERROR_MACRO", ERROR_ATTRIBUTES);
     public static final TextAttributesKey ERROR_ATTRIBUTE =
-            createTextAttributesKey("LATTE_ERROR_ATTRIBUTE", HighlighterColors.BAD_CHARACTER);
+            createTextAttributesKey("LATTE_ERROR_ATTRIBUTE", ERROR_ATTRIBUTES);
     public static final TextAttributesKey ERROR_FILTER =
-            createTextAttributesKey("LATTE_ERROR_FILTER", HighlighterColors.BAD_CHARACTER);
+            createTextAttributesKey("LATTE_ERROR_FILTER", ERROR_ATTRIBUTES);
 
     private static final TextAttributesKey[] EMPTY_KEYS = new TextAttributesKey[0];
     
@@ -57,7 +111,7 @@ public class LatteSyntaxHighlighter extends SyntaxHighlighterBase {
     @NotNull
     @Override
     public Lexer getHighlightingLexer() {
-        return new LatteLexer();
+        return LatteLexerFactory.getInstance().getLexer();
     }
 
     @NotNull

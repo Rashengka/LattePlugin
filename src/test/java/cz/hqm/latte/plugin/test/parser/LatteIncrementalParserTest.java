@@ -305,4 +305,58 @@ public class LatteIncrementalParserTest extends LattePluginTestBase {
             LatteVersionManager.setCurrentVersion(originalVersion);
         }
     }
+    
+    /**
+     * Tests that the parser correctly handles double-brace macros in {syntax double} mode.
+     * This tests our enhancement to findEndOfLatteMacro() to handle both single-brace and double-brace macros.
+     */
+    @Test
+    public void testDoubleBraceMacros() throws Exception {
+        // Test with a template containing double-brace macros in {syntax double} mode
+        String doubleBraceContent = 
+            "{syntax double}\n" +
+            "{{if $condition}}\n" +
+            "    <p>Content</p>\n" +
+            "    {{foreach $items as $item}}\n" +
+            "        <span>{{$item}}</span>\n" +
+            "    {{/foreach}}\n" +
+            "{{/if}}\n" +
+            "{/syntax}";
+        
+        VirtualFile doubleBraceFile = createTestFile("test_double_brace_macros.latte", doubleBraceContent);
+        
+        // Parse the file
+        List<TextRange> changedRanges = incrementalParser.parseChangedParts(doubleBraceFile, doubleBraceContent);
+        
+        // Verify that the entire file is considered changed
+        assertEquals("Should have one changed range", 1, changedRanges.size());
+        assertEquals("Changed range should cover the entire file", 0, changedRanges.get(0).getStartOffset());
+        assertEquals("Changed range should cover the entire file", doubleBraceContent.length(), changedRanges.get(0).getEndOffset());
+        
+        // Test with a more complex template containing nested syntax changes
+        String complexContent = 
+            "{syntax double}\n" +
+            "{{if $condition}}\n" +
+            "    {syntax off}\n" +
+            "    <script>\n" +
+            "        // This should not be processed as Latte\n" +
+            "        var x = {value: 10};\n" +
+            "    </script>\n" +
+            "    {/syntax}\n" +
+            "    {{foreach $items as $item}}\n" +
+            "        <span>{{$item}}</span>\n" +
+            "    {{/foreach}}\n" +
+            "{{/if}}\n" +
+            "{/syntax}";
+        
+        VirtualFile complexFile = createTestFile("test_complex_syntax_changes.latte", complexContent);
+        
+        // Parse the file
+        changedRanges = incrementalParser.parseChangedParts(complexFile, complexContent);
+        
+        // Verify that the entire file is considered changed
+        assertEquals("Should have one changed range", 1, changedRanges.size());
+        assertEquals("Changed range should cover the entire file", 0, changedRanges.get(0).getStartOffset());
+        assertEquals("Changed range should cover the entire file", complexContent.length(), changedRanges.get(0).getEndOffset());
+    }
 }

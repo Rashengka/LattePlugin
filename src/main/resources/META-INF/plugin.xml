@@ -88,5 +88,8 @@
             <className>cz.hqm.latte.plugin.intention.AddCustomVariableIntentionAction</className>
             <category>Latte</category>
         </intentionAction>
+        
+        <!-- Startup activity for plugin initialization and cleanup -->
+        <postStartupActivity implementation="cz.hqm.latte.plugin.project.LattePluginStartupActivity"/>
     </extensions>
 </idea-plugin>

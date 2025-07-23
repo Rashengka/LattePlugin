@@ -290,4 +290,58 @@ public class LatteSyntaxModeTest extends LattePluginTestBase {
             lexer.advance();
         }
     }
+    
+    /**
+     * Tests that the lexer correctly processes nested double-brace macros in {syntax double} mode.
+     * This test verifies that the fix for the "Top level element is not completed" error works correctly.
+     */
+    @Test
+    public void testNestedDoubleBraceMacros() {
+        // Create a test content with nested double-brace macros in {syntax double} mode
+        String content = "<div>\n" +
+                         "    {syntax double}\n" +
+                         "    {{if $condition}}\n" +
+                         "        <p>Content</p>\n" +
+                         "        {{foreach $items as $item}}\n" +
+                         "            <span>{{$item}}</span>\n" +
+                         "        {{/foreach}}\n" +
+                         "    {{/if}}\n" +
+                         "    {/syntax}\n" +
+                         "</div>";
+        
+        // Start the lexer with the content
+        lexer.start(content);
+        
+        // Verify initial syntax mode is DEFAULT
+        assertEquals("Initial syntax mode should be DEFAULT", 
+                     LatteSyntaxMode.DEFAULT, lexer.getSyntaxMode());
+        
+        // Process the {syntax double} tag
+        advanceLexerToText(lexer, "{syntax double}");
+        lexer.processSyntaxTags("{syntax double}");
+        
+        // Verify syntax mode is changed to DOUBLE
+        assertEquals("Syntax mode should be DOUBLE after {syntax double}", 
+                     LatteSyntaxMode.DOUBLE, lexer.getSyntaxMode());
+        
+        // Skip to the {{if part
+        advanceLexerToText(lexer, "{{if");
+        
+        // Skip to the {{foreach part
+        advanceLexerToText(lexer, "{{foreach");
+        
+        // Skip to the {{/foreach part
+        advanceLexerToText(lexer, "{{/foreach");
+        
+        // Skip to the {{/if part
+        advanceLexerToText(lexer, "{{/if");
+        
+        // Process the {/syntax} tag
+        advanceLexerToText(lexer, "{/syntax}");
+        lexer.processSyntaxTags("{/syntax}");
+        
+        // Verify syntax mode is restored to DEFAULT
+        assertEquals("Syntax mode should be DEFAULT after {/syntax}", 
+                     LatteSyntaxMode.DEFAULT, lexer.getSyntaxMode());
+    }
 }

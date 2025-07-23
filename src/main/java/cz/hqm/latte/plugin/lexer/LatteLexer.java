@@ -33,8 +33,6 @@ public class LatteLexer extends LayeredLexer {
     public LatteLexer() {
         super(new EmptyLexer());
         
-        System.out.println("DEBUG: Creating LatteLexer instance: " + this);
-        
         // Register Latte macro lexer with a reference to this lexer
         registerSelfStoppingLayer(
             new LatteMacroLexer(this),
@@ -44,14 +42,12 @@ public class LatteLexer extends LayeredLexer {
         
         // Register Latte n:attribute lexer with a reference to this lexer
         LatteAttributeLexer attributeLexer = new LatteAttributeLexer(this);
-        System.out.println("DEBUG: Created LatteAttributeLexer with parent: " + this);
         
         registerSelfStoppingLayer(
             attributeLexer,
             new IElementType[] { LatteTokenTypes.LATTE_ATTRIBUTE_START },
             new IElementType[] { LatteTokenTypes.LATTE_ATTRIBUTE_END }
         );
-        System.out.println("DEBUG: Registered LatteAttributeLexer layer");
     }
     
     /**
@@ -90,9 +86,6 @@ public class LatteLexer extends LayeredLexer {
             // Single braces mode: {macro}
             syntaxMode = LatteSyntaxMode.DEFAULT;
         }
-        
-        System.out.println("DEBUG: Set syntax mode to " + syntaxMode + ", previous mode was " + 
-                          (syntaxModeStack.isEmpty() ? LatteSyntaxMode.DEFAULT : syntaxModeStack.peek()));
     }
     
     /**
@@ -105,8 +98,6 @@ public class LatteLexer extends LayeredLexer {
      * @param text The text to process
      */
     public void processSyntaxTags(String text) {
-        System.out.println("DEBUG: processSyntaxTags called with text: " + text);
-        
         // Case 1: Check for {syntax off} or {syntax double} tag
         Matcher syntaxMatcher = SYNTAX_PARAM_PATTERN.matcher(text);
         if (syntaxMatcher.find()) {
@@ -114,7 +105,6 @@ public class LatteLexer extends LayeredLexer {
             String parameter = syntaxMatcher.group(1);
             // Set the syntax mode and store the previous mode
             setSyntaxMode(parameter);
-            System.out.println("Setting syntax mode to: " + syntaxMode + " for parameter: " + parameter);
             return;
         }
         
@@ -124,11 +114,9 @@ public class LatteLexer extends LayeredLexer {
             // Restore the previous syntax mode from the stack
             if (!syntaxModeStack.isEmpty()) {
                 syntaxMode = syntaxModeStack.pop();
-                System.out.println("DEBUG: Restoring syntax mode to previous mode: " + syntaxMode);
             } else {
                 // If the stack is empty, default to DEFAULT mode
                 syntaxMode = LatteSyntaxMode.DEFAULT;
-                System.out.println("DEBUG: Stack is empty, restoring to DEFAULT mode");
             }
             return;
         }
@@ -138,12 +126,8 @@ public class LatteLexer extends LayeredLexer {
         if (nSyntaxMatcher.find()) {
             // Extract the parameter (off or double)
             String parameter = nSyntaxMatcher.group(1);
-            System.out.println("DEBUG: Found n:syntax attribute with parameter: " + parameter);
             // Set the syntax mode and store the previous mode
             setSyntaxMode(parameter);
-            System.out.println("Setting syntax mode to: " + syntaxMode + " from n:syntax attribute with parameter: " + parameter);
-        } else {
-            System.out.println("DEBUG: No n:syntax attribute found in text");
         }
     }
     
@@ -159,7 +143,6 @@ public class LatteLexer extends LayeredLexer {
         CharSequence tokenSequence = getTokenSequence();
         if (tokenSequence != null && tokenSequence.length() > 0) {
             // Process the token sequence to update the syntax mode
-            System.out.println("Processing token sequence: " + tokenSequence);
             processSyntaxTags(tokenSequence.toString());
         }
         
@@ -170,5 +153,18 @@ public class LatteLexer extends LayeredLexer {
     @Override
     public CharSequence getTokenSequence() {
         return super.getTokenSequence();
+    }
+    
+    /**
+     * Resets the lexer state.
+     * This method is called when a cached lexer instance is reused.
+     * It resets the syntax mode to DEFAULT and clears the syntax mode stack.
+     */
+    public void reset() {
+        syntaxMode = LatteSyntaxMode.DEFAULT;
+        syntaxModeStack.clear();
+        
+        // Reset the base lexer
+        super.start("", 0, 0, 0);
     }
 }

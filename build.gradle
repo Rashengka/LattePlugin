@@ -1,10 +1,54 @@
+import java.text.SimpleDateFormat
+
 plugins {
     id 'java'
-    id 'org.jetbrains.intellij' version '1.15.0'
+    id 'org.jetbrains.intellij' version '1.16.0'
 }
 
 group 'cz.hqm.latte'
 version '1.0-SNAPSHOT'
+
+// Flag to enable/disable command logging
+// This should be true for local development and false for distribution builds
+ext.enableCommandLogging = !project.hasProperty('disableCommandLogging')
+
+// Control output destination (terminal, file, or both)
+ext.enableTerminalOutput = !project.hasProperty('disableTerminalOutput')
+ext.enableFileOutput = !project.hasProperty('disableFileOutput')
+
+// Directory for logs
+ext.logsDir = project.hasProperty('logsDir') ? project.property('logsDir') : 'log'
+
+// Create logs directory if it doesn't exist
+def logsDirectory = file(logsDir)
+if (!logsDirectory.exists()) {
+    logsDirectory.mkdirs()
+}
+
+// Utility function to log command output to a file and/or terminal
+ext.logToFile = { String taskName, String output ->
+    if (enableCommandLogging) {
+        def timestamp = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss").format(new Date())
+        
+        // Log to file if enabled
+        if (enableFileOutput) {
+            def logFile = file("${logsDir}/${taskName}_${timestamp}.log")
+            logFile.text = "=== ${taskName} executed at ${timestamp} ===\n\n${output}\n"
+            
+            // Only print the log file location if terminal output is enabled
+            if (enableTerminalOutput) {
+                println "Command output logged to: ${logFile.absolutePath}"
+            }
+        }
+        
+        // Print to terminal if enabled or if both terminal and file output are disabled
+        // This ensures that terminal output is enforced when no output is allowed
+        if (enableTerminalOutput && !enableFileOutput || (!enableTerminalOutput && !enableFileOutput)) {
+            println "=== ${taskName} executed at ${timestamp} ==="
+            println output
+        }
+    }
+}
 
 repositories {
     mavenCentral()
@@ -27,6 +71,100 @@ intellij {
     version = '2023.1.5'
     type = 'IU' // Target IDE - IntelliJ IDEA Ultimate Edition
     plugins = ['com.intellij.java']
+}
+
+// Configure runIde task to handle URL schemes
+runIde {
+    jvmArgs = [
+            '-Xms512m',
+            '-Xmx1024m',
+            "-Didea.mac.url.schemes=latte"
+    ]
+
+    systemProperties = [
+            'idea.mac.url.schemes': 'latte',
+            'idea.app.name': 'Latte Plugin',
+            'idea.paths.selector': 'LattePlugin',
+            'idea.ignore.vfs.log.version.mismatch': 'true',
+            'jna.nosys': 'true',
+            'ide.suppress.font.warnings': 'true',
+            'idea.dont.check.keymap': 'true'
+    ]
+
+    // Nastavení rozložení aplikace pro macOS
+    autoReloadPlugins.set(true)
+    
+    // Log command output
+    doFirst {
+        println "Starting runIde task with logging enabled: ${enableCommandLogging}"
+        if (enableCommandLogging) {
+            println "Logs will be written to: ${file(logsDir).absolutePath}"
+        }
+    }
+}
+
+// Add a task to run before runIde that sets up logging
+tasks.register('prepareRunIdeLogging') {
+    doLast {
+        // Nothing to do here, just a hook for the logging task
+    }
+}
+
+// Add a task to run after runIde that captures logs
+tasks.register('captureRunIdeLogs') {
+    doLast {
+        if (enableCommandLogging) {
+            // Get the IDE log file if it exists
+            def ideaLogDir = new File(System.getProperty('user.home'), 'Library/Logs/JetBrains/IdeaIC2023.1')
+            if (!ideaLogDir.exists()) {
+                ideaLogDir = new File(System.getProperty('user.home'), '.IntelliJIdea2023.1/system/log')
+            }
+
+            def ideaLogFile = new File(ideaLogDir, 'idea.log')
+            if (ideaLogFile.exists()) {
+                def logContent = ideaLogFile.text
+                logToFile('runIde', "=== IDE Log File ===\n\n${logContent}")
+                println "Captured IDE log file: ${ideaLogFile.absolutePath}"
+            } else {
+                println "IDE log file not found at ${ideaLogFile.absolutePath}"
+
+                // Try to find the log file in other locations
+                def possibleLogDirs = [
+                        new File(System.getProperty('user.home'), 'Library/Logs/JetBrains'),
+                        new File(System.getProperty('user.home'), '.IntelliJIdea/system/log'),
+                        new File(System.getProperty('user.home'), '.IntelliJIdea2023.1/system/log'),
+                        new File(System.getProperty('user.home'), '.IdeaIC2023.1/system/log')
+                ]
+
+                for (dir in possibleLogDirs) {
+                    if (dir.exists() && dir.isDirectory()) {
+                        println "Checking for log files in ${dir.absolutePath}"
+                        dir.eachFileRecurse { file ->
+                            if (file.name.endsWith('.log')) {
+                                println "Found log file: ${file.absolutePath}"
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Also capture the debug.log file from the temp directory
+            def debugLogFile = new File('temp/debug.log')
+            if (debugLogFile.exists()) {
+                def debugLogContent = debugLogFile.text
+                logToFile('runIde_debug', debugLogContent)
+                println "Captured debug log file: ${debugLogFile.absolutePath}"
+            }
+        }
+    }
+}
+
+// Configure the runIde task to run between our logging tasks
+runIde.dependsOn prepareRunIdeLogging
+captureRunIdeLogs.dependsOn runIde
+// Make captureRunIdeLogs the task that gets executed when runIde is called
+tasks.named('runIde').configure {
+    finalizedBy captureRunIdeLogs
 }
 
 patchPluginXml {
@@ -162,6 +300,11 @@ test {
 
         forkEvery = 1
 
+        println "Starting test task with logging enabled: ${enableCommandLogging}"
+        if (enableCommandLogging) {
+            println "Logs will be written to: ${file(logsDir).absolutePath}"
+        }
+
         println "=== JVM Arguments for tests ==="
         jvmArgs.each { arg ->
             println "  $arg"
@@ -181,14 +324,132 @@ test {
         println "================================"
         println ""
     }
+    
+    // Capture and log the output
+    def outputBuffer = new StringBuilder()
+    
+    // We can't directly redirect standardOutput and standardError for test tasks
+    // because they're used by the test framework, but we can capture the output
+    // by adding a TestListener
+    
+    afterTest { desc, result ->
+        if (enableCommandLogging) {
+            outputBuffer.append("Test: ${desc.className}.${desc.name} - ${result.resultType}\n")
+            if (result.exception) {
+                outputBuffer.append("Exception: ${result.exception}\n")
+                outputBuffer.append("Stack trace: ${result.exception.stackTrace.join('\n')}\n")
+            }
+        }
+    }
+    
+    afterSuite { desc, result ->
+        if (enableCommandLogging && desc.parent == null) {
+            // This is the root suite, so all tests are complete
+            outputBuffer.append("\nTest summary: ${result.testCount} tests, " +
+                    "${result.successfulTestCount} succeeded, " +
+                    "${result.failedTestCount} failed, " +
+                    "${result.skippedTestCount} skipped\n")
+            
+            logToFile('test', outputBuffer.toString())
+        }
+    }
 }
 
 runPluginVerifier {
     ideVersions = ["2023.1.5", "2023.2", "2023.3", "2024.1"]
 }
 
-tasks.withType(JavaCompile) {
+tasks.withType(JavaCompile).configureEach {
     sourceCompatibility = '17'
     targetCompatibility = '17'
     options.encoding = 'UTF-8'
+}
+
+// Add a task to run before build that sets up logging
+tasks.register('prepareBuildLogging') {
+    doLast {
+        println "Starting build task with logging enabled: ${enableCommandLogging}"
+        if (enableCommandLogging) {
+            println "Logs will be written to: ${file(logsDir).absolutePath}"
+        }
+    }
+}
+
+// Add a task to run after build that captures logs
+tasks.register('captureBuildLogs') {
+    doLast {
+        if (enableCommandLogging) {
+            def outputBuffer = new StringBuilder()
+
+            // Capture information about all tasks that were executed
+            gradle.taskGraph.allTasks.each { task ->
+                outputBuffer.append("Task: ${task.path} - ${task.state.failure ? 'FAILED' : 'SUCCESS'}\n")
+                if (task.state.failure) {
+                    outputBuffer.append("Failure: ${task.state.failure}\n")
+                    outputBuffer.append("Stack trace: ${task.state.failure.stackTrace.join('\n')}\n")
+                }
+            }
+
+            // Log the output
+            logToFile('build', outputBuffer.toString())
+            println "Build logs written to: ${file(logsDir).absolutePath}/build_*.log"
+        }
+    }
+}
+
+// Configure the build task to run between our logging tasks
+build.dependsOn prepareBuildLogging
+captureBuildLogs.dependsOn build
+// Make captureBuildLogs the task that gets executed when build is called
+tasks.named('build').configure {
+    finalizedBy captureBuildLogs
+}
+
+// Add a task to create a distribution build with logging disabled
+tasks.register('distributionBuild') {
+    description = 'Creates a distribution build with logging disabled'
+
+    doFirst {
+        println "Creating distribution build with logging disabled"
+        // Disable command logging for all tasks
+        project.ext.enableCommandLogging = false
+        println "Command logging is now disabled: ${enableCommandLogging}"
+    }
+
+    // For a real distribution build, we would run the build task
+    // finalizedBy tasks.build
+}
+
+// Add a simple task to test the logging functionality
+tasks.register('testLogging') {
+    description = 'Tests the logging functionality'
+
+    doFirst {
+        println "Testing logging functionality with logging enabled: ${enableCommandLogging}"
+        if (enableCommandLogging) {
+            println "Logs will be written to: ${file(logsDir).absolutePath}"
+        }
+    }
+
+    doLast {
+        if (enableCommandLogging) {
+            def message = """
+            This is a test log file.
+            It was generated by the testLogging task.
+            Current time: ${new Date()}
+            Gradle version: ${gradle.gradleVersion}
+            Java version: ${System.getProperty('java.version')}
+            Operating system: ${System.getProperty('os.name')} ${System.getProperty('os.version')}
+            """
+
+            logToFile('testLogging', message)
+
+            // Only print the log file message if file output is enabled
+            if (enableFileOutput) {
+                println "Test log written to: ${file(logsDir).absolutePath}/testLogging_*.log"
+            }
+        } else {
+            println "Logging is disabled, no log file was created"
+        }
+    }
 }

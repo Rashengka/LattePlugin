@@ -14,6 +14,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Service for caching parsed Latte templates to improve performance.
@@ -36,7 +37,10 @@ public final class LatteCacheManager {
     private final Project project;
     
     // Cache of parsed templates by file path
-    private final Map<String, CacheEntry> templateCache;
+    private final ConcurrentHashMap<String, CacheEntry> templateCache;
+    
+    // Counter for LRU implementation
+    private final AtomicInteger accessCounter = new AtomicInteger(0);
     
     /**
      * Constructor that initializes the cache.
@@ -45,13 +49,8 @@ public final class LatteCacheManager {
      */
     public LatteCacheManager(Project project) {
         this.project = project;
-        // Use LinkedHashMap with access order to implement LRU cache efficiently
-        this.templateCache = new LinkedHashMap<String, CacheEntry>(16, 0.75f, true) {
-            @Override
-            protected boolean removeEldestEntry(Map.Entry<String, CacheEntry> eldest) {
-                return size() > MAX_CACHE_SIZE;
-            }
-        };
+        // Use ConcurrentHashMap for better thread safety and performance
+        this.templateCache = new ConcurrentHashMap<>(16, 0.75f, 4);
     }
     
     /**
@@ -73,12 +72,7 @@ public final class LatteCacheManager {
     @Nullable
     public LatteFile getCachedTemplate(@NotNull VirtualFile file) {
         String filePath = file.getPath();
-        CacheEntry entry;
-        
-        // Use synchronized block only for the get operation to minimize contention
-        synchronized (templateCache) {
-            entry = templateCache.get(filePath);
-        }
+        CacheEntry entry = templateCache.get(filePath);
         
         if (entry == null) {
             return null;
@@ -86,19 +80,24 @@ public final class LatteCacheManager {
         
         long currentTime = System.currentTimeMillis();
         
-        // Only check validity if enough time has passed since the last check
-        // This reduces the overhead of frequent validity checks
-        if (currentTime - entry.lastValidityCheckTime > MIN_CHECK_INTERVAL) {
-            if (!isEntryValid(entry, file)) {
-                synchronized (templateCache) {
-                    templateCache.remove(filePath);
-                }
-                return null;
-            }
-            entry.lastValidityCheckTime = currentTime;
+        // Update access counter and time atomically
+        entry.lastAccessTime = currentTime;
+        entry.accessCount = accessCounter.incrementAndGet();
+        
+        // Fast path: if the entry was recently validated, return it immediately
+        if (currentTime - entry.lastValidityCheckTime <= MIN_CHECK_INTERVAL) {
+            return entry.template;
         }
         
-        // The LinkedHashMap will automatically update access order
+        // Slow path: check validity if enough time has passed since the last check
+        if (!isEntryValid(entry, file)) {
+            templateCache.remove(filePath, entry); // Only remove if it's still the same entry
+            return null;
+        }
+        
+        // Update validity check time
+        entry.lastValidityCheckTime = currentTime;
+        
         return entry.template;
     }
     
@@ -111,15 +110,32 @@ public final class LatteCacheManager {
     public void cacheTemplate(@NotNull VirtualFile file, @NotNull LatteFile template) {
         String filePath = file.getPath();
         long currentTime = System.currentTimeMillis();
+        int currentAccessCount = accessCounter.incrementAndGet();
         
-        // Create new cache entry
+        // Create a new cache entry
         CacheEntry entry = new CacheEntry(template, file.getModificationStamp(), currentTime, currentTime);
+        entry.accessCount = currentAccessCount;
+        entry.lastValidityCheckTime = currentTime;
         
-        // Add to cache with synchronization to ensure thread safety
-        synchronized (templateCache) {
-            templateCache.put(filePath, entry);
-            // The LinkedHashMap will automatically handle LRU eviction
+        // Add to cache - ConcurrentHashMap handles thread safety
+        templateCache.put(filePath, entry);
+        
+        // Check if we need to evict entries (LRU policy)
+        if (templateCache.size() > MAX_CACHE_SIZE) {
+            evictOldestEntries();
         }
+    }
+    
+    /**
+     * Evicts the oldest entries from the cache based on access count.
+     * This implements an LRU eviction policy.
+     */
+    private void evictOldestEntries() {
+        // Find entries with the lowest access counts and remove them
+        templateCache.entrySet().stream()
+            .sorted((e1, e2) -> Integer.compare(e1.getValue().accessCount, e2.getValue().accessCount))
+            .limit(templateCache.size() - MAX_CACHE_SIZE)
+            .forEach(entry -> templateCache.remove(entry.getKey(), entry.getValue()));
     }
     
     /**
@@ -128,18 +144,18 @@ public final class LatteCacheManager {
      * @param file The virtual file to invalidate the cache for
      */
     public void invalidateCache(@NotNull VirtualFile file) {
-        synchronized (templateCache) {
-            templateCache.remove(file.getPath());
-        }
+        // ConcurrentHashMap handles thread safety
+        templateCache.remove(file.getPath());
     }
     
     /**
      * Clears the entire cache.
      */
     public void clearCache() {
-        synchronized (templateCache) {
-            templateCache.clear();
-        }
+        // ConcurrentHashMap handles thread safety
+        templateCache.clear();
+        // Reset the access counter to avoid potential overflow after long-running sessions
+        accessCounter.set(0);
     }
     
     /**
@@ -168,8 +184,9 @@ public final class LatteCacheManager {
         final LatteFile template;
         final long modificationStamp;
         final long creationTime;
-        long lastAccessTime;
-        long lastValidityCheckTime;
+        volatile long lastAccessTime;
+        volatile long lastValidityCheckTime;
+        volatile int accessCount;
         
         CacheEntry(LatteFile template, long modificationStamp, long creationTime, long lastAccessTime) {
             this.template = template;
@@ -177,6 +194,7 @@ public final class LatteCacheManager {
             this.creationTime = creationTime;
             this.lastAccessTime = lastAccessTime;
             this.lastValidityCheckTime = lastAccessTime; // Initialize validity check time
+            this.accessCount = 0;
         }
     }
 }

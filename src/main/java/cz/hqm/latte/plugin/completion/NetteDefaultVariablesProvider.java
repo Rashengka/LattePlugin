@@ -239,7 +239,9 @@ public class NetteDefaultVariablesProvider {
      * @return True if Nette HTTP support is enabled, false otherwise
      */
     private static boolean isNetteHttpEnabled() {
-        return LatteSettings.getInstance().isEnableNetteHttp();
+        boolean enabled = LatteSettings.getInstance().isEnableNetteHttp();
+        System.out.println("[DEBUG_LOG] NetteDefaultVariablesProvider.isNetteHttpEnabled() = " + enabled);
+        return enabled;
     }
     
     /**
@@ -260,8 +262,17 @@ public class NetteDefaultVariablesProvider {
     public static List<NetteVariable> getNetteHttpVariables(Project project) {
         List<NetteVariable> variables = new ArrayList<>();
         
+        // Double-check that Nette HTTP is enabled
+        if (!isNetteHttpEnabled()) {
+            System.out.println("[DEBUG_LOG] getNetteHttpVariables: Nette HTTP is disabled, returning empty list");
+            return variables;
+        }
+        
+        System.out.println("[DEBUG_LOG] getNetteHttpVariables: Nette HTTP is enabled, adding variables");
+        
         // Get the version of Nette HTTP
         int version = getNetteHttpVersion(project);
+        System.out.println("[DEBUG_LOG] getNetteHttpVariables: Nette HTTP version = " + version);
         
         // Add common variables (available in all versions)
         variables.add(new NetteVariable("httpRequest", "Nette\\Http\\Request", "HTTP request object"));
@@ -274,12 +285,15 @@ public class NetteDefaultVariablesProvider {
         // Add version-specific variables
         if (version >= 3) {
             // Nette HTTP 3.x specific variables
+            System.out.println("[DEBUG_LOG] getNetteHttpVariables: Adding Nette HTTP 3.x specific variables");
             variables.add(new NetteVariable("requestFactory", "Nette\\Http\\RequestFactory", "HTTP request factory"));
         } else {
             // Nette HTTP 2.x specific variables
+            System.out.println("[DEBUG_LOG] getNetteHttpVariables: No specific variables for Nette HTTP 2.x");
             // No specific variables for version 2.x
         }
         
+        System.out.println("[DEBUG_LOG] getNetteHttpVariables: Returning " + variables.size() + " variables");
         return variables;
     }
     

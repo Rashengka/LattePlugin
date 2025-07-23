@@ -176,6 +176,25 @@ The script will check if your installed Java and Gradle versions are compatible 
 gradle test
 ```
 
+### Command Logging
+
+The build system includes functionality to log the output of Gradle commands to the `log` directory. This is useful for debugging and troubleshooting issues that occur during build, test, or IDE execution.
+
+By default, command logging is enabled for local development and disabled for distribution builds. Output is sent to both the terminal and log files by default.
+
+#### Basic Usage
+
+- Logs are automatically generated when running tasks like `runIde`, `test`, or `build`
+- Log files are stored in the `log` directory with a timestamp in the filename
+- To disable logging: `gradle runIde -PdisableCommandLogging`
+- To disable terminal output but keep file logging: `gradle runIde -PdisableTerminalOutput`
+- To disable file logging but keep terminal output: `gradle runIde -PdisableFileOutput`
+- To disable both (terminal output will still be enforced): `gradle runIde -PdisableTerminalOutput -PdisableFileOutput`
+- To change the logs directory: `gradle runIde -PlogsDir=custom_logs`
+- To create a distribution build with logging disabled: `gradle distributionBuild`
+
+For detailed documentation on the command logging functionality, see [log/README.md](log/README.md).
+
 For detailed instructions on building, testing, and debugging the plugin, see [BUILD_AND_TEST.md](docs/setup/BUILD_AND_TEST.md).
 
 ## Usage

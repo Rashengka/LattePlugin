@@ -158,6 +158,13 @@ public final class LatteIncrementalParser {
     
     /**
      * Finds the start of the Latte macro that contains the given offset.
+     * Handles both single-brace macros {macro} and double-brace macros {{macro}}
+     * for compatibility with different syntax modes.
+     * 
+     * This method is designed to be robust and handle all possible syntax modes correctly,
+     * without relying on the current syntax mode. It identifies both single-brace and
+     * double-brace macros as potential macro starts, and also handles special cases like
+     * {syntax} tags and JavaScript code with braces.
      *
      * @param content The content of the file
      * @param offset The offset to start searching from
@@ -165,9 +172,94 @@ public final class LatteIncrementalParser {
      */
     private int findStartOfLatteMacro(@NotNull String content, int offset) {
         // Search backward for the start of a Latte macro
+        boolean inString = false;
+        char stringDelimiter = 0;
+        boolean inComment = false;
+        boolean inJavaScript = false;
+        
+        // Check if we're inside a JavaScript block
+        for (int i = 0; i < offset; i++) {
+            if (i + 8 < content.length() && content.substring(i, i + 9).equals("<script>")) {
+                inJavaScript = true;
+            } else if (i + 9 < content.length() && content.substring(i, i + 10).equals("</script>")) {
+                inJavaScript = false;
+            }
+        }
+        
         for (int i = offset; i >= 0; i--) {
+            // Handle strings and comments
+            if (i > 0) {
+                char prevChar = content.charAt(i - 1);
+                char currentChar = content.charAt(i);
+                
+                // Check for end of string
+                if (inString && currentChar == stringDelimiter && prevChar != '\\') {
+                    inString = false;
+                    continue;
+                }
+                
+                // Check for start of string
+                if (!inString && !inComment && (currentChar == '"' || currentChar == '\'')) {
+                    inString = true;
+                    stringDelimiter = currentChar;
+                    continue;
+                }
+                
+                // Check for end of line comment
+                if (inComment && currentChar == '\n') {
+                    inComment = false;
+                    continue;
+                }
+                
+                // Check for start of line comment
+                if (!inString && !inComment && i > 0 && prevChar == '/' && currentChar == '/') {
+                    inComment = true;
+                    continue;
+                }
+            }
+            
+            // Skip if we're in a string or comment
+            if (inString || inComment) {
+                continue;
+            }
+            
+            // Special handling for JavaScript code
+            if (inJavaScript) {
+                // In JavaScript, only look for {syntax} and {/syntax} tags
+                if (i + 8 < content.length() && content.substring(i, i + 9).equals("{/syntax}")) {
+                    return i;
+                }
+                if (i + 12 < content.length() && content.substring(i, i + 13).equals("{syntax off}")) {
+                    return i;
+                }
+                if (i + 14 < content.length() && content.substring(i, i + 15).equals("{syntax double}")) {
+                    return i;
+                }
+                continue;
+            }
+            
+            // Check for {syntax} tags first, as they have highest priority
+            if (i + 8 < content.length() && content.substring(i, i + 9).equals("{/syntax}")) {
+                return i;
+            }
+            if (i + 12 < content.length() && content.substring(i, i + 13).equals("{syntax off}")) {
+                return i;
+            }
+            if (i + 14 < content.length() && content.substring(i, i + 15).equals("{syntax double}")) {
+                return i;
+            }
+            
+            // Check for double-brace macro {{macro}} (for {syntax double} mode)
+            // This has higher priority than single-brace macros to avoid misidentifying {{macro}} as two separate macros
+            if (i + 1 < content.length() && i + 2 < content.length() && 
+                content.charAt(i) == '{' && content.charAt(i + 1) == '{') {
+                // Found potential start of a double-brace macro
+                return i;
+            }
+            
+            // Check for single-brace macro {macro}
             if (i + 1 < content.length() && content.charAt(i) == '{' && content.charAt(i + 1) != '{') {
-                // Found potential start of a Latte macro
+                // Found potential start of a single-brace macro
                 return i;
             }
         }
@@ -180,15 +272,21 @@ public final class LatteIncrementalParser {
      * Finds the end of the Latte macro that contains the given offset.
      * This enhanced version tracks opening and closing macros to detect proper nesting,
      * unclosed macros, and crossing macros.
+     * It handles both single-brace macros {macro} and double-brace macros {{macro}}
+     * for compatibility with different syntax modes.
      *
      * @param content The content of the file
      * @param offset The offset to start searching from
      * @return The offset of the end of the Latte macro
      */
     private int findEndOfLatteMacro(@NotNull String content, int offset) {
-        // Patterns for matching macro names
+        // Patterns for matching macro names in single-brace syntax
         Pattern openMacroPattern = Pattern.compile("\\{([a-zA-Z_][a-zA-Z0-9_]*)(?:\\s+|\\}|$)");
         Pattern closeMacroPattern = Pattern.compile("\\{/([a-zA-Z_][a-zA-Z0-9_]*)\\}");
+        
+        // Patterns for matching macro names in double-brace syntax
+        Pattern openDoubleMacroPattern = Pattern.compile("\\{\\{([a-zA-Z_][a-zA-Z0-9_]*)(?:\\s+|\\}\\}|$)");
+        Pattern closeDoubleMacroPattern = Pattern.compile("\\{\\{/([a-zA-Z_][a-zA-Z0-9_]*)\\}\\}");
         
         // Set of macros that don't require closing tags
         Set<String> selfClosingMacros = new HashSet<>(Arrays.asList(
@@ -207,8 +305,17 @@ public final class LatteIncrementalParser {
         int i = offset;
         
         while (i < content.length()) {
-            // Check for opening macro
-            if (i < content.length() - 1 && content.charAt(i) == '{' && content.charAt(i + 1) != '{') {
+            boolean isDoubleBrace = false;
+            
+            // Check for double-brace macro {{macro}} (for {syntax double} mode)
+            if (i < content.length() - 2 && content.charAt(i) == '{' && content.charAt(i + 1) == '{') {
+                isDoubleBrace = true;
+            }
+            
+            // Check for opening macro (either single-brace or double-brace)
+            if ((isDoubleBrace && i < content.length() - 2) || 
+                (!isDoubleBrace && i < content.length() - 1 && content.charAt(i) == '{')) {
+                
                 // Find the end of this macro tag
                 int macroEnd = findMacroTagEnd(content, i);
                 if (macroEnd == -1) {
@@ -219,7 +326,13 @@ public final class LatteIncrementalParser {
                 String macroTag = content.substring(i, macroEnd);
                 
                 // Check if it's a closing macro
-                Matcher closeMatcher = closeMacroPattern.matcher(macroTag);
+                Matcher closeMatcher;
+                if (isDoubleBrace) {
+                    closeMatcher = closeDoubleMacroPattern.matcher(macroTag);
+                } else {
+                    closeMatcher = closeMacroPattern.matcher(macroTag);
+                }
+                
                 if (closeMatcher.find()) {
                     String closingMacroName = closeMatcher.group(1);
                     
@@ -265,7 +378,13 @@ public final class LatteIncrementalParser {
                     }
                 } else {
                     // Check if it's an opening macro
-                    Matcher openMatcher = openMacroPattern.matcher(macroTag);
+                    Matcher openMatcher;
+                    if (isDoubleBrace) {
+                        openMatcher = openDoubleMacroPattern.matcher(macroTag);
+                    } else {
+                        openMatcher = openMacroPattern.matcher(macroTag);
+                    }
+                    
                     if (openMatcher.find()) {
                         String openingMacroName = openMatcher.group(1);
                         

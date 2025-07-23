@@ -274,12 +274,22 @@ public class LatteCompletionContributor extends CompletionContributor {
         System.out.println("[DEBUG_LOG] addNetteVariables called");
         
         try {
+            // Check if Nette HTTP is enabled
+            LatteSettings settings = LatteSettings.getInstance();
+            System.out.println("[DEBUG_LOG] LatteCompletionContributor - Nette HTTP enabled: " + settings.isEnableNetteHttp());
+            
             // Get all variables from NetteDefaultVariablesProvider
             List<NetteVariable> variables = NetteDefaultVariablesProvider.getAllVariables(parameters.getOriginalFile().getProject());
             System.out.println("[DEBUG_LOG] Number of variables: " + variables.size());
             
-            // Add variables to completion results
+            // Add variables to completion results, filtering out HTTP variables if Nette HTTP is disabled
             for (NetteVariable variable : variables) {
+                // Skip HTTP variables if Nette HTTP is disabled
+                if (!settings.isEnableNetteHttp() && isHttpVariable(variable.getName())) {
+                    System.out.println("[DEBUG_LOG] Skipping HTTP variable: " + variable.getName() + " because Nette HTTP is disabled");
+                    continue;
+                }
+                
                 System.out.println("[DEBUG_LOG] Adding variable: " + variable.getName() + " of type " + variable.getType());
                 result.addElement(LookupElementBuilder.create(variable.getName())
                         .withTypeText(variable.getType())
@@ -289,5 +299,21 @@ public class LatteCompletionContributor extends CompletionContributor {
             System.out.println("[DEBUG_LOG] Error adding Nette variables: " + e.getMessage());
             e.printStackTrace();
         }
+    }
+    
+    /**
+     * Checks if a variable is an HTTP variable.
+     *
+     * @param name The name of the variable
+     * @return True if the variable is an HTTP variable, false otherwise
+     */
+    private boolean isHttpVariable(String name) {
+        return name.equals("httpRequest") || 
+               name.equals("httpResponse") || 
+               name.equals("session") || 
+               name.equals("url") || 
+               name.equals("cookies") || 
+               name.equals("headers") || 
+               name.equals("requestFactory");
     }
 }
