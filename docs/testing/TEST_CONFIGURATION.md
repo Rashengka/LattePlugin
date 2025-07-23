@@ -67,6 +67,8 @@ Configuration file for j.u.l.LogManager does not exist: /path/to/ideaIU/test-log
 
 This warning indicates that the Java Util Logging (j.u.l) system is looking for a configuration file that doesn't exist. This is normal during test execution and doesn't affect the test results.
 
+For more information about the logging system used in the Latte Plugin, including how test logs are organized, see [Logging Documentation](../logging/README.md).
+
 #### VFS Log Version Warning
 
 ```

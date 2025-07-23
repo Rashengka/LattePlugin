@@ -1,0 +1,109 @@
+{* Latte Template Example with Deliberate Errors *}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{$title|upper</title>  {* Missing closing brace *}
+    
+    {* CSS styles can be included using the include macro *}
+    {include 'styles.latte'  {* Missing closing brace *}
+    
+    {* Define variables with errors *}
+    {var $pageId = 'homepage'  {* Missing closing brace *}
+    {var $isAdmin = $user->role === 'admin'}
+</head>
+<body id="{$pageId}">
+    {* Conditional rendering with unclosed if macro *}
+    {if $user->isLoggedIn()
+        <header>
+            <h1>Welcome, {$user->name|capitalize}</h1>
+            {* n:if attribute for conditional rendering of elements *}
+            <div n:if="$isAdmin" class="admin-panel">
+                <p>You have admin privileges</p>
+            </div>
+        </header>
+    {else}
+        <header>
+            <h1>Welcome, Guest</h1>
+            <p>Please <a href="/login">log in</a> to access all features.</p>
+        </header>
+    {/if}  {* This closing tag doesn't match the unclosed if above *}
+    
+    <main>
+        {* Iterating over arrays with foreach - missing end tag *}
+        <section class="articles">
+            <h2>Latest Articles</h2>
+            {if count($articles) > 0}
+                <ul>
+                    {foreach $articles as $article}
+                        <li>
+                            <h3>{$article->title}</h3>
+                            <p>{$article->excerpt|truncate:150}</p>
+                            <time datetime="{$article->date|date:'Y-m-d'}">{$article->date|date:'j F Y'}</time>
+                            {* Using n:class to conditionally add classes *}
+                            <span n:class="$article->featured ? featured">
+                                {if $article->featured}Featured{/if}
+                            </span>
+                        </li>
+                    {* Missing /foreach closing tag *}
+                </ul>
+            {else}
+                <p>No articles found.</p>
+            {/if}
+        </section>
+        
+        {* Using n:foreach attribute with syntax error *}
+        <section class="categories">
+            <h2>Categories</h2>
+            <ul n:inner-foreach="$categories as"> {* Missing variable after 'as' *}
+                <li>{$category->name} ({$category->articleCount})</li>
+            </ul>
+        </section>
+        
+        {* Capturing output to a variable - unclosed capture *}
+        {capture $sidebarContent}
+            <h3>Popular Tags</h3>
+            <ul>
+                {foreach $tags as $tag}
+                    <li>{$tag->name} ({$tag->count})</li>
+                {/foreach}
+            </ul>
+        {* Missing /capture closing tag *}
+    </main>
+    
+    <aside>
+        {* Print the captured content *}
+        {$sidebarContent|noescape}
+        
+        {* Translation example with error *}
+        <div class="newsletter">
+            <h3>{_newsletter.signup}</h3> {* Missing quotes *}
+            <p>{_'newsletter.description'}</p>
+            <form action="/subscribe" method="post">
+                <input type="email" name="email" placeholder="{_'newsletter.email_placeholder'}">
+                <button type="submit">{_'newsletter.subscribe'}</button>
+            </form>
+        </div>
+    </aside>
+    
+    <footer>
+        {* Using n:attr with syntax error *}
+        <div n:attr="data-user-id => $user->id, data-logged-in => "> {* Missing value *}
+            <p>&copy; {date('Y')} My Website</p>
+        </div>
+        
+        {* Include another template with error *}
+        {include} {* Missing template name *}
+    </footer>
+    
+    {* Conditional script loading with unclosed if *}
+    {if $enableAnalytics
+        <script>
+            // Analytics code
+            console.log('Analytics enabled');
+        </script>
+    {* Missing /if closing tag *}
+</body>
+</html>

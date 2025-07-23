@@ -8,6 +8,7 @@ import com.intellij.openapi.editor.markup.TextAttributes;
 import com.intellij.openapi.fileTypes.SyntaxHighlighterBase;
 import com.intellij.psi.TokenType;
 import com.intellij.psi.tree.IElementType;
+import com.intellij.psi.xml.XmlTokenType;
 import org.jetbrains.annotations.NotNull;
 import cz.hqm.latte.plugin.lexer.LatteLexerFactory;
 import cz.hqm.latte.plugin.lexer.LatteTokenTypes;
@@ -114,10 +115,32 @@ public class LatteSyntaxHighlighter extends SyntaxHighlighterBase {
         return LatteLexerFactory.getInstance().getLexer();
     }
 
+    // Define text attribute keys for HTML elements with LATTE_ prefix to avoid conflicts
+    public static final TextAttributesKey HTML_TAG =
+            createTextAttributesKey("LATTE_HTML_TAG", DefaultLanguageHighlighterColors.MARKUP_TAG);
+    public static final TextAttributesKey HTML_TAG_NAME =
+            createTextAttributesKey("LATTE_HTML_TAG_NAME", DefaultLanguageHighlighterColors.MARKUP_TAG);
+    public static final TextAttributesKey HTML_ATTRIBUTE_NAME =
+            createTextAttributesKey("LATTE_HTML_ATTRIBUTE_NAME", DefaultLanguageHighlighterColors.MARKUP_ATTRIBUTE);
+    public static final TextAttributesKey HTML_ATTRIBUTE_VALUE =
+            createTextAttributesKey("LATTE_HTML_ATTRIBUTE_VALUE", DefaultLanguageHighlighterColors.STRING);
+    public static final TextAttributesKey HTML_ENTITY =
+            createTextAttributesKey("LATTE_HTML_ENTITY", DefaultLanguageHighlighterColors.MARKUP_ENTITY);
+    public static final TextAttributesKey HTML_COMMENT =
+            createTextAttributesKey("LATTE_HTML_COMMENT", DefaultLanguageHighlighterColors.BLOCK_COMMENT);
+            
+    // Define arrays of text attribute keys for token highlighting
+    private static final TextAttributesKey[] HTML_TAG_KEYS = new TextAttributesKey[]{HTML_TAG};
+    private static final TextAttributesKey[] HTML_TAG_NAME_KEYS = new TextAttributesKey[]{HTML_TAG_NAME};
+    private static final TextAttributesKey[] HTML_ATTRIBUTE_NAME_KEYS = new TextAttributesKey[]{HTML_ATTRIBUTE_NAME};
+    private static final TextAttributesKey[] HTML_ATTRIBUTE_VALUE_KEYS = new TextAttributesKey[]{HTML_ATTRIBUTE_VALUE};
+    private static final TextAttributesKey[] HTML_ENTITY_KEYS = new TextAttributesKey[]{HTML_ENTITY};
+    private static final TextAttributesKey[] HTML_COMMENT_KEYS = new TextAttributesKey[]{HTML_COMMENT};
+
     @NotNull
     @Override
     public TextAttributesKey[] getTokenHighlights(IElementType tokenType) {
-        // Handle standard token types
+        // Handle standard Latte token types
         if (tokenType.equals(TokenType.BAD_CHARACTER)) {
             return BAD_CHAR_KEYS;
         } else if (tokenType.equals(LatteTokenTypes.LATTE_MACRO_START) || 
@@ -135,6 +158,28 @@ public class LatteSyntaxHighlighter extends SyntaxHighlighterBase {
                    tokenType.equals(LatteTokenTypes.LATTE_COMMENT_END) || 
                    tokenType.equals(LatteTokenTypes.LATTE_COMMENT_CONTENT)) {
             return COMMENT_KEYS;
+        }
+        
+        // Handle HTML token types
+        else if (tokenType.equals(XmlTokenType.XML_START_TAG_START) || 
+                 tokenType.equals(XmlTokenType.XML_END_TAG_START) ||
+                 tokenType.equals(XmlTokenType.XML_TAG_END) ||
+                 tokenType.equals(XmlTokenType.XML_EMPTY_ELEMENT_END)) {
+            return HTML_TAG_KEYS;
+        } else if (tokenType.equals(XmlTokenType.XML_TAG_NAME)) {
+            return HTML_TAG_NAME_KEYS;
+        } else if (tokenType.equals(XmlTokenType.XML_NAME)) {
+            return HTML_ATTRIBUTE_NAME_KEYS;
+        } else if (tokenType.equals(XmlTokenType.XML_ATTRIBUTE_VALUE_TOKEN) ||
+                   tokenType.equals(XmlTokenType.XML_ATTRIBUTE_VALUE_START_DELIMITER) ||
+                   tokenType.equals(XmlTokenType.XML_ATTRIBUTE_VALUE_END_DELIMITER)) {
+            return HTML_ATTRIBUTE_VALUE_KEYS;
+        } else if (tokenType.equals(XmlTokenType.XML_ENTITY_REF_TOKEN)) {
+            return HTML_ENTITY_KEYS;
+        } else if (tokenType.equals(XmlTokenType.XML_COMMENT_START) ||
+                   tokenType.equals(XmlTokenType.XML_COMMENT_END) ||
+                   tokenType.equals(XmlTokenType.XML_COMMENT_CHARACTERS)) {
+            return HTML_COMMENT_KEYS;
         }
         
         // Handle error token types

@@ -18,12 +18,21 @@ import java.util.Map;
  */
 public class LatteColorSettingsPage implements ColorSettingsPage {
     private static final AttributesDescriptor[] DESCRIPTORS = new AttributesDescriptor[]{
-            new AttributesDescriptor("Macro", LatteSyntaxHighlighter.LATTE_MACRO),
-            new AttributesDescriptor("Macro Name", LatteSyntaxHighlighter.LATTE_MACRO_NAME),
-            new AttributesDescriptor("Attribute", LatteSyntaxHighlighter.LATTE_ATTRIBUTE),
-            new AttributesDescriptor("Filter", LatteSyntaxHighlighter.LATTE_FILTER),
-            new AttributesDescriptor("Comment", LatteSyntaxHighlighter.LATTE_COMMENT),
-            new AttributesDescriptor("Bad Character", LatteSyntaxHighlighter.BAD_CHARACTER)
+            // Latte-specific syntax elements
+            new AttributesDescriptor("Latte Macro", LatteSyntaxHighlighter.LATTE_MACRO),
+            new AttributesDescriptor("Latte Macro Name", LatteSyntaxHighlighter.LATTE_MACRO_NAME),
+            new AttributesDescriptor("Latte Attribute", LatteSyntaxHighlighter.LATTE_ATTRIBUTE),
+            new AttributesDescriptor("Latte Filter", LatteSyntaxHighlighter.LATTE_FILTER),
+            new AttributesDescriptor("Latte Comment", LatteSyntaxHighlighter.LATTE_COMMENT),
+            new AttributesDescriptor("Latte Bad Character", LatteSyntaxHighlighter.BAD_CHARACTER),
+            
+            // HTML syntax elements
+            new AttributesDescriptor("HTML Tag", LatteSyntaxHighlighter.HTML_TAG),
+            new AttributesDescriptor("HTML Tag Name", LatteSyntaxHighlighter.HTML_TAG_NAME),
+            new AttributesDescriptor("HTML Attribute Name", LatteSyntaxHighlighter.HTML_ATTRIBUTE_NAME),
+            new AttributesDescriptor("HTML Attribute Value", LatteSyntaxHighlighter.HTML_ATTRIBUTE_VALUE),
+            new AttributesDescriptor("HTML Entity", LatteSyntaxHighlighter.HTML_ENTITY),
+            new AttributesDescriptor("HTML Comment", LatteSyntaxHighlighter.HTML_COMMENT)
     };
 
     @Nullable

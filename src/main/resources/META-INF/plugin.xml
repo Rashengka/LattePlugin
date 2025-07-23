@@ -35,6 +35,10 @@
         <lang.syntaxHighlighterFactory language="Latte"
                                        implementationClass="cz.hqm.latte.plugin.highlighting.LatteSyntaxHighlighterFactory"/>
                                        
+        <!-- Error annotator for validation errors (only logs in development mode) -->
+        <annotator language="Latte"
+                   implementationClass="cz.hqm.latte.plugin.annotator.LatteErrorAnnotator"/>
+                                       
         <!-- Code completion -->
         <completion.contributor language="Latte"
                                 implementationClass="cz.hqm.latte.plugin.completion.LatteCompletionContributor"/>

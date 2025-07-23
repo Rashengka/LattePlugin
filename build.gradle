@@ -50,6 +50,39 @@ ext.logToFile = { String taskName, String output ->
     }
 }
 
+// Utility function to log to project log directory with timestamp in log name
+// This is specifically for captureRunIdeLogs and captureBuildLogs tasks
+ext.logToProjectRoot = { String taskName, String output ->
+    if (enableCommandLogging) {
+        def timestamp = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss").format(new Date())
+        
+        // Log to file if enabled
+        if (enableFileOutput) {
+            // Create log directory if it doesn't exist
+            def logDir = file("log")
+            if (!logDir.exists()) {
+                logDir.mkdirs()
+            }
+            
+            // Add timestamp to log filename for consistency with test logs
+            def logFile = file("log/${taskName}_${timestamp}.log")
+            logFile.text = "=== ${taskName} executed at ${timestamp} ===\n\n${output}\n"
+            
+            // Only print the log file location if terminal output is enabled
+            if (enableTerminalOutput) {
+                println "Command output logged to: ${logFile.absolutePath}"
+            }
+        }
+        
+        // Print to terminal if enabled or if both terminal and file output are disabled
+        // This ensures that terminal output is enforced when no output is allowed
+        if (enableTerminalOutput && !enableFileOutput || (!enableTerminalOutput && !enableFileOutput)) {
+            println "=== ${taskName} executed at ${timestamp} ==="
+            println output
+        }
+    }
+}
+
 repositories {
     mavenCentral()
 }
@@ -78,7 +111,8 @@ runIde {
     jvmArgs = [
             '-Xms512m',
             '-Xmx1024m',
-            "-Didea.mac.url.schemes=latte"
+            "-Didea.mac.url.schemes=latte",
+            "-Dlatte.plugin.production=false"  // Explicitly enable development mode for logging
     ]
 
     systemProperties = [
@@ -88,7 +122,9 @@ runIde {
             'idea.ignore.vfs.log.version.mismatch': 'true',
             'jna.nosys': 'true',
             'ide.suppress.font.warnings': 'true',
-            'idea.dont.check.keymap': 'true'
+            'idea.dont.check.keymap': 'true',
+            'latte.plugin.production': 'false',  // Explicitly enable development mode for logging
+            'latte.plugin.log.dir': file('log').absolutePath  // Set the log directory to the project's log directory
     ]
 
     // Nastavení rozložení aplikace pro macOS
@@ -98,7 +134,7 @@ runIde {
     doFirst {
         println "Starting runIde task with logging enabled: ${enableCommandLogging}"
         if (enableCommandLogging) {
-            println "Logs will be written to: ${file(logsDir).absolutePath}"
+            println "Logs will be written to: ${file('log').absolutePath}"
         }
     }
 }
@@ -114,47 +150,110 @@ tasks.register('prepareRunIdeLogging') {
 tasks.register('captureRunIdeLogs') {
     doLast {
         if (enableCommandLogging) {
-            // Get the IDE log file if it exists
-            def ideaLogDir = new File(System.getProperty('user.home'), 'Library/Logs/JetBrains/IdeaIC2023.1')
-            if (!ideaLogDir.exists()) {
-                ideaLogDir = new File(System.getProperty('user.home'), '.IntelliJIdea2023.1/system/log')
+            // Create log directory if it doesn't exist
+            def logDir = file("log")
+            if (!logDir.exists()) {
+                logDir.mkdirs()
             }
 
-            def ideaLogFile = new File(ideaLogDir, 'idea.log')
-            if (ideaLogFile.exists()) {
-                def logContent = ideaLogFile.text
-                logToFile('runIde', "=== IDE Log File ===\n\n${logContent}")
-                println "Captured IDE log file: ${ideaLogFile.absolutePath}"
-            } else {
-                println "IDE log file not found at ${ideaLogFile.absolutePath}"
-
-                // Try to find the log file in other locations
-                def possibleLogDirs = [
-                        new File(System.getProperty('user.home'), 'Library/Logs/JetBrains'),
-                        new File(System.getProperty('user.home'), '.IntelliJIdea/system/log'),
-                        new File(System.getProperty('user.home'), '.IntelliJIdea2023.1/system/log'),
-                        new File(System.getProperty('user.home'), '.IdeaIC2023.1/system/log')
-                ]
-
+            // Only look for log files within the project directory
+            def possibleLogDirs = [
+                    file("log"),
+                    file("build/idea-sandbox/system/log"),
+                    file("build/idea-sandbox"),
+                    file("build"),
+                    file("temp")
+            ]
+            
+            // Variable to track if we found and processed a log file
+            boolean logFileFound = false
+            StringBuilder logContent = new StringBuilder("=== IDE Log File ===\n\n")
+            
+            // Check all possible directories for the log file
+            for (dir in possibleLogDirs) {
+                if (dir.exists() && dir.isDirectory()) {
+                    def ideaLogFile = new File(dir, 'idea.log')
+                    if (ideaLogFile.exists()) {
+                        logContent.append("Log file found at: ${ideaLogFile.absolutePath}\n\n")
+                        logContent.append(ideaLogFile.text)
+                        println "Captured IDE log file: ${ideaLogFile.absolutePath}"
+                        logFileFound = true
+                        break
+                    }
+                }
+            }
+            
+            // If no log file was found, add a message to the log content
+            if (!logFileFound) {
+                logContent.append("No IDE log file was found in any of the following locations:\n")
+                possibleLogDirs.each { dir ->
+                    logContent.append("- ${dir.absolutePath}/idea.log\n")
+                }
+                
+                // Also list any .log files found in the possible directories
+                logContent.append("\nOther log files found:\n")
+                boolean otherLogsFound = false
+                
                 for (dir in possibleLogDirs) {
                     if (dir.exists() && dir.isDirectory()) {
-                        println "Checking for log files in ${dir.absolutePath}"
                         dir.eachFileRecurse { file ->
                             if (file.name.endsWith('.log')) {
-                                println "Found log file: ${file.absolutePath}"
+                                logContent.append("- ${file.absolutePath}\n")
+                                otherLogsFound = true
+                            }
+                        }
+                    }
+                }
+                
+                if (!otherLogsFound) {
+                    logContent.append("No other log files found.\n")
+                }
+            }
+            
+            // Always create a log file, even if no IDE log file was found
+            def timestamp = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss").format(new Date())
+            def logFile = file("log/runIde_${timestamp}.log")
+            logFile.text = logContent.toString()
+            println "IDE logs written to: ${logFile.absolutePath}"
+
+            // Also capture the debug.log file from the project's temp directory
+            def debugLogFile = file('temp/debug.log')
+            def debugLogContent = new StringBuilder("=== Debug Log File ===\n\n")
+            
+            if (debugLogFile.exists()) {
+                debugLogContent.append("Debug log file found at: ${debugLogFile.absolutePath}\n\n")
+                debugLogContent.append(debugLogFile.text)
+                println "Captured debug log file: ${debugLogFile.absolutePath}"
+            } else {
+                debugLogContent.append("No debug log file found at: ${debugLogFile.absolutePath}\n")
+                
+                // Check for debug log files in other potential locations within the project
+                def potentialDebugLogLocations = [
+                    file('build/idea-sandbox/system/log/debug.log'),
+                    file('build/idea-sandbox/system/log'),
+                    file('build'),
+                    file('log')
+                ]
+                
+                debugLogContent.append("\nChecked the following locations for debug log files:\n")
+                potentialDebugLogLocations.each { location ->
+                    debugLogContent.append("- ${location.absolutePath}\n")
+                    
+                    if (location.exists() && location.isDirectory()) {
+                        location.eachFileRecurse { file ->
+                            if (file.name.endsWith('.log')) {
+                                debugLogContent.append("  Found log file: ${file.absolutePath}\n")
                             }
                         }
                     }
                 }
             }
-
-            // Also capture the debug.log file from the temp directory
-            def debugLogFile = new File('temp/debug.log')
-            if (debugLogFile.exists()) {
-                def debugLogContent = debugLogFile.text
-                logToFile('runIde_debug', debugLogContent)
-                println "Captured debug log file: ${debugLogFile.absolutePath}"
-            }
+            
+            // Always create a debug log file, even if the debug.log file isn't found
+            // Reuse the timestamp variable from the IDE log file handling
+            def debugLogFile2 = file("log/runIde_debug_${timestamp}.log")
+            debugLogFile2.text = debugLogContent.toString()
+            println "Debug logs written to: ${debugLogFile2.absolutePath}"
         }
     }
 }
@@ -226,6 +325,9 @@ test {
     ]
 
     systemProperties([
+            // Latte Plugin Test Mode Flag
+            'latte.plugin.test.mode': 'true',
+            
             // Java Logging Configuration
             'java.util.logging.manager': 'java.util.logging.LogManager',
             'java.util.logging.config.file': project.file('src/test/resources/test-log.properties').absolutePath,
@@ -370,7 +472,7 @@ tasks.register('prepareBuildLogging') {
     doLast {
         println "Starting build task with logging enabled: ${enableCommandLogging}"
         if (enableCommandLogging) {
-            println "Logs will be written to: ${file(logsDir).absolutePath}"
+            println "Logs will be written to: ${file('log').absolutePath}"
         }
     }
 }
@@ -391,8 +493,8 @@ tasks.register('captureBuildLogs') {
             }
 
             // Log the output
-            logToFile('build', outputBuffer.toString())
-            println "Build logs written to: ${file(logsDir).absolutePath}/build_*.log"
+            logToProjectRoot('build', outputBuffer.toString())
+            println "Build logs written to: ${file('log').absolutePath}/build_[timestamp].log"
         }
     }
 }
@@ -414,10 +516,14 @@ tasks.register('distributionBuild') {
         // Disable command logging for all tasks
         project.ext.enableCommandLogging = false
         println "Command logging is now disabled: ${enableCommandLogging}"
+        
+        // Set the production flag for the Latte plugin
+        System.setProperty("latte.plugin.production", "true")
+        println "Set latte.plugin.production=true for disabling validation error logging"
     }
 
-    // For a real distribution build, we would run the build task
-    // finalizedBy tasks.build
+    // Run the build task for distribution
+    finalizedBy tasks.build
 }
 
 // Add a simple task to test the logging functionality

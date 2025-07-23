@@ -193,7 +193,7 @@ By default, command logging is enabled for local development and disabled for di
 - To change the logs directory: `gradle runIde -PlogsDir=custom_logs`
 - To create a distribution build with logging disabled: `gradle distributionBuild`
 
-For detailed documentation on the command logging functionality, see [log/README.md](log/README.md).
+For detailed documentation on the command logging functionality, see [docs/logging/README.md](docs/logging/README.md).
 
 For detailed instructions on building, testing, and debugging the plugin, see [BUILD_AND_TEST.md](docs/setup/BUILD_AND_TEST.md).
 

@@ -62,6 +62,8 @@ To run tests directly in IntelliJ IDEA without font-related errors, you need to 
 6. Click "Apply" and then "OK"
 7. Run the test using this configuration
 
+Note: Several of these VM options configure logging behavior. For more information about the logging system used in the Latte Plugin, including how test logs are organized, see [Logging Documentation](../logging/README.md).
+
 ## Creating a Template Configuration
 
 To avoid adding these VM options every time you create a new test configuration, you can create a template:
