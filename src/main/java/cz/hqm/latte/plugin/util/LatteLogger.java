@@ -661,11 +661,13 @@ public class LatteLogger {
     /**
      * Logs a test message to verify that logging is working correctly.
      * This method should be called when the plugin is initialized.
+     * Test messages are only logged when running in test mode.
      */
     public static void logTestMessage() {
-        if (IS_DEVELOPMENT_MODE) {
+        if (IS_DEVELOPMENT_MODE && IS_TEST_MODE) {
             System.out.println("LatteLogger: Testing logging system...");
             System.out.println("LatteLogger: Development mode is enabled: " + IS_DEVELOPMENT_MODE);
+            System.out.println("LatteLogger: Test mode is enabled: " + IS_TEST_MODE);
             System.out.println("LatteLogger: Log directory is: " + LOG_DIR_PATH);
 
             // Create a test logger

@@ -6,6 +6,7 @@ import com.intellij.lang.html.HTMLParser;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.psi.tree.IElementType;
 import cz.hqm.latte.plugin.util.LatteLogger;
+import cz.hqm.latte.plugin.validator.LatteValidator;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -44,16 +45,9 @@ public class LatteHtmlParser extends HTMLParser {
         // IMPORTANT: We're completely avoiding accessing the PSI element's containing file
         // as it can cause PsiInvalidElementAccessException with NULL_PSI_ELEMENT
         
-        // Always log the "Top level element is not completed" error for now
-        // This ensures that the error is logged even if we can't detect it automatically
-        LatteLogger.debug(LOG, "Assuming HTML structure is incomplete for all files");
-        
-        // Directly log the validation error here to ensure it's logged
-        LatteLogger.logValidationError(LOG, "Top level element is not completed", 
-                                     "HTML structure in Latte file", 
-                                     0);
-        
-        return true;
+        // If we have at least one child, assume the structure is complete
+        LatteLogger.debug(LOG, "Node has children, structure is likely complete");
+        return false;
     }
 
     @Override
@@ -67,7 +61,13 @@ public class LatteHtmlParser extends HTMLParser {
         
         // Log the current token if available
         if (builder.getTokenType() != null) {
-            LatteLogger.debug(LOG, "Current token: " + builder.getTokenType() + ", text: " + builder.getTokenText());
+            // Use truncateElementText to avoid logging the entire file content
+            String tokenText = builder.getTokenText();
+            LatteLogger.debug(LOG, "Current token: " + builder.getTokenType() + ", text: " + 
+                             LatteValidator.truncateElementText(tokenText));
+        } else {
+            // For empty tokens, just log that it's empty without including the entire file content
+            LatteLogger.debug(LOG, "Current token: empty token (no token type available)");
         }
         
         try {
@@ -80,9 +80,6 @@ public class LatteHtmlParser extends HTMLParser {
             // Log the result of parsing
             if (result != null) {
                 LatteLogger.debug(LOG, "Parsing completed successfully with root type: " + result.getElementType());
-                // Log a message specifically looking for the "Top level element is not completed" error
-                LatteLogger.debug(LOG, "If you're seeing 'Top level element is not completed' errors, they should appear in the IDE log");
-                
                 // Check if the HTML structure is incomplete by examining the result
                 // The "Top level element is not completed" error typically occurs when the root HTML element is not properly closed
                 if (isHtmlStructureIncomplete(result)) {

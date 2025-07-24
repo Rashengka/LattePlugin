@@ -38,3 +38,7 @@ bin/
 ### Temp files ###
 /temp/**
 /log/**
+/samples/.idea
+
+### Junie temp files ###
+.output.txt

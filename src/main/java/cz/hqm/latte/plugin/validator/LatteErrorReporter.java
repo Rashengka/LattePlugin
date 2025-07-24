@@ -6,6 +6,8 @@ import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.psi.PsiElement;
 import cz.hqm.latte.plugin.util.LatteLogger;
 import org.jetbrains.annotations.NotNull;
+// Explicit import for LatteValidator for better code clarity
+// Not strictly necessary as both classes are in the same package
 
 /**
  * Captures and logs validation errors displayed in Latte files.
@@ -22,7 +24,8 @@ public class LatteErrorReporter {
      */
     public static void logValidationError(@NotNull String message, @NotNull PsiElement element) {
         // Use the specialized validation error logging method to ensure errors are logged to validation_errors.log
-        LatteLogger.logValidationError(LOG, message, element.getText(), element.getTextOffset());
+        // Use truncateElementText to format multi-line element text
+        LatteLogger.logValidationError(LOG, message, LatteValidator.truncateElementText(element.getText()), element.getTextOffset());
     }
 
     /**
@@ -38,7 +41,8 @@ public class LatteErrorReporter {
                                         @NotNull PsiElement element, 
                                         @NotNull AnnotationHolder holder) {
         // Use the specialized validation error logging method to ensure errors are logged to validation_errors.log
-        LatteLogger.logValidationError(LOG, message, element.getText(), element.getTextOffset());
+        // Use truncateElementText to format multi-line element text
+        LatteLogger.logValidationError(LOG, message, LatteValidator.truncateElementText(element.getText()), element.getTextOffset());
         
         // Create the annotation in the editor
         holder.newAnnotation(severity, message)

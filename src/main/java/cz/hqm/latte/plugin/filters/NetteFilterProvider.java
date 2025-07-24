@@ -3,12 +3,20 @@ package cz.hqm.latte.plugin.filters;
 import cz.hqm.latte.plugin.settings.LatteSettings;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Provides Latte filters from Nette packages based on enabled settings.
  * This class is responsible for storing and providing filters from different Nette packages.
+ * Uses caching to improve performance.
  */
 public class NetteFilterProvider {
+    // Cache for filter names and filter objects
+    private static final AtomicReference<Set<String>> cachedFilterNames = new AtomicReference<>();
+    private static final AtomicReference<Set<NetteFilter>> cachedFilters = new AtomicReference<>();
+    
+    // Cache for settings to detect changes
+    private static final AtomicReference<LatteSettings> cachedSettings = new AtomicReference<>();
 
     // Filters from nette/application package
     private static final Set<NetteFilter> APPLICATION_FILTERS = new HashSet<>(Arrays.asList(
@@ -94,78 +102,137 @@ public class NetteFilterProvider {
     ));
 
     /**
-     * Gets all valid filter names based on enabled settings.
-     *
-     * @return A set of valid filter names
+     * Checks if the cache needs to be updated based on current settings.
+     * 
+     * @return True if the cache is valid, false if it needs to be updated
      */
-    public static Set<String> getValidFilterNames() {
+    private static synchronized boolean isCacheValid() {
+        // Check if we have a cache
+        if (cachedFilterNames.get() == null || cachedFilters.get() == null) {
+            System.out.println("[DEBUG_LOG] Filter cache not initialized");
+            return false;
+        }
+        
+        // Check if settings have changed
+        LatteSettings currentSettings = LatteSettings.getInstance();
+        LatteSettings cachedSettingsValue = cachedSettings.get();
+        
+        if (cachedSettingsValue == null || !settingsEqual(cachedSettingsValue, currentSettings)) {
+            System.out.println("[DEBUG_LOG] Filter settings have changed, cache invalid");
+            return false;
+        }
+        
+        // Cache is valid
+        return true;
+    }
+    
+    /**
+     * Compares two settings instances to check if they are equal.
+     *
+     * @param settings1 The first settings instance
+     * @param settings2 The second settings instance
+     * @return True if the settings are equal, false otherwise
+     */
+    private static boolean settingsEqual(LatteSettings settings1, LatteSettings settings2) {
+        return settings1.isEnableNetteApplication() == settings2.isEnableNetteApplication()
+            && settings1.isEnableNetteForms() == settings2.isEnableNetteForms()
+            && settings1.isEnableNetteAssets() == settings2.isEnableNetteAssets()
+            && settings1.isEnableNetteDatabase() == settings2.isEnableNetteDatabase()
+            && settings1.isEnableNetteSecurity() == settings2.isEnableNetteSecurity();
+    }
+    
+    /**
+     * Initializes the cache with current settings.
+     */
+    private static synchronized void initCache() {
+        System.out.println("[DEBUG_LOG] Initializing filter cache");
+        
+        // Get current settings
+        LatteSettings settings = LatteSettings.getInstance();
+        
+        // Create filter names set
         Set<String> filterNames = new HashSet<>();
         
         // Add core filters
         CORE_FILTERS.forEach(filter -> filterNames.add(filter.getName()));
         
-        // Get settings
-        LatteSettings settings = LatteSettings.getInstance();
+        // Create filters set
+        Set<NetteFilter> filters = new HashSet<>(CORE_FILTERS);
         
         // Add filters based on enabled settings
         if (settings.isEnableNetteApplication()) {
             APPLICATION_FILTERS.forEach(filter -> filterNames.add(filter.getName()));
-        }
-        
-        if (settings.isEnableNetteForms()) {
-            FORMS_FILTERS.forEach(filter -> filterNames.add(filter.getName()));
-        }
-        
-        if (settings.isEnableNetteAssets()) {
-            ASSETS_FILTERS.forEach(filter -> filterNames.add(filter.getName()));
-        }
-        
-        if (settings.isEnableNetteDatabase()) {
-            DATABASE_FILTERS.forEach(filter -> filterNames.add(filter.getName()));
-        }
-        
-        if (settings.isEnableNetteSecurity()) {
-            SECURITY_FILTERS.forEach(filter -> filterNames.add(filter.getName()));
-        }
-        
-        return filterNames;
-    }
-
-    /**
-     * Gets all filters based on enabled settings.
-     *
-     * @return A set of filters
-     */
-    public static Set<NetteFilter> getAllFilters() {
-        Set<NetteFilter> filters = new HashSet<>();
-        
-        // Add core filters
-        filters.addAll(CORE_FILTERS);
-        
-        // Get settings
-        LatteSettings settings = LatteSettings.getInstance();
-        
-        // Add filters based on enabled settings
-        if (settings.isEnableNetteApplication()) {
             filters.addAll(APPLICATION_FILTERS);
         }
         
         if (settings.isEnableNetteForms()) {
+            FORMS_FILTERS.forEach(filter -> filterNames.add(filter.getName()));
             filters.addAll(FORMS_FILTERS);
         }
         
         if (settings.isEnableNetteAssets()) {
+            ASSETS_FILTERS.forEach(filter -> filterNames.add(filter.getName()));
             filters.addAll(ASSETS_FILTERS);
         }
         
         if (settings.isEnableNetteDatabase()) {
+            DATABASE_FILTERS.forEach(filter -> filterNames.add(filter.getName()));
             filters.addAll(DATABASE_FILTERS);
         }
         
         if (settings.isEnableNetteSecurity()) {
+            SECURITY_FILTERS.forEach(filter -> filterNames.add(filter.getName()));
             filters.addAll(SECURITY_FILTERS);
         }
         
-        return filters;
+        // Update cache
+        cachedFilterNames.set(filterNames);
+        cachedFilters.set(filters);
+        cachedSettings.set(settings);
+        
+        System.out.println("[DEBUG_LOG] Filter cache initialized with " + filterNames.size() + " filter names and " + filters.size() + " filters");
+    }
+    
+    /**
+     * Invalidates the cache.
+     * This should be called when settings change.
+     */
+    public static synchronized void invalidateCache() {
+        System.out.println("[DEBUG_LOG] Invalidating filter cache");
+        cachedFilterNames.set(null);
+        cachedFilters.set(null);
+        cachedSettings.set(null);
+    }
+
+    /**
+     * Gets all valid filter names based on enabled settings.
+     * Uses caching to improve performance.
+     *
+     * @return A set of valid filter names
+     */
+    public static Set<String> getValidFilterNames() {
+        // Check if cache is valid
+        if (!isCacheValid()) {
+            initCache();
+        }
+        
+        // Return cached filter names
+        return new HashSet<>(cachedFilterNames.get());
+    }
+
+    /**
+     * Gets all filters based on enabled settings.
+     * Uses caching to improve performance.
+     *
+     * @return A set of filters
+     */
+    public static Set<NetteFilter> getAllFilters() {
+        // Check if cache is valid
+        if (!isCacheValid()) {
+            initCache();
+        }
+        
+        // Return cached filters
+        return new HashSet<>(cachedFilters.get());
     }
 }

@@ -8,6 +8,8 @@ import com.intellij.openapi.components.Storage;
 import com.intellij.util.xmlb.XmlSerializerUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import cz.hqm.latte.plugin.completion.NetteDefaultVariablesProvider;
+import cz.hqm.latte.plugin.filters.NetteFilterProvider;
 import cz.hqm.latte.plugin.version.LatteVersion;
 
 /**
@@ -256,6 +258,9 @@ public final class LatteSettings implements PersistentStateComponent<LatteSettin
      */
     public void setEnableNetteApplication(boolean enableNetteApplication) {
         this.enableNetteApplication = enableNetteApplication;
+        // Invalidate caches when settings change
+        NetteDefaultVariablesProvider.invalidateCache();
+        NetteFilterProvider.invalidateCache();
     }
     
     /**
@@ -274,6 +279,9 @@ public final class LatteSettings implements PersistentStateComponent<LatteSettin
      */
     public void setEnableNetteForms(boolean enableNetteForms) {
         this.enableNetteForms = enableNetteForms;
+        // Invalidate caches when settings change
+        NetteDefaultVariablesProvider.invalidateCache();
+        NetteFilterProvider.invalidateCache();
     }
     
     /**
@@ -292,6 +300,8 @@ public final class LatteSettings implements PersistentStateComponent<LatteSettin
      */
     public void setEnableNetteAssets(boolean enableNetteAssets) {
         this.enableNetteAssets = enableNetteAssets;
+        // Invalidate the variables cache when settings change
+        NetteDefaultVariablesProvider.invalidateCache();
     }
     
     /**
@@ -311,6 +321,8 @@ public final class LatteSettings implements PersistentStateComponent<LatteSettin
      */
     public void setSelectedNetteApplicationVersion(@Nullable String selectedNetteApplicationVersion) {
         this.selectedNetteApplicationVersion = selectedNetteApplicationVersion;
+        // Invalidate the variables cache when settings change
+        NetteDefaultVariablesProvider.invalidateCache();
     }
     
     /**
@@ -329,6 +341,8 @@ public final class LatteSettings implements PersistentStateComponent<LatteSettin
      */
     public void setOverrideDetectedNetteApplicationVersion(boolean overrideDetectedNetteApplicationVersion) {
         this.overrideDetectedNetteApplicationVersion = overrideDetectedNetteApplicationVersion;
+        // Invalidate the variables cache when settings change
+        NetteDefaultVariablesProvider.invalidateCache();
     }
     
     /**
@@ -348,6 +362,8 @@ public final class LatteSettings implements PersistentStateComponent<LatteSettin
      */
     public void setSelectedNetteFormsVersion(@Nullable String selectedNetteFormsVersion) {
         this.selectedNetteFormsVersion = selectedNetteFormsVersion;
+        // Invalidate the variables cache when settings change
+        NetteDefaultVariablesProvider.invalidateCache();
     }
     
     /**
@@ -366,6 +382,8 @@ public final class LatteSettings implements PersistentStateComponent<LatteSettin
      */
     public void setOverrideDetectedNetteFormsVersion(boolean overrideDetectedNetteFormsVersion) {
         this.overrideDetectedNetteFormsVersion = overrideDetectedNetteFormsVersion;
+        // Invalidate the variables cache when settings change
+        NetteDefaultVariablesProvider.invalidateCache();
     }
     
     /**
@@ -385,6 +403,8 @@ public final class LatteSettings implements PersistentStateComponent<LatteSettin
      */
     public void setSelectedNetteAssetsVersion(@Nullable String selectedNetteAssetsVersion) {
         this.selectedNetteAssetsVersion = selectedNetteAssetsVersion;
+        // Invalidate the variables cache when settings change
+        NetteDefaultVariablesProvider.invalidateCache();
     }
     
     /**
@@ -403,6 +423,8 @@ public final class LatteSettings implements PersistentStateComponent<LatteSettin
      */
     public void setOverrideDetectedNetteAssetsVersion(boolean overrideDetectedNetteAssetsVersion) {
         this.overrideDetectedNetteAssetsVersion = overrideDetectedNetteAssetsVersion;
+        // Invalidate the variables cache when settings change
+        NetteDefaultVariablesProvider.invalidateCache();
     }
     
     /**
@@ -421,6 +443,8 @@ public final class LatteSettings implements PersistentStateComponent<LatteSettin
      */
     public void setEnableNetteDatabase(boolean enableNetteDatabase) {
         this.enableNetteDatabase = enableNetteDatabase;
+        // Invalidate the variables cache when settings change
+        NetteDefaultVariablesProvider.invalidateCache();
     }
     
     /**
@@ -440,6 +464,8 @@ public final class LatteSettings implements PersistentStateComponent<LatteSettin
      */
     public void setSelectedNetteDatabaseVersion(@Nullable String selectedNetteDatabaseVersion) {
         this.selectedNetteDatabaseVersion = selectedNetteDatabaseVersion;
+        // Invalidate the variables cache when settings change
+        NetteDefaultVariablesProvider.invalidateCache();
     }
     
     /**
@@ -458,6 +484,8 @@ public final class LatteSettings implements PersistentStateComponent<LatteSettin
      */
     public void setOverrideDetectedNetteDatabaseVersion(boolean overrideDetectedNetteDatabaseVersion) {
         this.overrideDetectedNetteDatabaseVersion = overrideDetectedNetteDatabaseVersion;
+        // Invalidate the variables cache when settings change
+        NetteDefaultVariablesProvider.invalidateCache();
     }
     
     /**
@@ -476,6 +504,8 @@ public final class LatteSettings implements PersistentStateComponent<LatteSettin
      */
     public void setEnableNetteSecurity(boolean enableNetteSecurity) {
         this.enableNetteSecurity = enableNetteSecurity;
+        // Invalidate the variables cache when settings change
+        NetteDefaultVariablesProvider.invalidateCache();
     }
     
     /**
@@ -495,6 +525,8 @@ public final class LatteSettings implements PersistentStateComponent<LatteSettin
      */
     public void setSelectedNetteSecurityVersion(@Nullable String selectedNetteSecurityVersion) {
         this.selectedNetteSecurityVersion = selectedNetteSecurityVersion;
+        // Invalidate the variables cache when settings change
+        NetteDefaultVariablesProvider.invalidateCache();
     }
     
     /**
@@ -513,6 +545,8 @@ public final class LatteSettings implements PersistentStateComponent<LatteSettin
      */
     public void setOverrideDetectedNetteSecurityVersion(boolean overrideDetectedNetteSecurityVersion) {
         this.overrideDetectedNetteSecurityVersion = overrideDetectedNetteSecurityVersion;
+        // Invalidate the variables cache when settings change
+        NetteDefaultVariablesProvider.invalidateCache();
     }
     
     /**
@@ -531,6 +565,8 @@ public final class LatteSettings implements PersistentStateComponent<LatteSettin
      */
     public void setEnableNetteMail(boolean enableNetteMail) {
         this.enableNetteMail = enableNetteMail;
+        // Invalidate the variables cache when settings change
+        NetteDefaultVariablesProvider.invalidateCache();
     }
     
     /**
@@ -550,6 +586,8 @@ public final class LatteSettings implements PersistentStateComponent<LatteSettin
      */
     public void setSelectedNetteMailVersion(@Nullable String selectedNetteMailVersion) {
         this.selectedNetteMailVersion = selectedNetteMailVersion;
+        // Invalidate the variables cache when settings change
+        NetteDefaultVariablesProvider.invalidateCache();
     }
     
     /**
@@ -568,6 +606,8 @@ public final class LatteSettings implements PersistentStateComponent<LatteSettin
      */
     public void setOverrideDetectedNetteMailVersion(boolean overrideDetectedNetteMailVersion) {
         this.overrideDetectedNetteMailVersion = overrideDetectedNetteMailVersion;
+        // Invalidate the variables cache when settings change
+        NetteDefaultVariablesProvider.invalidateCache();
     }
     
     /**
@@ -586,6 +626,8 @@ public final class LatteSettings implements PersistentStateComponent<LatteSettin
      */
     public void setEnableNetteHttp(boolean enableNetteHttp) {
         this.enableNetteHttp = enableNetteHttp;
+        // Invalidate the variables cache when settings change
+        NetteDefaultVariablesProvider.invalidateCache();
     }
     
     /**
@@ -605,6 +647,8 @@ public final class LatteSettings implements PersistentStateComponent<LatteSettin
      */
     public void setSelectedNetteHttpVersion(@Nullable String selectedNetteHttpVersion) {
         this.selectedNetteHttpVersion = selectedNetteHttpVersion;
+        // Invalidate the variables cache when settings change
+        NetteDefaultVariablesProvider.invalidateCache();
     }
     
     /**
@@ -623,5 +667,7 @@ public final class LatteSettings implements PersistentStateComponent<LatteSettin
      */
     public void setOverrideDetectedNetteHttpVersion(boolean overrideDetectedNetteHttpVersion) {
         this.overrideDetectedNetteHttpVersion = overrideDetectedNetteHttpVersion;
+        // Invalidate the variables cache when settings change
+        NetteDefaultVariablesProvider.invalidateCache();
     }
 }

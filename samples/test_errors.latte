@@ -1,0 +1,30 @@
+{* This is a test file with Latte syntax errors *}
+
+{* Unclosed macro *}
+{if $condition
+
+{* Invalid macro name *}
+{invalid_macro}
+
+{* Mismatched macro end *}
+{if $condition}
+    This is a test
+{/foreach}
+
+{* Unexpected macro end *}
+{/if}
+
+{* Invalid attribute syntax *}
+<div n:invalid="value">Test</div>
+
+{* Unclosed attribute quotes *}
+<div n:if="$condition>Test</div>
+
+{* Invalid filter syntax *}
+{$variable|invalid:filter}
+
+{* Unknown filter *}
+{$variable|unknown_filter}
+
+{* Unexpected character *}
+{$variable@}

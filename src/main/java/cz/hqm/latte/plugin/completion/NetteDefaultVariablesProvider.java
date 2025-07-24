@@ -6,20 +6,43 @@ import cz.hqm.latte.plugin.version.LatteVersionManager;
 import cz.hqm.latte.plugin.version.NettePackageDetector;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Provides default variables for Nette packages based on detected versions.
+ * Uses caching to improve performance.
  */
 public class NetteDefaultVariablesProvider {
+    // Cache for variables by project
+    private static final Map<Project, List<NetteVariable>> variablesCache = new ConcurrentHashMap<>();
+    
+    // Cache for settings to detect changes
+    private static final AtomicReference<LatteSettings> cachedSettings = new AtomicReference<>();
+    
+    // Cache for package versions by project
+    private static final Map<Project, Map<String, Integer>> versionCache = new ConcurrentHashMap<>();
 
     /**
      * Gets all default variables for the given project.
+     * Uses caching to improve performance.
      *
      * @param project The project to get variables for
      * @return A list of default variables
      */
     public static List<NetteVariable> getAllVariables(Project project) {
+        // Check if we need to update the cache
+        if (isCacheValid(project)) {
+            System.out.println("[DEBUG_LOG] Using cached variables for project: " + project.getName());
+            return variablesCache.get(project);
+        }
+        
+        System.out.println("[DEBUG_LOG] Cache invalid or not found, rebuilding variables for project: " + project.getName());
+        
+        // Cache is invalid or not found, rebuild it
         List<NetteVariable> variables = new ArrayList<>();
         
         // Add variables from Nette Application
@@ -58,12 +81,183 @@ public class NetteDefaultVariablesProvider {
         }
         
         // Log all variables for debugging
-        System.out.println("[DEBUG_LOG] All variables:");
+        System.out.println("[DEBUG_LOG] All variables (" + variables.size() + "):");
         for (NetteVariable variable : variables) {
             System.out.println("[DEBUG_LOG] - " + variable.getName() + " (" + variable.getType() + ")");
         }
         
+        // Update the cache
+        updateCache(project, variables);
+        
         return variables;
+    }
+    
+    /**
+     * Checks if the cache is valid for the given project.
+     *
+     * @param project The project to check
+     * @return True if the cache is valid, false otherwise
+     */
+    private static synchronized boolean isCacheValid(Project project) {
+        // Check if we have a cache for this project
+        if (!variablesCache.containsKey(project)) {
+            System.out.println("[DEBUG_LOG] No cache found for project: " + project.getName());
+            return false;
+        }
+        
+        // Check if settings have changed
+        LatteSettings currentSettings = LatteSettings.getInstance();
+        LatteSettings cachedSettingsValue = cachedSettings.get();
+        
+        if (cachedSettingsValue == null || !settingsEqual(cachedSettingsValue, currentSettings)) {
+            System.out.println("[DEBUG_LOG] Settings have changed, cache invalid");
+            return false;
+        }
+        
+        // Check if versions have changed
+        Map<String, Integer> cachedVersions = versionCache.get(project);
+        if (cachedVersions == null) {
+            System.out.println("[DEBUG_LOG] No version cache found, cache invalid");
+            return false;
+        }
+        
+        // Check each package version
+        if (isNetteApplicationEnabled() && 
+            !versionsEqual(cachedVersions, NettePackageDetector.NETTE_APPLICATION, getNetteApplicationVersion(project))) {
+            System.out.println("[DEBUG_LOG] Nette Application version changed, cache invalid");
+            return false;
+        }
+        
+        if (isNetteFormsEnabled() && 
+            !versionsEqual(cachedVersions, NettePackageDetector.NETTE_FORMS, getNetteFormsVersion(project))) {
+            System.out.println("[DEBUG_LOG] Nette Forms version changed, cache invalid");
+            return false;
+        }
+        
+        if (isNetteAssetsEnabled() && 
+            !versionsEqual(cachedVersions, NettePackageDetector.NETTE_ASSETS, getNetteAssetsVersion(project))) {
+            System.out.println("[DEBUG_LOG] Nette Assets version changed, cache invalid");
+            return false;
+        }
+        
+        if (isNetteDatabaseEnabled() && 
+            !versionsEqual(cachedVersions, NettePackageDetector.NETTE_DATABASE, getNetteDatabaseVersion(project))) {
+            System.out.println("[DEBUG_LOG] Nette Database version changed, cache invalid");
+            return false;
+        }
+        
+        if (isNetteSecurityEnabled() && 
+            !versionsEqual(cachedVersions, NettePackageDetector.NETTE_SECURITY, getNetteSecurityVersion(project))) {
+            System.out.println("[DEBUG_LOG] Nette Security version changed, cache invalid");
+            return false;
+        }
+        
+        if (isNetteHttpEnabled() && 
+            !versionsEqual(cachedVersions, NettePackageDetector.NETTE_HTTP, getNetteHttpVersion(project))) {
+            System.out.println("[DEBUG_LOG] Nette HTTP version changed, cache invalid");
+            return false;
+        }
+        
+        if (isNetteMailEnabled() && 
+            !versionsEqual(cachedVersions, NettePackageDetector.NETTE_MAIL, getNetteMailVersion(project))) {
+            System.out.println("[DEBUG_LOG] Nette Mail version changed, cache invalid");
+            return false;
+        }
+        
+        // Cache is valid
+        return true;
+    }
+    
+    /**
+     * Updates the cache for the given project.
+     *
+     * @param project The project to update the cache for
+     * @param variables The variables to cache
+     */
+    private static synchronized void updateCache(Project project, List<NetteVariable> variables) {
+        System.out.println("[DEBUG_LOG] Updating cache for project: " + project.getName());
+        
+        // Update variables cache
+        variablesCache.put(project, new ArrayList<>(variables));
+        
+        // Update settings cache
+        cachedSettings.set(LatteSettings.getInstance());
+        
+        // Update version cache
+        Map<String, Integer> versions = new HashMap<>();
+        
+        if (isNetteApplicationEnabled()) {
+            versions.put(NettePackageDetector.NETTE_APPLICATION, getNetteApplicationVersion(project));
+        }
+        
+        if (isNetteFormsEnabled()) {
+            versions.put(NettePackageDetector.NETTE_FORMS, getNetteFormsVersion(project));
+        }
+        
+        if (isNetteAssetsEnabled()) {
+            versions.put(NettePackageDetector.NETTE_ASSETS, getNetteAssetsVersion(project));
+        }
+        
+        if (isNetteDatabaseEnabled()) {
+            versions.put(NettePackageDetector.NETTE_DATABASE, getNetteDatabaseVersion(project));
+        }
+        
+        if (isNetteSecurityEnabled()) {
+            versions.put(NettePackageDetector.NETTE_SECURITY, getNetteSecurityVersion(project));
+        }
+        
+        if (isNetteHttpEnabled()) {
+            versions.put(NettePackageDetector.NETTE_HTTP, getNetteHttpVersion(project));
+        }
+        
+        if (isNetteMailEnabled()) {
+            versions.put(NettePackageDetector.NETTE_MAIL, getNetteMailVersion(project));
+        }
+        
+        versionCache.put(project, versions);
+        
+        System.out.println("[DEBUG_LOG] Cache updated for project: " + project.getName());
+    }
+    
+    /**
+     * Compares two settings instances to check if they are equal.
+     *
+     * @param settings1 The first settings instance
+     * @param settings2 The second settings instance
+     * @return True if the settings are equal, false otherwise
+     */
+    private static boolean settingsEqual(LatteSettings settings1, LatteSettings settings2) {
+        return settings1.isEnableNetteApplication() == settings2.isEnableNetteApplication()
+            && settings1.isEnableNetteForms() == settings2.isEnableNetteForms()
+            && settings1.isEnableNetteAssets() == settings2.isEnableNetteAssets()
+            && settings1.isEnableNetteDatabase() == settings2.isEnableNetteDatabase()
+            && settings1.isEnableNetteSecurity() == settings2.isEnableNetteSecurity()
+            && settings1.isEnableNetteHttp() == settings2.isEnableNetteHttp()
+            && settings1.isEnableNetteMail() == settings2.isEnableNetteMail();
+    }
+    
+    /**
+     * Compares two versions to check if they are equal.
+     *
+     * @param cachedVersions The cached versions
+     * @param packageName The package name
+     * @param currentVersion The current version
+     * @return True if the versions are equal, false otherwise
+     */
+    private static boolean versionsEqual(Map<String, Integer> cachedVersions, String packageName, int currentVersion) {
+        Integer cachedVersion = cachedVersions.get(packageName);
+        return cachedVersion != null && cachedVersion == currentVersion;
+    }
+    
+    /**
+     * Invalidates the cache for all projects.
+     * This should be called when settings change.
+     */
+    public static synchronized void invalidateCache() {
+        System.out.println("[DEBUG_LOG] Invalidating all caches");
+        variablesCache.clear();
+        versionCache.clear();
+        cachedSettings.set(null);
     }
     
     /**
