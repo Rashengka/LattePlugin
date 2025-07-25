@@ -1,9 +1,8 @@
 package cz.hqm.latte.plugin.test.completion;
 
 import com.intellij.codeInsight.completion.CompletionType;
+import com.intellij.openapi.application.PathManager;
 import org.junit.Test;
-import org.junit.Before;
-import org.junit.After;
 import cz.hqm.latte.plugin.test.LattePluginTestBase;
 import cz.hqm.latte.plugin.settings.LatteSettings;
 
@@ -25,7 +24,7 @@ public class NetteHttpVariableCompletionTest extends LattePluginTestBase {
 
     @Override
     protected String getTestDataPath() {
-        return "src/test/resources/testData/core";
+        return PathManager.getHomePath() + "/plugins/latte-plugin/src/test/resources/testData/core";
     }
 
     /**

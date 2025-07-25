@@ -1,13 +1,10 @@
 package cz.hqm.latte.plugin.test;
 
 import com.intellij.testFramework.fixtures.BasePlatformTestCase;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import com.intellij.openapi.application.PathManager;
 import cz.hqm.latte.plugin.test.util.TestErrorHandler;
-import java.io.File;
-
-import static org.junit.Assert.*;
+import org.junit.Before;
+import org.junit.After;
 
 /**
  * Base class for all Latte plugin tests.
@@ -67,7 +64,7 @@ public abstract class LattePluginTestBase extends BasePlatformTestCase {
      */
     @Override
     protected String getTestDataPath() {
-        return new File("src/test/resources/testData").getAbsolutePath();
+        return PathManager.getHomePath() + "/plugins/latte-plugin/src/test/resources/testData";
     }
 
     /**

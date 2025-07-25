@@ -4,6 +4,7 @@ import com.intellij.testFramework.fixtures.BasePlatformTestCase;
 import cz.hqm.latte.plugin.custom.CustomFilter;
 import cz.hqm.latte.plugin.custom.CustomFiltersProvider;
 import cz.hqm.latte.plugin.settings.LatteProjectSettings;
+import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.Set;
@@ -42,6 +43,7 @@ public class CustomFilterCachingTest extends BasePlatformTestCase {
     /**
      * Tests that custom filter names are cached and not recreated on each request.
      */
+    @Test
     public void testCustomFilterNamesCaching() {
         System.out.println("[DEBUG_LOG] Running testCustomFilterNamesCaching");
         
@@ -68,6 +70,7 @@ public class CustomFilterCachingTest extends BasePlatformTestCase {
     /**
      * Tests that custom filters are cached and not recreated on each request.
      */
+    @Test
     public void testCustomFiltersCaching() {
         System.out.println("[DEBUG_LOG] Running testCustomFiltersCaching");
         
@@ -90,6 +93,7 @@ public class CustomFilterCachingTest extends BasePlatformTestCase {
     /**
      * Tests that the cache is updated when filters are added.
      */
+    @Test
     public void testCacheUpdateOnFilterAdd() {
         System.out.println("[DEBUG_LOG] Running testCacheUpdateOnFilterAdd");
         
@@ -119,6 +123,7 @@ public class CustomFilterCachingTest extends BasePlatformTestCase {
     /**
      * Tests that the cache is updated when filters are removed.
      */
+    @Test
     public void testCacheUpdateOnFilterRemove() {
         System.out.println("[DEBUG_LOG] Running testCacheUpdateOnFilterRemove");
         

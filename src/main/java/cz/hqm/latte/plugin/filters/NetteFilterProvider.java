@@ -153,36 +153,49 @@ public class NetteFilterProvider {
         // Create filter names set
         Set<String> filterNames = new HashSet<>();
         
-        // Add core filters
-        CORE_FILTERS.forEach(filter -> filterNames.add(filter.getName()));
-        
         // Create filters set
-        Set<NetteFilter> filters = new HashSet<>(CORE_FILTERS);
+        Set<NetteFilter> filters = new HashSet<>();
+        
+        // Add core filters
+        for (NetteFilter filter : CORE_FILTERS) {
+            filterNames.add(filter.getName());
+            filters.add(filter);
+        }
         
         // Add filters based on enabled settings
         if (settings.isEnableNetteApplication()) {
-            APPLICATION_FILTERS.forEach(filter -> filterNames.add(filter.getName()));
-            filters.addAll(APPLICATION_FILTERS);
+            for (NetteFilter filter : APPLICATION_FILTERS) {
+                filterNames.add(filter.getName());
+                filters.add(filter);
+            }
         }
         
         if (settings.isEnableNetteForms()) {
-            FORMS_FILTERS.forEach(filter -> filterNames.add(filter.getName()));
-            filters.addAll(FORMS_FILTERS);
+            for (NetteFilter filter : FORMS_FILTERS) {
+                filterNames.add(filter.getName());
+                filters.add(filter);
+            }
         }
         
         if (settings.isEnableNetteAssets()) {
-            ASSETS_FILTERS.forEach(filter -> filterNames.add(filter.getName()));
-            filters.addAll(ASSETS_FILTERS);
+            for (NetteFilter filter : ASSETS_FILTERS) {
+                filterNames.add(filter.getName());
+                filters.add(filter);
+            }
         }
         
         if (settings.isEnableNetteDatabase()) {
-            DATABASE_FILTERS.forEach(filter -> filterNames.add(filter.getName()));
-            filters.addAll(DATABASE_FILTERS);
+            for (NetteFilter filter : DATABASE_FILTERS) {
+                filterNames.add(filter.getName());
+                filters.add(filter);
+            }
         }
         
         if (settings.isEnableNetteSecurity()) {
-            SECURITY_FILTERS.forEach(filter -> filterNames.add(filter.getName()));
-            filters.addAll(SECURITY_FILTERS);
+            for (NetteFilter filter : SECURITY_FILTERS) {
+                filterNames.add(filter.getName());
+                filters.add(filter);
+            }
         }
         
         // Update cache
@@ -216,8 +229,9 @@ public class NetteFilterProvider {
             initCache();
         }
         
-        // Return cached filter names
-        return new HashSet<>(cachedFilterNames.get());
+        // Return cached filter names, ensuring we don't return null
+        Set<String> filterNames = cachedFilterNames.get();
+        return filterNames != null ? new HashSet<>(filterNames) : new HashSet<>();
     }
 
     /**
@@ -232,7 +246,8 @@ public class NetteFilterProvider {
             initCache();
         }
         
-        // Return cached filters
-        return new HashSet<>(cachedFilters.get());
+        // Return cached filters, ensuring we don't return null
+        Set<NetteFilter> filters = cachedFilters.get();
+        return filters != null ? new HashSet<>(filters) : new HashSet<>();
     }
 }

@@ -19,6 +19,10 @@ ext.enableFileOutput = !project.hasProperty('disableFileOutput')
 // Directory for logs
 ext.logsDir = project.hasProperty('logsDir') ? project.property('logsDir') : 'log'
 
+// Create a single timestamp for the entire build/test run
+// This ensures all logs from a single run go to the same directory
+ext.buildTimestamp = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss").format(new Date())
+
 // Create logs directory if it doesn't exist
 def logsDirectory = file(logsDir)
 if (!logsDirectory.exists()) {
@@ -28,7 +32,8 @@ if (!logsDirectory.exists()) {
 // Utility function to log command output to a file and/or terminal
 ext.logToFile = { String taskName, String output ->
     if (enableCommandLogging) {
-        def timestamp = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss").format(new Date())
+        // Use the shared buildTimestamp instead of creating a new one
+        def timestamp = buildTimestamp
         
         // Log to file if enabled
         if (enableFileOutput) {
@@ -54,7 +59,8 @@ ext.logToFile = { String taskName, String output ->
 // This is specifically for captureRunIdeLogs and captureBuildLogs tasks
 ext.logToProjectRoot = { String taskName, String output ->
     if (enableCommandLogging) {
-        def timestamp = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss").format(new Date())
+        // Use the shared buildTimestamp instead of creating a new one
+        def timestamp = buildTimestamp
         
         // Log to file if enabled
         if (enableFileOutput) {
@@ -327,6 +333,10 @@ test {
     systemProperties([
             // Latte Plugin Test Mode Flag
             'latte.plugin.test.mode': 'true',
+            
+            // Pass the build timestamp to the tests
+            // This ensures all logs from a single test run use the same timestamp
+            'latte.plugin.test.timestamp': buildTimestamp,
             
             // Java Logging Configuration
             'java.util.logging.manager': 'java.util.logging.LogManager',

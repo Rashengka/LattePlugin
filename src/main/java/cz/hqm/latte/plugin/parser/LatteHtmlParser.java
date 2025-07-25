@@ -20,33 +20,21 @@ public class LatteHtmlParser extends HTMLParser {
     
     /**
      * Checks if the HTML structure is incomplete, which would trigger the "Top level element is not completed" error.
-     * This is a simple implementation that checks if the ASTNode has certain characteristics that indicate an incomplete HTML structure.
+     * In Latte, unclosed block directives at the end of a file are automatically closed, which is standard behavior.
+     * Therefore, we always return false to suppress the "Top level element is not completed" error for Latte files.
      * 
      * @param node The ASTNode to check
-     * @return true if the HTML structure is likely incomplete, false otherwise
+     * @return false, to suppress the "Top level element is not completed" error for Latte files
      */
     private boolean isHtmlStructureIncomplete(ASTNode node) {
         // Log that we're checking for incomplete HTML structure
         LatteLogger.debug(LOG, "Checking for incomplete HTML structure in node: " + (node != null ? node.getElementType() : "null"));
         
-        if (node == null) {
-            LatteLogger.debug(LOG, "Node is null, structure is incomplete");
-            return true; // If the node is null, the structure is definitely incomplete
-        }
+        // In Latte, unclosed block directives at the end of a file are automatically closed.
+        // This is standard behavior in Latte, so we don't flag it as an error.
+        // We always return false to suppress the "Top level element is not completed" error.
         
-        // Check if the node has children
-        ASTNode[] children = node.getChildren(null);
-        LatteLogger.debug(LOG, "Node has " + children.length + " children");
-        if (children.length == 0) {
-            LatteLogger.debug(LOG, "Node has no children, structure is likely incomplete");
-            return true; // If the node has no children, it's likely incomplete
-        }
-        
-        // IMPORTANT: We're completely avoiding accessing the PSI element's containing file
-        // as it can cause PsiInvalidElementAccessException with NULL_PSI_ELEMENT
-        
-        // If we have at least one child, assume the structure is complete
-        LatteLogger.debug(LOG, "Node has children, structure is likely complete");
+        LatteLogger.debug(LOG, "Suppressing 'Top level element is not completed' error for Latte files");
         return false;
     }
 

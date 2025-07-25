@@ -37,6 +37,9 @@ public class CustomFiltersProviderTest extends LattePluginTestBase {
         
         // Clear the filters for testing
         settings.setCustomFilters(new ArrayList<>());
+        
+        // Invalidate the cache to ensure it's cleared
+        CustomFiltersProvider.invalidateCache(project);
     }
     
     @Override

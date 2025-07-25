@@ -4,6 +4,7 @@ import com.intellij.testFramework.fixtures.BasePlatformTestCase;
 import cz.hqm.latte.plugin.filters.NetteFilter;
 import cz.hqm.latte.plugin.filters.NetteFilterProvider;
 import cz.hqm.latte.plugin.settings.LatteSettings;
+import org.junit.Test;
 
 import java.util.Set;
 
@@ -32,6 +33,7 @@ public class FilterCachingTest extends BasePlatformTestCase {
     /**
      * Tests that filter names are cached and not recreated on each request.
      */
+    @Test
     public void testFilterNamesCaching() {
         System.out.println("[DEBUG_LOG] Running testFilterNamesCaching");
         
@@ -54,6 +56,7 @@ public class FilterCachingTest extends BasePlatformTestCase {
     /**
      * Tests that filters are cached and not recreated on each request.
      */
+    @Test
     public void testFiltersCaching() {
         System.out.println("[DEBUG_LOG] Running testFiltersCaching");
         
@@ -76,6 +79,7 @@ public class FilterCachingTest extends BasePlatformTestCase {
     /**
      * Tests that the cache is updated when settings change.
      */
+    @Test
     public void testCacheUpdateOnSettingsChange() {
         System.out.println("[DEBUG_LOG] Running testCacheUpdateOnSettingsChange");
         

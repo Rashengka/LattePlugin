@@ -1,0 +1,27 @@
+{* This is a test file with unclosed block directives *}
+
+{* Unclosed block directive at the end of the file *}
+<html>
+<head>
+    <title>Test Unclosed Blocks</title>
+</head>
+<body>
+    <h1>Test Unclosed Blocks</h1>
+    
+    {* Unclosed if block *}
+    {if $condition}
+        <p>This condition is true</p>
+        
+    {* Unclosed foreach block *}
+    {foreach $items as $item}
+        <div class="item">
+            <h2>{$item->title}</h2>
+            <p>{$item->description}</p>
+        </div>
+        
+    {* Unclosed block directive *}
+    {block content}
+        <div class="content">
+            <p>This is the content of the block</p>
+</body>
+</html>

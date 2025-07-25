@@ -53,6 +53,9 @@ public class NetteFilterTest extends LattePluginTestBase {
             // Disable nette/application
             settings.setEnableNetteApplication(false);
             
+            // Explicitly invalidate the cache after changing settings
+            NetteFilterProvider.invalidateCache();
+            
             // Get all filters again
             allFilters = NetteFilterProvider.getAllFilters();
             
@@ -64,6 +67,9 @@ public class NetteFilterTest extends LattePluginTestBase {
             // Disable nette/forms
             settings.setEnableNetteForms(false);
             
+            // Explicitly invalidate the cache after changing settings
+            NetteFilterProvider.invalidateCache();
+            
             // Get all filters again
             allFilters = NetteFilterProvider.getAllFilters();
             
@@ -74,6 +80,9 @@ public class NetteFilterTest extends LattePluginTestBase {
             
             // Disable nette/assets
             settings.setEnableNetteAssets(false);
+            
+            // Explicitly invalidate the cache after changing settings
+            NetteFilterProvider.invalidateCache();
             
             // Get all filters again
             allFilters = NetteFilterProvider.getAllFilters();
@@ -89,6 +98,9 @@ public class NetteFilterTest extends LattePluginTestBase {
             
             // Disable nette/database
             settings.setEnableNetteDatabase(false);
+            
+            // Explicitly invalidate the cache after changing settings
+            NetteFilterProvider.invalidateCache();
             
             // Get all filters again
             allFilters = NetteFilterProvider.getAllFilters();
@@ -150,6 +162,9 @@ public class NetteFilterTest extends LattePluginTestBase {
             settings.setEnableNetteForms(false);
             settings.setEnableNetteAssets(false);
             
+            // Explicitly invalidate the cache after changing settings
+            NetteFilterProvider.invalidateCache();
+            
             // Get all filter names again
             filterNames = NetteFilterProvider.getValidFilterNames();
             
@@ -164,6 +179,9 @@ public class NetteFilterTest extends LattePluginTestBase {
             
             // Disable database package
             settings.setEnableNetteDatabase(false);
+            
+            // Explicitly invalidate the cache after changing settings
+            NetteFilterProvider.invalidateCache();
             
             // Get all filter names again
             filterNames = NetteFilterProvider.getValidFilterNames();

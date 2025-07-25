@@ -1,0 +1,18 @@
+{* This is a test file with unclosed default directive *}
+
+<html>
+<head>
+    <title>Test Unclosed Default Directive</title>
+</head>
+<body>
+    <h1>Test Unclosed Default Directive</h1>
+    
+    {* Unclosed switch-default structure *}
+    {switch $value}
+        {case 1}
+            <p>The value is 1</p>
+        {default}
+            <div class="default-content">
+                <p>The value is something else</p>
+</body>
+</html>

@@ -12,6 +12,8 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Utility class for conditional logging in the Latte plugin.
@@ -72,10 +74,13 @@ public class LatteLogger {
     private static final SimpleDateFormat FILE_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss");
 
     /**
-     * Session timestamp - generated once when the class is loaded.
+     * Session timestamp - either from system property or generated once when the class is loaded.
      * This ensures all logs during one editor session go to the same file.
+     * In test mode, this will use the timestamp passed from build.gradle to ensure
+     * all logs from a single test run use the same timestamp.
      */
-    private static final String SESSION_TIMESTAMP = FILE_DATE_FORMAT.format(new Date());
+    private static final String SESSION_TIMESTAMP = System.getProperty("latte.plugin.test.timestamp") != null ?
+            System.getProperty("latte.plugin.test.timestamp") : FILE_DATE_FORMAT.format(new Date());
 
     /**
      * Test directory name prefix.
@@ -91,11 +96,17 @@ public class LatteLogger {
      * Full path to the validation log file for this session.
      */
     private static final String VALIDATION_LOG_FILE_PATH;
-    
+
     /**
      * Base directory for test logs.
      */
     private static final String TEST_LOG_BASE_DIR;
+    
+    /**
+     * Map to store test names and their corresponding directories.
+     * This ensures all logs from the same test go to the same directory.
+     */
+    private static final Map<String, File> TEST_DIRECTORIES = new HashMap<>();
 
     /**
      * Ensures the log directory exists.
@@ -131,7 +142,7 @@ public class LatteLogger {
             // Create a test-specific directory with timestamp
             String testDirName = TEST_DIR_PREFIX + SESSION_TIMESTAMP;
             String testLogBaseDirPath = LOG_DIR_PATH + File.separator + testDirName;
-            
+
             // Create the test log base directory
             File testLogBaseDir = new File(testLogBaseDirPath);
             if (!testLogBaseDir.exists()) {
@@ -142,19 +153,19 @@ public class LatteLogger {
                     System.out.println("Created test log directory at: " + testLogBaseDir.getAbsolutePath());
                 }
             }
-            
+
             TEST_LOG_BASE_DIR = testLogBaseDirPath;
-            
+
             // For test mode, we'll create the actual log files in test-specific subdirectories
             // when logging occurs, so we just set these to empty strings for now
             DEBUG_LOG_FILE_PATH = "";
             VALIDATION_LOG_FILE_PATH = "";
-            
+
             System.out.println("Test mode detected. Logs will be organized in test-specific directories under: " + TEST_LOG_BASE_DIR);
         } else {
             // Normal mode (not test) - use the original behavior
             TEST_LOG_BASE_DIR = ""; // Not used in normal mode
-            
+
             // Initialize the log file paths for this session
             // Format: latte_plugin_TIMESTAMP_TYPE.log
             String debugFileName = LOG_FILE_PREFIX + "_" + SESSION_TIMESTAMP + "_" + DEBUG_LOG_BASE + ".log";
@@ -188,18 +199,31 @@ public class LatteLogger {
 
         try {
             String logFilePath;
-            
+
             if (IS_TEST_MODE) {
                 // In test mode, create a test-specific subdirectory and place log files there
                 String testName = getTestName();
                 String testDirName = sanitizeTestName(testName);
                 
-                // Create the test-specific directory if it doesn't exist
-                File testDir = new File(TEST_LOG_BASE_DIR, testDirName);
-                if (!testDir.exists()) {
-                    boolean created = testDir.mkdirs();
-                    if (!created) {
-                        System.err.println("Failed to create test-specific directory at: " + testDir.getAbsolutePath());
+                // Check if we already have a directory for this test
+                File testDir;
+                synchronized (TEST_DIRECTORIES) {
+                    testDir = TEST_DIRECTORIES.get(testDirName);
+                    
+                    // If not, create a new test-specific directory
+                    if (testDir == null) {
+                        testDir = new File(TEST_LOG_BASE_DIR, testDirName);
+                        if (!testDir.exists()) {
+                            boolean created = testDir.mkdirs();
+                            if (!created) {
+                                System.err.println("Failed to create test-specific directory at: " + testDir.getAbsolutePath());
+                            } else {
+                                System.out.println("Created test-specific directory at: " + testDir.getAbsolutePath());
+                            }
+                        }
+                        
+                        // Store the directory for future use
+                        TEST_DIRECTORIES.put(testDirName, testDir);
                     }
                 }
                 
@@ -683,7 +707,7 @@ public class LatteLogger {
             System.out.println("LatteLogger: Test messages logged successfully");
         }
     }
-    
+
     /**
      * Gets the name of the current test from the stack trace.
      * This method looks for a method annotated with @Test or a class that extends TestCase.
@@ -693,28 +717,28 @@ public class LatteLogger {
      */
     private static String getTestName() {
         StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
-        
+
         // Look for a method in a test class
         for (StackTraceElement element : stackTrace) {
             String className = element.getClassName();
             String methodName = element.getMethodName();
-            
+
             // Check if this is likely a test class/method
-            if ((className.contains("Test") || className.endsWith("Tests")) && 
+            if ((className.contains("Test") || className.endsWith("Tests")) &&
                 !className.contains("$") && // Exclude inner classes
                 !methodName.equals("getTestName") && // Exclude this method
                 !methodName.equals("logToFile") && // Exclude calling method
                 !methodName.startsWith("access$")) { // Exclude synthetic accessor methods
-                
+
                 // Found a potential test method
                 return className + "." + methodName;
             }
         }
-        
+
         // If no test method found, return a default name
         return "unknown_test";
     }
-    
+
     /**
      * Sanitizes a test name for use as a directory name.
      * Removes invalid characters, shortens if necessary, and makes it more human-readable.
@@ -726,33 +750,33 @@ public class LatteLogger {
         if (testName == null || testName.isEmpty()) {
             return "unknown_test";
         }
-        
+
         // Split into class and method parts
         String[] parts = testName.split("\\.");
         String className = parts.length > 0 ? parts[parts.length - 2] : "";
         String methodName = parts.length > 0 ? parts[parts.length - 1] : "";
-        
+
         // Extract just the simple class name (without package)
         if (className.contains(".")) {
             className = className.substring(className.lastIndexOf('.') + 1);
         }
-        
+
         // Remove "Test" suffix from class name if present
         if (className.endsWith("Test")) {
             className = className.substring(0, className.length() - 4);
         }
-        
+
         // Combine class and method names
         String sanitized = className + "_" + methodName;
-        
+
         // Replace invalid characters with underscores
         sanitized = sanitized.replaceAll("[^a-zA-Z0-9_.-]", "_");
-        
+
         // Limit length to 50 characters to avoid too long directory names
         if (sanitized.length() > 50) {
             sanitized = sanitized.substring(0, 50);
         }
-        
+
         return sanitized;
     }
 }

@@ -1,0 +1,17 @@
+{* This is a test file with unclosed catch directive *}
+
+<html>
+<head>
+    <title>Test Unclosed Catch Directive</title>
+</head>
+<body>
+    <h1>Test Unclosed Catch Directive</h1>
+    
+    {* Unclosed try-catch structure *}
+    {try}
+        <p>This content is in a try block</p>
+    {catch \Exception $e}
+        <div class="error">
+            <p>An error occurred: {$e->getMessage()}</p>
+</body>
+</html>

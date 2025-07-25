@@ -1,12 +1,10 @@
 package cz.hqm.latte.plugin.test.version;
 
 import org.junit.Test;
-import org.junit.Before;
-import org.junit.After;
 import cz.hqm.latte.plugin.test.LattePluginTestBase;
 import cz.hqm.latte.plugin.version.LatteVersion;
+import com.intellij.openapi.application.PathManager;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -107,7 +105,7 @@ public class LatteVersionTest extends LattePluginTestBase {
      * @throws IOException If the file cannot be read
      */
     private String loadTestFile(String filename) throws IOException {
-        String testDataPath = new File("src/test/resources/testData/version").getAbsolutePath();
+        String testDataPath = PathManager.getHomePath() + "/plugins/latte-plugin/src/test/resources/testData/version";
         return new String(Files.readAllBytes(Paths.get(testDataPath, filename)));
     }
 }

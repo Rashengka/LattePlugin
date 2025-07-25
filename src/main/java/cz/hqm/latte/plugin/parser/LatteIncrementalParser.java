@@ -409,22 +409,25 @@ public final class LatteIncrementalParser {
         // If we've reached the end of the file and the stack is not empty,
         // we have unclosed macros
         if (!macroStack.isEmpty()) {
-            MacroInfo lastMacro = macroStack.peek();
+            // Check each macro in the stack to see if it's allowed to remain unclosed
+            boolean allMacrosAllowedUnclosed = true;
             
-            // Check if the unclosed macro is a block macro that might be allowed to remain unclosed
-            if (blockMacros.contains(lastMacro.name)) {
-                // In some versions, block macros might be allowed to remain unclosed
-                // Check the version-specific behavior
-                if (isBlockMacroAllowedUnclosed(lastMacro.name)) {
-                    // This block macro is allowed to remain unclosed in the current version
-                    return content.length();
+            for (MacroInfo macro : macroStack) {
+                if (!isBlockMacroAllowedUnclosed(macro.name)) {
+                    allMacrosAllowedUnclosed = false;
+                    break;
                 }
             }
             
-            // Unclosed macro detected
-            // For this implementation, we'll return the end of the file
-            // In a real error reporting system, this would be flagged as an error
-            return content.length();
+            if (allMacrosAllowedUnclosed) {
+                // All unclosed macros are block directives that are automatically closed at EOF
+                // This is standard behavior in Latte, so we don't flag it as an error
+                return content.length();
+            } else {
+                // Some unclosed macros are not block directives that can be automatically closed
+                // This is still an error, but we'll return the end of the file
+                return content.length();
+            }
         }
         
         // If we've reached here, we didn't find the end of the macro
@@ -484,16 +487,19 @@ public final class LatteIncrementalParser {
      * @return True if the block macro is allowed to remain unclosed, false otherwise
      */
     private boolean isBlockMacroAllowedUnclosed(String macroName) {
-        // According to the issue description, the block macro might be allowed to remain unclosed
-        // in some versions of Latte. We'll implement this based on the version.
+        // According to Latte's standard behavior, all block directives are automatically closed
+        // at the end of the file if they are not explicitly closed.
         
-        // For now, we'll assume that only the "block" macro might be allowed to remain unclosed
-        // in Latte 2.x, but not in later versions. This should be verified with Latte documentation.
-        if ("block".equals(macroName) && LatteVersionManager.isVersion2x()) {
-            return true;
-        }
+        // Set of block macros that are automatically closed at EOF
+        Set<String> autoClosedMacros = new HashSet<>(Arrays.asList(
+            "block", "define", "snippet", "snippetArea", "capture",
+            "if", "elseif", "else",
+            "foreach", "for", "while",
+            "try", "catch",
+            "switch", "case", "default"
+        ));
         
-        return false;
+        return autoClosedMacros.contains(macroName);
     }
     
     /**

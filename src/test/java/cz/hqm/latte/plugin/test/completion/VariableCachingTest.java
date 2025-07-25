@@ -4,6 +4,7 @@ import com.intellij.testFramework.fixtures.BasePlatformTestCase;
 import cz.hqm.latte.plugin.completion.NetteDefaultVariablesProvider;
 import cz.hqm.latte.plugin.completion.NetteDefaultVariablesProvider.NetteVariable;
 import cz.hqm.latte.plugin.settings.LatteSettings;
+import org.junit.Test;
 
 import java.util.List;
 
@@ -33,6 +34,7 @@ public class VariableCachingTest extends BasePlatformTestCase {
     /**
      * Tests that variables are cached and not recreated on each request.
      */
+    @Test
     public void testVariableCaching() {
         System.out.println("[DEBUG_LOG] Running testVariableCaching");
         
@@ -55,6 +57,7 @@ public class VariableCachingTest extends BasePlatformTestCase {
     /**
      * Tests that the cache is updated when settings change.
      */
+    @Test
     public void testCacheUpdateOnSettingsChange() {
         System.out.println("[DEBUG_LOG] Running testCacheUpdateOnSettingsChange");
         

@@ -5,6 +5,7 @@ import com.intellij.testFramework.fixtures.BasePlatformTestCase;
 import cz.hqm.latte.plugin.settings.LatteSettings;
 import cz.hqm.latte.plugin.version.LatteVersion;
 import cz.hqm.latte.plugin.version.LatteVersionManager;
+import org.junit.Test;
 
 /**
  * Tests for the caching mechanism in LatteCompletionContributor.
@@ -27,6 +28,7 @@ public class LatteMacroCachingTest extends BasePlatformTestCase {
     /**
      * Tests that macros are cached and not recreated on each completion request.
      */
+    @Test
     public void testMacroCaching() {
         System.out.println("[DEBUG_LOG] Running testMacroCaching");
         
@@ -48,6 +50,7 @@ public class LatteMacroCachingTest extends BasePlatformTestCase {
     /**
      * Tests that the cache is updated when the Latte version changes.
      */
+    @Test
     public void testCacheUpdateOnVersionChange() {
         System.out.println("[DEBUG_LOG] Running testCacheUpdateOnVersionChange");
         
@@ -73,6 +76,7 @@ public class LatteMacroCachingTest extends BasePlatformTestCase {
     /**
      * Tests that the cache is updated when settings change.
      */
+    @Test
     public void testCacheUpdateOnSettingsChange() {
         System.out.println("[DEBUG_LOG] Running testCacheUpdateOnSettingsChange");
         

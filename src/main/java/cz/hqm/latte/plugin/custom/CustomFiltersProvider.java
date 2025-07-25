@@ -81,8 +81,9 @@ public class CustomFiltersProvider {
             updateCache(project);
         }
         
-        // Return cached filters
-        return new HashSet<>(filtersCache.get(project));
+        // Return cached filters, ensuring we don't return null
+        Set<CustomFilter> filters = filtersCache.get(project);
+        return filters != null ? new HashSet<>(filters) : new HashSet<>();
     }
     
     /**
