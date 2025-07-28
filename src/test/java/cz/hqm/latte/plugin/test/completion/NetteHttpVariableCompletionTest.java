@@ -24,7 +24,7 @@ public class NetteHttpVariableCompletionTest extends LattePluginTestBase {
 
     @Override
     protected String getTestDataPath() {
-        return PathManager.getHomePath() + "/plugins/latte-plugin/src/test/resources/testData/core";
+        return System.getProperty("user.dir") + "/src/test/resources/testData/core";
     }
 
     /**

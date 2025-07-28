@@ -176,6 +176,92 @@ public class LatteValidator {
         if (!BUILT_IN_MACRO_NAMES.contains(macroName)) {
             reportError("Unknown macro: " + macroName, HighlightSeverity.WARNING, element);
         }
+        
+        // Add validation for {else} and {elseif} tags
+        if ("else".equals(macroName) || "elseif".equals(macroName)) {
+            boolean isInsideIfBlock = checkIfInsideIfBlock(element);
+            if (!isInsideIfBlock) {
+                // Report error for standalone {else} or {elseif} tag
+                reportError("Tag {" + macroName + "} must be inside an {if} block", HighlightSeverity.ERROR, element);
+            }
+        }
+    }
+    
+    /**
+     * Checks if the given element is inside an {if} block.
+     * 
+     * @param element The element to check
+     * @return true if the element is inside an {if} block, false otherwise
+     */
+    private static boolean checkIfInsideIfBlock(@NotNull PsiElement element) {
+        // Get the parent element
+        PsiElement parent = element.getParent();
+        
+        // Track the nesting level of if blocks
+        int ifLevel = 0;
+        
+        // Iterate through previous siblings to find an {if} tag
+        PsiElement prevSibling = element.getPrevSibling();
+        while (prevSibling != null) {
+            // Check if this is a macro name element
+            if (prevSibling.getNode().getElementType().equals(LatteTokenTypes.LATTE_MACRO_NAME)) {
+                String macroName = prevSibling.getText();
+                
+                // Check for if/else tags
+                if ("if".equals(macroName)) {
+                    ifLevel++;
+                } else if ("/if".equals(macroName)) {
+                    ifLevel--;
+                }
+            }
+            
+            // If we found an open if block, return true
+            if (ifLevel > 0) {
+                return true;
+            }
+            
+            // Move to the previous sibling
+            prevSibling = prevSibling.getPrevSibling();
+        }
+        
+        // If we didn't find an open if block, check parent elements
+        while (parent != null) {
+            // Check if this parent contains an {if} tag before our element
+            PsiElement[] children = parent.getChildren();
+            boolean foundOurElement = false;
+            ifLevel = 0;
+            
+            for (PsiElement child : children) {
+                // Once we reach our element, stop checking
+                if (child == element) {
+                    foundOurElement = true;
+                    break;
+                }
+                
+                // Check if this is a macro name element
+                if (child.getNode().getElementType().equals(LatteTokenTypes.LATTE_MACRO_NAME)) {
+                    String macroName = child.getText();
+                    
+                    // Check for if/else tags
+                    if ("if".equals(macroName)) {
+                        ifLevel++;
+                    } else if ("/if".equals(macroName)) {
+                        ifLevel--;
+                    }
+                }
+            }
+            
+            // If we found an open if block, return true
+            if (ifLevel > 0) {
+                return true;
+            }
+            
+            // Move up to the parent
+            parent = parent.getParent();
+        }
+        
+        // If we didn't find an open if block, return false
+        return false;
     }
 
     /**

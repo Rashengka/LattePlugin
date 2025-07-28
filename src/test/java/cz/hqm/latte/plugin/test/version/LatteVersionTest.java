@@ -105,7 +105,7 @@ public class LatteVersionTest extends LattePluginTestBase {
      * @throws IOException If the file cannot be read
      */
     private String loadTestFile(String filename) throws IOException {
-        String testDataPath = PathManager.getHomePath() + "/plugins/latte-plugin/src/test/resources/testData/version";
+        String testDataPath = getTestDataPath() + "/version";
         return new String(Files.readAllBytes(Paths.get(testDataPath, filename)));
     }
 }

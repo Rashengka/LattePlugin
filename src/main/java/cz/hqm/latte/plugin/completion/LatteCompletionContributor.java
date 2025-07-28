@@ -50,7 +50,27 @@ public class LatteCompletionContributor extends CompletionContributor {
                         
                         // Check if we're in a test environment with {$<caret>}
                         String text = parameters.getOriginalFile().getText();
-                        System.out.println("[DEBUG_LOG] File text: '" + text + "'");
+                        
+                        // Get the file path relative to the project root
+                        String filePath = "";
+                        com.intellij.openapi.project.Project project = parameters.getOriginalFile().getProject();
+                        String absolutePath = parameters.getOriginalFile().getVirtualFile() != null ? 
+                                parameters.getOriginalFile().getVirtualFile().getPath() : "";
+                        
+                        if (project != null && project.getBasePath() != null && !absolutePath.isEmpty()) {
+                            String projectPath = project.getBasePath();
+                            // Check if the file is within the project
+                            if (absolutePath.startsWith(projectPath)) {
+                                // Get path relative to project
+                                filePath = absolutePath.substring(projectPath.length());
+                            } else {
+                                filePath = absolutePath;
+                            }
+                        }
+                        
+                        // Log only the beginning of the file content and the path
+                        System.out.println("[DEBUG_LOG] File path: '" + filePath + "', text beginning: '" + 
+                                cz.hqm.latte.plugin.validator.LatteValidator.truncateElementText(text) + "'");
                         
                         if (text.contains("{$")) {
                             System.out.println("[DEBUG_LOG] Found {$ in file text, adding variables");

@@ -64,7 +64,7 @@ public abstract class LattePluginTestBase extends BasePlatformTestCase {
      */
     @Override
     protected String getTestDataPath() {
-        return PathManager.getHomePath() + "/plugins/latte-plugin/src/test/resources/testData";
+        return System.getProperty("user.dir") + "/src/test/resources/testData";
     }
 
     /**
