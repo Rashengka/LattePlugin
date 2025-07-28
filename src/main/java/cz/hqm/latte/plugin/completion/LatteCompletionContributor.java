@@ -26,16 +26,18 @@ import static com.intellij.patterns.StandardPatterns.string;
  * Supports Latte 2.x, 3.0+, and 4.0+ versions.
  */
 public class LatteCompletionContributor extends CompletionContributor {
-    // Cache for version and macros to optimize performance
+    // Cache for version, macros, and variables to optimize performance
     private static final AtomicReference<LatteVersion> cachedVersion = new AtomicReference<>();
     private static final AtomicReference<List<LookupElement>> cachedMacros = new AtomicReference<>();
     private static final AtomicReference<LatteSettings> cachedSettings = new AtomicReference<>();
+    private static final AtomicReference<List<LookupElement>> cachedVariables = new AtomicReference<>();
 
     public LatteCompletionContributor() {
             System.out.println("[DEBUG_LOG] LatteCompletionContributor constructor called");
             
-            // Initialize the cache when the contributor is created
+            // Initialize the caches when the contributor is created
             initMacrosCache();
+            initVariablesCache();
         
         // Add a special pattern for test environment that always adds variables
         // This is needed because the test uses myFixture.configureByText("test.latte", "{$<caret>}")
@@ -77,7 +79,8 @@ public class LatteCompletionContributor extends CompletionContributor {
                             addNetteVariables(parameters, result);
                         }
                         
-                        addCachedMacros(result);
+                        // Use the overloaded method with project parameter for comprehensive caching
+                        addCachedMacros(result, project);
                     }
                 });
                 
@@ -91,7 +94,9 @@ public class LatteCompletionContributor extends CompletionContributor {
                                                   @NotNull ProcessingContext context,
                                                   @NotNull CompletionResultSet result) {
                         System.out.println("[DEBUG_LOG] Pattern 1 (afterLeaf) matched");
-                        addCachedMacros(result);
+                        // Use the overloaded method with project parameter for comprehensive caching
+                        com.intellij.openapi.project.Project project = parameters.getOriginalFile().getProject();
+                        addCachedMacros(result, project);
                     }
                 });
 
@@ -105,7 +110,9 @@ public class LatteCompletionContributor extends CompletionContributor {
                                                   @NotNull ProcessingContext context,
                                                   @NotNull CompletionResultSet result) {
                         System.out.println("[DEBUG_LOG] Pattern 2 (withText) matched");
-                        addCachedMacros(result);
+                        // Use the overloaded method with project parameter for comprehensive caching
+                        com.intellij.openapi.project.Project project = parameters.getOriginalFile().getProject();
+                        addCachedMacros(result, project);
                     }
                 });
 
@@ -159,7 +166,9 @@ public class LatteCompletionContributor extends CompletionContributor {
                             
                             if (contextText.contains("{")) {
                                 System.out.println("[DEBUG_LOG] Pattern 3 (fallback) matched");
-                                addCachedMacros(result);
+                                // Use the overloaded method with project parameter for comprehensive caching
+                                com.intellij.openapi.project.Project project = parameters.getOriginalFile().getProject();
+                                addCachedMacros(result, project);
                             }
                             
                             // Check for variable context
@@ -173,7 +182,9 @@ public class LatteCompletionContributor extends CompletionContributor {
     }
 
     /**
-     * Checks if the cache needs to be updated based on current version and settings
+     * Checks if any cache needs to be updated based on current version and settings
+     * This method is called from addCachedMacros() and only updates the macros cache
+     * For a full update of all caches, use updateAllCaches() with a project parameter
      */
     private synchronized void checkAndUpdateCache() {
         LatteVersion currentVersion = LatteVersionManager.getCurrentVersion();
@@ -192,7 +203,25 @@ public class LatteCompletionContributor extends CompletionContributor {
         
         if (needsUpdate) {
             initMacrosCache();
+            // Note: Variables cache will be updated when addNetteVariables is called with a project
+            System.out.println("[DEBUG_LOG] Variables cache will be updated when needed with a project");
         }
+    }
+    
+    /**
+     * Updates all caches (macros and variables) for the given project
+     * This is a comprehensive update method that ensures all caches are in sync
+     */
+    private synchronized void updateAllCaches(@NotNull com.intellij.openapi.project.Project project) {
+        System.out.println("[DEBUG_LOG] Updating all caches for project: " + project.getName());
+        
+        // Update macros cache
+        initMacrosCache();
+        
+        // Update variables cache
+        updateVariablesCache(project);
+        
+        System.out.println("[DEBUG_LOG] All caches updated successfully");
     }
     
     /**
@@ -346,7 +375,9 @@ public class LatteCompletionContributor extends CompletionContributor {
     private void addCachedMacros(@NotNull CompletionResultSet result) {
         System.out.println("[DEBUG_LOG] Adding cached macros to completion result");
         
-        // Check if cache needs updating
+        // Check if macros cache needs updating
+        // Note: This only updates the macros cache since we don't have a project here
+        // The variables cache will be updated when addNetteVariables is called with a project
         checkAndUpdateCache();
         
         // Add macros from cache to results
@@ -357,7 +388,51 @@ public class LatteCompletionContributor extends CompletionContributor {
                 result.addElement(macro);
             }
         } else {
-            System.out.println("[DEBUG_LOG] Cache is null, initializing");
+            System.out.println("[DEBUG_LOG] Macros cache is null, initializing");
+            initMacrosCache();
+            addCachedMacros(result);
+        }
+    }
+    
+    /**
+     * Adds macros from cache to the completion results
+     * This overloaded version takes a project parameter and can update all caches if needed
+     * 
+     * @param result The completion result set
+     * @param project The project to update caches for
+     */
+    private void addCachedMacros(@NotNull CompletionResultSet result, @NotNull com.intellij.openapi.project.Project project) {
+        System.out.println("[DEBUG_LOG] Adding cached macros to completion result with project");
+        
+        // Check if version or settings have changed
+        LatteVersion currentVersion = LatteVersionManager.getCurrentVersion();
+        LatteSettings currentSettings = LatteSettings.getInstance();
+        
+        boolean needsFullUpdate = false;
+        
+        if (cachedVersion.get() == null || !cachedVersion.get().equals(currentVersion) ||
+            cachedSettings.get() == null || !settingsEqual(cachedSettings.get(), currentSettings)) {
+            System.out.println("[DEBUG_LOG] Version or settings changed, updating all caches");
+            needsFullUpdate = true;
+        }
+        
+        if (needsFullUpdate) {
+            // Update all caches to ensure consistency
+            updateAllCaches(project);
+        } else {
+            // Just check if macros cache needs updating
+            checkAndUpdateCache();
+        }
+        
+        // Add macros from cache to results
+        List<LookupElement> macros = cachedMacros.get();
+        if (macros != null) {
+            System.out.println("[DEBUG_LOG] Adding " + macros.size() + " macros from cache");
+            for (LookupElement macro : macros) {
+                result.addElement(macro);
+            }
+        } else {
+            System.out.println("[DEBUG_LOG] Macros cache is null, initializing");
             initMacrosCache();
             addCachedMacros(result);
         }
@@ -373,7 +448,114 @@ public class LatteCompletionContributor extends CompletionContributor {
     }
     
     /**
+     * Initializes the cache of variables based on current settings
+     */
+    private synchronized void initVariablesCache() {
+        LatteSettings currentSettings = LatteSettings.getInstance();
+        
+        System.out.println("[DEBUG_LOG] Initializing variables cache");
+        
+        List<LookupElement> variables = new ArrayList<>();
+        
+        try {
+            // We need a project to get variables, but we don't have one at this point
+            // Variables will be initialized when addNetteVariables is first called with a project
+            System.out.println("[DEBUG_LOG] Variables cache will be initialized when first needed with a project");
+        } catch (Exception e) {
+            System.out.println("[DEBUG_LOG] Error initializing variables cache: " + e.getMessage());
+            e.printStackTrace();
+        }
+        
+        // Update the cache
+        cachedSettings.set(currentSettings);
+        cachedVariables.set(variables);
+        
+        System.out.println("[DEBUG_LOG] Variables cache initialized");
+    }
+    
+    /**
+     * Checks if the variables cache needs to be updated based on current settings and project
+     * If settings have changed, it will update all caches to ensure consistency
+     * 
+     * @param project The project to check variables for
+     */
+    private synchronized void checkAndUpdateVariablesCache(@NotNull com.intellij.openapi.project.Project project) {
+        LatteVersion currentVersion = LatteVersionManager.getCurrentVersion();
+        LatteSettings currentSettings = LatteSettings.getInstance();
+        
+        boolean needsFullUpdate = false;
+        boolean needsVariablesUpdate = false;
+        
+        // Check if version or settings have changed - this requires a full update of all caches
+        if (cachedVersion.get() == null || !cachedVersion.get().equals(currentVersion)) {
+            System.out.println("[DEBUG_LOG] Version changed, need to update all caches");
+            needsFullUpdate = true;
+        } else if (cachedSettings.get() == null || !settingsEqual(cachedSettings.get(), currentSettings)) {
+            System.out.println("[DEBUG_LOG] Settings changed, need to update all caches");
+            needsFullUpdate = true;
+        }
+        
+        // Check if variables cache is empty - this only requires updating the variables cache
+        List<LookupElement> variables = cachedVariables.get();
+        if (variables == null || variables.isEmpty()) {
+            System.out.println("[DEBUG_LOG] Variables cache is empty, initializing");
+            needsVariablesUpdate = true;
+        }
+        
+        if (needsFullUpdate) {
+            // Update all caches to ensure consistency
+            updateAllCaches(project);
+        } else if (needsVariablesUpdate) {
+            // Only update variables cache
+            updateVariablesCache(project);
+        }
+    }
+    
+    /**
+     * Updates the variables cache for the given project
+     * 
+     * @param project The project to update variables for
+     */
+    private synchronized void updateVariablesCache(@NotNull com.intellij.openapi.project.Project project) {
+        LatteSettings currentSettings = LatteSettings.getInstance();
+        
+        System.out.println("[DEBUG_LOG] Updating variables cache for project: " + project.getName());
+        
+        List<LookupElement> variables = new ArrayList<>();
+        
+        try {
+            // Get all variables from NetteDefaultVariablesProvider
+            List<NetteVariable> netteVariables = NetteDefaultVariablesProvider.getAllVariables(project);
+            System.out.println("[DEBUG_LOG] Got " + netteVariables.size() + " variables from provider");
+            
+            // Convert variables to LookupElements
+            for (NetteVariable variable : netteVariables) {
+                // Skip HTTP variables if Nette HTTP is disabled
+                if (!currentSettings.isEnableNetteHttp() && isHttpVariable(variable.getName())) {
+                    System.out.println("[DEBUG_LOG] Skipping HTTP variable: " + variable.getName() + " because Nette HTTP is disabled");
+                    continue;
+                }
+                
+                System.out.println("[DEBUG_LOG] Adding variable to cache: " + variable.getName() + " of type " + variable.getType());
+                variables.add(LookupElementBuilder.create(variable.getName())
+                        .withTypeText(variable.getType())
+                        .withTailText(" - " + variable.getDescription(), true));
+            }
+        } catch (Exception e) {
+            System.out.println("[DEBUG_LOG] Error updating variables cache: " + e.getMessage());
+            e.printStackTrace();
+        }
+        
+        // Update the cache
+        cachedSettings.set(currentSettings);
+        cachedVariables.set(variables);
+        
+        System.out.println("[DEBUG_LOG] Variables cache updated with " + variables.size() + " variables");
+    }
+    
+    /**
      * Adds Nette variables to the completion results.
+     * Uses caching to improve performance.
      *
      * @param parameters The completion parameters
      * @param result The completion result set
@@ -382,26 +564,24 @@ public class LatteCompletionContributor extends CompletionContributor {
         System.out.println("[DEBUG_LOG] addNetteVariables called");
         
         try {
-            // Check if Nette HTTP is enabled
-            LatteSettings settings = LatteSettings.getInstance();
-            System.out.println("[DEBUG_LOG] LatteCompletionContributor - Nette HTTP enabled: " + settings.isEnableNetteHttp());
+            // Get the project from parameters
+            com.intellij.openapi.project.Project project = parameters.getOriginalFile().getProject();
             
-            // Get all variables from NetteDefaultVariablesProvider
-            List<NetteVariable> variables = NetteDefaultVariablesProvider.getAllVariables(parameters.getOriginalFile().getProject());
-            System.out.println("[DEBUG_LOG] Number of variables: " + variables.size());
+            // Check and update the variables cache
+            checkAndUpdateVariablesCache(project);
             
-            // Add variables to completion results, filtering out HTTP variables if Nette HTTP is disabled
-            for (NetteVariable variable : variables) {
-                // Skip HTTP variables if Nette HTTP is disabled
-                if (!settings.isEnableNetteHttp() && isHttpVariable(variable.getName())) {
-                    System.out.println("[DEBUG_LOG] Skipping HTTP variable: " + variable.getName() + " because Nette HTTP is disabled");
-                    continue;
-                }
-                
-                System.out.println("[DEBUG_LOG] Adding variable: " + variable.getName() + " of type " + variable.getType());
-                result.addElement(LookupElementBuilder.create(variable.getName())
-                        .withTypeText(variable.getType())
-                        .withTailText(" - " + variable.getDescription(), true));
+            // Get variables from cache
+            List<LookupElement> variables = cachedVariables.get();
+            if (variables == null || variables.isEmpty()) {
+                System.out.println("[DEBUG_LOG] Variables cache is empty after update, something went wrong");
+                return;
+            }
+            
+            System.out.println("[DEBUG_LOG] Adding " + variables.size() + " variables from cache to completion results");
+            
+            // Add variables from cache to results
+            for (LookupElement variable : variables) {
+                result.addElement(variable);
             }
         } catch (Exception e) {
             System.out.println("[DEBUG_LOG] Error adding Nette variables: " + e.getMessage());
