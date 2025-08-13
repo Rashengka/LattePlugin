@@ -75,6 +75,13 @@ To avoid adding these VM options every time you create a new test configuration,
 
 Now, whenever you create a new test configuration, you can select "Latte Plugin Test" as the template, and all the VM options will be pre-filled.
 
+## Shared Run Configurations (committed)
+
+One ready-to-use configuration is committed to VCS and appears in the Run/Debug configurations list:
+- All Tests (Gradle): runs Gradle :test and shows results in IDE test UI (leverages build.gradle jvmArgs, no VM options needed here).
+
+If you don't see it, ensure that you opened the project from the repository root and that the .idea/runConfigurations directory is not excluded.
+
 ## Alternative: Use the test_runner.sh Script
 
 If you prefer not to configure IntelliJ IDEA, you can always use the `test_runner.sh` script to run tests:

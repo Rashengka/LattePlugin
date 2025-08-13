@@ -21,6 +21,7 @@ import static org.junit.Assert.*;
  */
 public class NAttributeSyntaxTest extends LattePluginTestBase {
 
+
     private LatteLexer lexer;
 
     @Before

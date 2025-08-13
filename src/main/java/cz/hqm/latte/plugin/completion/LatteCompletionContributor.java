@@ -19,6 +19,8 @@ import java.util.Set;
 import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicReference;
 
+import com.intellij.openapi.application.ApplicationManager;
+
 import static com.intellij.patterns.StandardPatterns.string;
 
 /**
@@ -31,13 +33,14 @@ public class LatteCompletionContributor extends CompletionContributor {
     private static final AtomicReference<List<LookupElement>> cachedMacros = new AtomicReference<>();
     private static final AtomicReference<LatteSettings> cachedSettings = new AtomicReference<>();
     private static final AtomicReference<List<LookupElement>> cachedVariables = new AtomicReference<>();
+    // Flag to track if cache initialization has been started
+    private static final AtomicReference<Boolean> cacheInitializationStarted = new AtomicReference<>(false);
 
     public LatteCompletionContributor() {
             System.out.println("[DEBUG_LOG] LatteCompletionContributor constructor called");
             
-            // Initialize the caches when the contributor is created
-            initMacrosCache();
-            initVariablesCache();
+            // Initialize the caches in a background thread to avoid freezing the EDT
+            initCachesInBackground();
         
         // Add a special pattern for test environment that always adds variables
         // This is needed because the test uses myFixture.configureByText("test.latte", "{$<caret>}")
@@ -80,7 +83,8 @@ public class LatteCompletionContributor extends CompletionContributor {
                         }
                         
                         // Use the overloaded method with project parameter for comprehensive caching
-                        addCachedMacros(result, project);
+                        boolean afterClosedTag = isAfterClosedTag(parameters);
+                        addCachedMacros(result, project, afterClosedTag);
                     }
                 });
                 
@@ -96,7 +100,8 @@ public class LatteCompletionContributor extends CompletionContributor {
                         System.out.println("[DEBUG_LOG] Pattern 1 (afterLeaf) matched");
                         // Use the overloaded method with project parameter for comprehensive caching
                         com.intellij.openapi.project.Project project = parameters.getOriginalFile().getProject();
-                        addCachedMacros(result, project);
+                        boolean afterClosedTag = isAfterClosedTag(parameters);
+                        addCachedMacros(result, project, afterClosedTag);
                     }
                 });
 
@@ -112,7 +117,8 @@ public class LatteCompletionContributor extends CompletionContributor {
                         System.out.println("[DEBUG_LOG] Pattern 2 (withText) matched");
                         // Use the overloaded method with project parameter for comprehensive caching
                         com.intellij.openapi.project.Project project = parameters.getOriginalFile().getProject();
-                        addCachedMacros(result, project);
+                        boolean afterClosedTag2 = isAfterClosedTag(parameters);
+                        addCachedMacros(result, project, afterClosedTag2);
                     }
                 });
 
@@ -168,7 +174,8 @@ public class LatteCompletionContributor extends CompletionContributor {
                                 System.out.println("[DEBUG_LOG] Pattern 3 (fallback) matched");
                                 // Use the overloaded method with project parameter for comprehensive caching
                                 com.intellij.openapi.project.Project project = parameters.getOriginalFile().getProject();
-                                addCachedMacros(result, project);
+                                boolean afterClosedTag3 = isAfterClosedTag(parameters);
+                                addCachedMacros(result, project, afterClosedTag3);
                             }
                             
                             // Check for variable context
@@ -375,6 +382,12 @@ public class LatteCompletionContributor extends CompletionContributor {
     private void addCachedMacros(@NotNull CompletionResultSet result) {
         System.out.println("[DEBUG_LOG] Adding cached macros to completion result");
         
+        // Ensure cache initialization has been started
+        if (!cacheInitializationStarted.get()) {
+            System.out.println("[DEBUG_LOG] Cache initialization not started, starting now");
+            initCachesInBackground();
+        }
+        
         // Check if macros cache needs updating
         // Note: This only updates the macros cache since we don't have a project here
         // The variables cache will be updated when addNetteVariables is called with a project
@@ -388,9 +401,22 @@ public class LatteCompletionContributor extends CompletionContributor {
                 result.addElement(macro);
             }
         } else {
-            System.out.println("[DEBUG_LOG] Macros cache is null, initializing");
-            initMacrosCache();
-            addCachedMacros(result);
+            System.out.println("[DEBUG_LOG] Macros cache is null, initializing on demand");
+            // Initialize on demand but in a lightweight way to avoid freezing
+            List<LookupElement> basicMacros = new ArrayList<>();
+            // Add a minimal set of common macros for immediate use
+            basicMacros.add(LookupElementBuilder.create("if").bold().withTypeText("Latte macro"));
+            basicMacros.add(LookupElementBuilder.create("foreach").bold().withTypeText("Latte macro"));
+            basicMacros.add(LookupElementBuilder.create("include").bold().withTypeText("Latte macro"));
+            basicMacros.add(LookupElementBuilder.create("block").bold().withTypeText("Latte macro"));
+            
+            // Add these basic macros to the result
+            for (LookupElement macro : basicMacros) {
+                result.addElement(macro);
+            }
+            
+            // The full cache will be populated in the background
+            System.out.println("[DEBUG_LOG] Added basic macros while waiting for full cache initialization");
         }
     }
     
@@ -401,8 +427,14 @@ public class LatteCompletionContributor extends CompletionContributor {
      * @param result The completion result set
      * @param project The project to update caches for
      */
-    private void addCachedMacros(@NotNull CompletionResultSet result, @NotNull com.intellij.openapi.project.Project project) {
+    private void addCachedMacros(@NotNull CompletionResultSet result, @NotNull com.intellij.openapi.project.Project project, boolean afterClosedTag) {
         System.out.println("[DEBUG_LOG] Adding cached macros to completion result with project");
+        
+        // Ensure cache initialization has been started
+        if (!cacheInitializationStarted.get()) {
+            System.out.println("[DEBUG_LOG] Cache initialization not started, starting now");
+            initCachesInBackground();
+        }
         
         // Check if version or settings have changed
         LatteVersion currentVersion = LatteVersionManager.getCurrentVersion();
@@ -417,25 +449,123 @@ public class LatteCompletionContributor extends CompletionContributor {
         }
         
         if (needsFullUpdate) {
-            // Update all caches to ensure consistency
-            updateAllCaches(project);
+            // Check if we're running in a test environment
+            boolean isTestMode = ApplicationManager.getApplication().isUnitTestMode();
+            
+            if (isTestMode) {
+                System.out.println("[DEBUG_LOG] Test environment detected, updating caches synchronously");
+                try {
+                    updateAllCaches(project);
+                } catch (Exception e) {
+                    System.out.println("[DEBUG_LOG] Error updating caches synchronously: " + e.getMessage());
+                    e.printStackTrace();
+                }
+            } else {
+                // In normal mode, schedule the update in a background thread
+                System.out.println("[DEBUG_LOG] Scheduling cache update in background thread");
+                ApplicationManager.getApplication().executeOnPooledThread(() -> {
+                    try {
+                        updateAllCaches(project);
+                    } catch (Exception e) {
+                        System.out.println("[DEBUG_LOG] Error updating caches in background: " + e.getMessage());
+                        e.printStackTrace();
+                    }
+                });
+            }
         } else {
-            // Just check if macros cache needs updating
-            checkAndUpdateCache();
+            // Just check if macros cache needs updating, but don't block if it's not ready
+            if (cachedMacros.get() != null) {
+                checkAndUpdateCache();
+            }
         }
         
         // Add macros from cache to results
         List<LookupElement> macros = cachedMacros.get();
         if (macros != null) {
             System.out.println("[DEBUG_LOG] Adding " + macros.size() + " macros from cache");
+            System.out.println("[DEBUG_LOG] afterClosedTag (from parameters): " + afterClosedTag);
+            
             for (LookupElement macro : macros) {
+                // If we're after a closed tag, don't add n: attributes
+                if (afterClosedTag && macro.getLookupString().startsWith("n:")) {
+                    System.out.println("[DEBUG_LOG] Skipping n: attribute after closed tag: " + macro.getLookupString());
+                    continue;
+                }
                 result.addElement(macro);
             }
         } else {
-            System.out.println("[DEBUG_LOG] Macros cache is null, initializing");
-            initMacrosCache();
-            addCachedMacros(result);
+            System.out.println("[DEBUG_LOG] Macros cache is null, initializing on demand");
+            // Initialize on demand but in a lightweight way to avoid freezing
+            List<LookupElement> basicMacros = new ArrayList<>();
+            // Add a minimal set of common macros for immediate use
+            basicMacros.add(LookupElementBuilder.create("if").bold().withTypeText("Latte macro"));
+            basicMacros.add(LookupElementBuilder.create("foreach").bold().withTypeText("Latte macro"));
+            basicMacros.add(LookupElementBuilder.create("include").bold().withTypeText("Latte macro"));
+            basicMacros.add(LookupElementBuilder.create("block").bold().withTypeText("Latte macro"));
+            
+            // Add these basic macros to the result
+            for (LookupElement macro : basicMacros) {
+                // If we're after a closed tag, don't add n: attributes
+                if (afterClosedTag && macro.getLookupString().startsWith("n:")) {
+                    continue;
+                }
+                result.addElement(macro);
+            }
+            
+            // The full cache will be populated in the background
+            System.out.println("[DEBUG_LOG] Added basic macros while waiting for full cache initialization");
         }
+    }
+    
+    /**
+     * Checks if the current position is after a closed HTML/XML tag.
+     * 
+     * @return true if the current position is after a closed HTML/XML tag, false otherwise
+     */
+    private boolean isAfterClosedTag() {
+        // Get the editor and caret position
+        com.intellij.openapi.editor.Editor editor = com.intellij.openapi.fileEditor.FileEditorManager.getInstance(
+                com.intellij.openapi.project.ProjectManager.getInstance().getOpenProjects()[0]).getSelectedTextEditor();
+        
+        if (editor == null) {
+            return false;
+        }
+        
+        // Get the text before the caret
+        int offset = editor.getCaretModel().getOffset();
+        String text = editor.getDocument().getText();
+        if (offset > text.length()) {
+            return false;
+        }
+        
+        String textBeforeCursor = text.substring(0, offset);
+        
+        // Pattern to detect if we're after a closed HTML/XML tag
+        java.util.regex.Pattern AFTER_CLOSED_TAG_PATTERN = java.util.regex.Pattern.compile("<[^>]+>[^<]*$");
+        java.util.regex.Matcher afterTagMatcher = AFTER_CLOSED_TAG_PATTERN.matcher(textBeforeCursor);
+        
+        System.out.println("[DEBUG_LOG] Text before cursor for AFTER_CLOSED_TAG_PATTERN: '" + textBeforeCursor + "'");
+        System.out.println("[DEBUG_LOG] AFTER_CLOSED_TAG_PATTERN: '" + AFTER_CLOSED_TAG_PATTERN.pattern() + "'");
+        
+        return afterTagMatcher.find();
+    }
+    
+    /**
+     * Safer variant that uses completion parameters to determine if caret is after a closed HTML/XML tag.
+     * Avoids accessing global editors/projects which may be unavailable or cause deadlocks in tests.
+     */
+    private boolean isAfterClosedTag(@NotNull CompletionParameters parameters) {
+        String text = parameters.getOriginalFile().getText();
+        if (text == null) {
+            return false;
+        }
+        int offset = parameters.getOffset();
+        if (offset > text.length()) {
+            offset = text.length();
+        }
+        String textBeforeCursor = text.substring(0, offset);
+        java.util.regex.Pattern AFTER_CLOSED_TAG_PATTERN = java.util.regex.Pattern.compile("<[^>]+>[^<]*$");
+        return AFTER_CLOSED_TAG_PATTERN.matcher(textBeforeCursor).find();
     }
 
     /**
@@ -471,6 +601,57 @@ public class LatteCompletionContributor extends CompletionContributor {
         cachedVariables.set(variables);
         
         System.out.println("[DEBUG_LOG] Variables cache initialized");
+    }
+    
+    /**
+     * Initializes the caches in a background thread to avoid freezing the EDT.
+     * When running in a test environment, initializes the caches synchronously.
+     * This method is called from the constructor.
+     */
+    private void initCachesInBackground() {
+        // Only start initialization if it hasn't been started yet
+        if (cacheInitializationStarted.compareAndSet(false, true)) {
+            // Check if we're running in a test environment
+            boolean isTestMode = ApplicationManager.getApplication().isUnitTestMode();
+            
+            if (isTestMode) {
+                System.out.println("[DEBUG_LOG] Test environment detected, initializing caches synchronously");
+                
+                try {
+                    // Initialize caches synchronously in test environment
+                    System.out.println("[DEBUG_LOG] Synchronously initializing macros cache");
+                    initMacrosCache();
+                    
+                    System.out.println("[DEBUG_LOG] Synchronously initializing variables cache");
+                    initVariablesCache();
+                    
+                    System.out.println("[DEBUG_LOG] Synchronous cache initialization complete");
+                } catch (Exception e) {
+                    System.out.println("[DEBUG_LOG] Error in synchronous cache initialization: " + e.getMessage());
+                    e.printStackTrace();
+                }
+            } else {
+                System.out.println("[DEBUG_LOG] Starting cache initialization in background thread");
+                
+                // Run initialization in a background thread
+                ApplicationManager.getApplication().executeOnPooledThread(() -> {
+                    try {
+                        System.out.println("[DEBUG_LOG] Background thread: initializing macros cache");
+                        initMacrosCache();
+                        
+                        System.out.println("[DEBUG_LOG] Background thread: initializing variables cache");
+                        initVariablesCache();
+                        
+                        System.out.println("[DEBUG_LOG] Background thread: cache initialization complete");
+                    } catch (Exception e) {
+                        System.out.println("[DEBUG_LOG] Error in background cache initialization: " + e.getMessage());
+                        e.printStackTrace();
+                    }
+                });
+            }
+        } else {
+            System.out.println("[DEBUG_LOG] Cache initialization already started");
+        }
     }
     
     /**
@@ -564,24 +745,87 @@ public class LatteCompletionContributor extends CompletionContributor {
         System.out.println("[DEBUG_LOG] addNetteVariables called");
         
         try {
+            // Ensure cache initialization has been started
+            if (!cacheInitializationStarted.get()) {
+                System.out.println("[DEBUG_LOG] Cache initialization not started, starting now");
+                initCachesInBackground();
+            }
+            
             // Get the project from parameters
             com.intellij.openapi.project.Project project = parameters.getOriginalFile().getProject();
             
+            // Check if we're running in a test environment
+            boolean isTestMode = ApplicationManager.getApplication().isUnitTestMode();
+            
             // Check and update the variables cache
-            checkAndUpdateVariablesCache(project);
+            if (cachedVariables.get() == null || cachedVariables.get().isEmpty()) {
+                if (isTestMode) {
+                    System.out.println("[DEBUG_LOG] Test environment detected, updating variables cache synchronously");
+                    try {
+                        checkAndUpdateVariablesCache(project);
+                    } catch (Exception e) {
+                        System.out.println("[DEBUG_LOG] Error updating variables cache synchronously: " + e.getMessage());
+                        e.printStackTrace();
+                    }
+                } else {
+                    System.out.println("[DEBUG_LOG] Variables cache is empty, scheduling update in background");
+                    // Schedule the update in a background thread
+                    ApplicationManager.getApplication().executeOnPooledThread(() -> {
+                        try {
+                            checkAndUpdateVariablesCache(project);
+                        } catch (Exception e) {
+                            System.out.println("[DEBUG_LOG] Error updating variables cache in background: " + e.getMessage());
+                            e.printStackTrace();
+                        }
+                    });
+                }
+            } else {
+                // If we already have variables, check if we need to update them
+                if (isTestMode) {
+                    System.out.println("[DEBUG_LOG] Test environment detected, checking variables cache synchronously");
+                    try {
+                        checkAndUpdateVariablesCache(project);
+                    } catch (Exception e) {
+                        System.out.println("[DEBUG_LOG] Error checking variables cache synchronously: " + e.getMessage());
+                        e.printStackTrace();
+                    }
+                } else {
+                    // In normal mode, check for updates in the background
+                    ApplicationManager.getApplication().executeOnPooledThread(() -> {
+                        try {
+                            checkAndUpdateVariablesCache(project);
+                        } catch (Exception e) {
+                            System.out.println("[DEBUG_LOG] Error checking variables cache in background: " + e.getMessage());
+                            e.printStackTrace();
+                        }
+                    });
+                }
+            }
             
             // Get variables from cache
             List<LookupElement> variables = cachedVariables.get();
-            if (variables == null || variables.isEmpty()) {
-                System.out.println("[DEBUG_LOG] Variables cache is empty after update, something went wrong");
-                return;
-            }
-            
-            System.out.println("[DEBUG_LOG] Adding " + variables.size() + " variables from cache to completion results");
-            
-            // Add variables from cache to results
-            for (LookupElement variable : variables) {
-                result.addElement(variable);
+            if (variables != null && !variables.isEmpty()) {
+                System.out.println("[DEBUG_LOG] Adding " + variables.size() + " variables from cache to completion results");
+                
+                // Add variables from cache to results
+                for (LookupElement variable : variables) {
+                    result.addElement(variable);
+                }
+            } else {
+                System.out.println("[DEBUG_LOG] Variables cache is empty, adding basic variables on demand");
+                // Add some basic variables on demand to provide immediate feedback
+                List<LookupElement> basicVariables = new ArrayList<>();
+                basicVariables.add(LookupElementBuilder.create("presenter").withTypeText("Nette\\Application\\UI\\Presenter"));
+                basicVariables.add(LookupElementBuilder.create("control").withTypeText("Nette\\Application\\UI\\Control"));
+                basicVariables.add(LookupElementBuilder.create("user").withTypeText("Nette\\Security\\User"));
+                basicVariables.add(LookupElementBuilder.create("basePath").withTypeText("string"));
+                
+                // Add these basic variables to the result
+                for (LookupElement variable : basicVariables) {
+                    result.addElement(variable);
+                }
+                
+                System.out.println("[DEBUG_LOG] Added basic variables while waiting for full cache initialization");
             }
         } catch (Exception e) {
             System.out.println("[DEBUG_LOG] Error adding Nette variables: " + e.getMessage());

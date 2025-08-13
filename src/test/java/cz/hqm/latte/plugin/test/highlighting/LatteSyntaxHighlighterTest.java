@@ -136,8 +136,8 @@ public class LatteSyntaxHighlighterTest extends LattePluginTestBase {
      */
     @Test
     public void testUnknownTokenHighlighting() {
-        // Create a mock token type
-        IElementType unknownType = new IElementType("UNKNOWN", null);
+        // Create a mock token type using Latte's element type to avoid platform constructor constraints
+        IElementType unknownType = new LatteTokenTypes.LatteElementType("UNKNOWN");
         
         // Test unknown token highlighting
         TextAttributesKey[] unknownKeys = highlighter.getTokenHighlights(unknownType);

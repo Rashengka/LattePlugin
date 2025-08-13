@@ -51,6 +51,10 @@
         <completion.contributor language="Latte"
                                 implementationClass="cz.hqm.latte.plugin.completion.NetteFormCompletionContributor"/>
                                 
+        <!-- Nette attribute completion for n: attributes in HTML/XML tags -->
+        <completion.contributor language="Latte"
+                                implementationClass="cz.hqm.latte.plugin.completion.NetteAttributeCompletionContributor"/>
+                                
         <!-- Documentation provider -->
         <lang.documentationProvider language="Latte"
                                     implementationClass="cz.hqm.latte.plugin.documentation.LatteDocumentationProvider"/>

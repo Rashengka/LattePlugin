@@ -26,24 +26,35 @@ latte_plugin_2025-07-23_12-09-03_validation_errors.log
 
 During test execution, logs are organized in a hierarchical folder structure to make it easier to identify which logs correspond to which tests:
 
+1) Per-test plugin logs (debug/validation):
 ```
 log/test_TIMESTAMP/
   TestName_testMethod/
     latte_plugin_TIMESTAMP_TYPE.log
 ```
 
+2) Per-method full console capture (stdout + stderr):
+```
+log/test_TIMESTAMP/
+  SimpleClassName/
+    testMethod.console.log
+```
+
 Where:
 - `TIMESTAMP` is the date and time when the test was run (format: YYYY-MM-DD_HH-MM-SS)
-- `TestName_testMethod` is a sanitized version of the test class and method name
-- `TYPE` is the type of log (e.g., `latte_debug`, `validation_errors`)
+- `TestName_testMethod` is a sanitized version of the test class and method name (legacy/debug logs)
+- `SimpleClassName/testMethod.console.log` is the complete console output for a test method
+- `TYPE` is the type of plugin log (e.g., `latte_debug`, `validation_errors`)
 
-Example:
+Examples:
 ```
 log/test_2025-07-23_12-32-58/
   LatteLogger_testDebugLogging/
     latte_plugin_2025-07-23_12-32-58_latte_debug.log
   LatteLogger_testValidationErrorLogging/
     latte_plugin_2025-07-23_12-32-58_validation_errors.log
+  Latte4xCompletionTest/
+    testLatte4xMacroCompletion.console.log
 ```
 
 ## Log Types

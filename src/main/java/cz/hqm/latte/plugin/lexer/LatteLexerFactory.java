@@ -25,8 +25,19 @@ public final class LatteLexerFactory implements Disposable {
      *
      * @return The factory instance
      */
+    private static final LatteLexerFactory FALLBACK_INSTANCE = new LatteLexerFactory();
+    
     public static LatteLexerFactory getInstance() {
-        return ApplicationManager.getApplication().getService(LatteLexerFactory.class);
+        try {
+            var app = ApplicationManager.getApplication();
+            if (app != null) {
+                return app.getService(LatteLexerFactory.class);
+            }
+        } catch (Throwable ignored) {
+            // In non-IDE test environments ApplicationManager may be unavailable
+        }
+        // Fallback for environments where the IntelliJ Application is not initialized
+        return FALLBACK_INSTANCE;
     }
     
     /**

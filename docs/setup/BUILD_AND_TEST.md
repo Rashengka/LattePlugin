@@ -207,6 +207,8 @@ The plugin uses JUnit 4 for testing (as of July 2025, the project was converted 
 
 Test results are available in the `build/reports/tests/test/index.html` file. Open this file in a browser to view detailed test results.
 
+For the full, disciplined workflow to run, analyze, and fix tests iteratively (treating "0 tests" as failure and timeouts as errors), follow the Iterační testovací cyklus (ITC): see ../testing/ITERACNI_TESTOVACI_CYKLUS.md.
+
 ## Creating a Distribution Package
 
 To create a distribution package that can be installed in IntelliJ IDEA:

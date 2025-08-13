@@ -1,8 +1,9 @@
 package cz.hqm.latte.plugin.lexer;
 
 import com.intellij.lexer.LayeredLexer;
-import com.intellij.lexer.EmptyLexer;
+import com.intellij.lexer.HtmlLexer;
 import com.intellij.psi.tree.IElementType;
+import com.intellij.psi.xml.XmlTokenType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.Stack;
@@ -28,10 +29,13 @@ public class LatteLexer extends LayeredLexer {
     
     // Pattern for matching n:syntax attribute - n:syntax="double" or n:syntax="off" or n:syntax=double
     // This allows for both quoted and unquoted attribute values
-    private static final Pattern N_SYNTAX_PATTERN = Pattern.compile("n:syntax\\s*=\\s*[\"']?([a-zA-Z0-9_]+)[\"']?");
+    private static final Pattern N_SYNTAX_PATTERN = Pattern.compile("n:syntax\\s*=\\s*['\"]?([a-zA-Z0-9_]+)['\"]?");
+    
+    // Internal flag to track when we are at an n:syntax attribute name
+    private boolean nSyntaxAttributeSeen = false;
     
     public LatteLexer() {
-        super(new EmptyLexer());
+        super(new HtmlLexer());
         
         // Register Latte macro lexer with a reference to this lexer
         registerSelfStoppingLayer(
@@ -40,9 +44,9 @@ public class LatteLexer extends LayeredLexer {
             new IElementType[] { LatteTokenTypes.LATTE_MACRO_END }
         );
         
-        // Register Latte n:attribute lexer with a reference to this lexer
+        // Keep registration of attribute layer for future use (it may be activated in environments
+        // where custom tokens are provided). Tests relying on LatteLexer will use XML tokens path below.
         LatteAttributeLexer attributeLexer = new LatteAttributeLexer(this);
-        
         registerSelfStoppingLayer(
             attributeLexer,
             new IElementType[] { LatteTokenTypes.LATTE_ATTRIBUTE_START },
@@ -101,9 +105,7 @@ public class LatteLexer extends LayeredLexer {
         // Case 1: Check for {syntax off} or {syntax double} tag
         Matcher syntaxMatcher = SYNTAX_PARAM_PATTERN.matcher(text);
         if (syntaxMatcher.find()) {
-            // Extract the parameter (off or double)
             String parameter = syntaxMatcher.group(1);
-            // Set the syntax mode and store the previous mode
             setSyntaxMode(parameter);
             return;
         }
@@ -111,22 +113,18 @@ public class LatteLexer extends LayeredLexer {
         // Case 2: Check for {/syntax} tag
         Matcher endSyntaxMatcher = SYNTAX_END_PATTERN.matcher(text);
         if (endSyntaxMatcher.find()) {
-            // Restore the previous syntax mode from the stack
             if (!syntaxModeStack.isEmpty()) {
                 syntaxMode = syntaxModeStack.pop();
             } else {
-                // If the stack is empty, default to DEFAULT mode
                 syntaxMode = LatteSyntaxMode.DEFAULT;
             }
             return;
         }
         
-        // Case 3: Check for n:syntax attribute in HTML
+        // Case 3: Check for inline n:syntax attribute pattern in the same token
         Matcher nSyntaxMatcher = N_SYNTAX_PATTERN.matcher(text);
         if (nSyntaxMatcher.find()) {
-            // Extract the parameter (off or double)
             String parameter = nSyntaxMatcher.group(1);
-            // Set the syntax mode and store the previous mode
             setSyntaxMode(parameter);
         }
     }
@@ -139,14 +137,41 @@ public class LatteLexer extends LayeredLexer {
     
     @Override
     public void advance() {
-        // Get the current token sequence
+        // Inspect current token for XML-based detection of n:syntax name/value
+        IElementType type = super.getTokenType();
         CharSequence tokenSequence = getTokenSequence();
+        if (type != null && tokenSequence != null) {
+            // Detect the n:syntax attribute name
+            if (type == XmlTokenType.XML_NAME && "n:syntax".contentEquals(tokenSequence)) {
+                nSyntaxAttributeSeen = true;
+            }
+            // When we see the value token for an n:syntax attribute, set the mode
+            else if (nSyntaxAttributeSeen && type == XmlTokenType.XML_ATTRIBUTE_VALUE_TOKEN) {
+                String raw = tokenSequence.toString();
+                String value = stripQuotes(raw).trim();
+                if (!value.isEmpty()) {
+                    setSyntaxMode(value);
+                }
+                nSyntaxAttributeSeen = false; // reset flag after processing value
+            }
+        }
+        
+        // Also process macro and inline patterns within the current token
         if (tokenSequence != null && tokenSequence.length() > 0) {
-            // Process the token sequence to update the syntax mode
             processSyntaxTags(tokenSequence.toString());
         }
         
         super.advance();
+    }
+    
+    private static String stripQuotes(String s) {
+        if (s == null || s.length() < 2) return s == null ? "" : s;
+        char first = s.charAt(0);
+        char last = s.charAt(s.length() - 1);
+        if ((first == '"' && last == '"') || (first == '\'' && last == '\'')) {
+            return s.substring(1, s.length() - 1);
+        }
+        return s;
     }
     
     @NotNull
@@ -163,6 +188,7 @@ public class LatteLexer extends LayeredLexer {
     public void reset() {
         syntaxMode = LatteSyntaxMode.DEFAULT;
         syntaxModeStack.clear();
+        nSyntaxAttributeSeen = false;
         
         // Reset the base lexer
         super.start("", 0, 0, 0);

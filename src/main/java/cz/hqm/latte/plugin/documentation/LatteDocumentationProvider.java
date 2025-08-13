@@ -100,6 +100,7 @@ public class LatteDocumentationProvider extends AbstractDocumentationProvider {
         }
         
         String text = element.getText();
+        String trimmedToken = text == null ? "" : text.replace("\n", " ").trim();
         
         // Check if the element is a Latte macro
         if (text.startsWith("{")) {
@@ -122,6 +123,20 @@ public class LatteDocumentationProvider extends AbstractDocumentationProvider {
             
             // Check Nette package macros
             String netteMacroDoc = getNetteMacroDocumentation(macroName);
+            if (netteMacroDoc != null) {
+                return netteMacroDoc;
+            }
+        }
+        
+        // Additional heuristic: if the token itself is a known macro name (without braces)
+        String bareToken = trimmedToken.replaceAll("[{}\"'=<>()]", "");
+        if (!bareToken.isEmpty()) {
+            // Built-in macro names
+            if (MACRO_DOCS.containsKey(bareToken)) {
+                return createDocumentation("Latte Macro: " + bareToken, MACRO_DOCS.get(bareToken));
+            }
+            // Nette package macros
+            String netteMacroDoc = getNetteMacroDocumentation(bareToken);
             if (netteMacroDoc != null) {
                 return netteMacroDoc;
             }
@@ -165,6 +180,21 @@ public class LatteDocumentationProvider extends AbstractDocumentationProvider {
                 if (netteAttrDoc != null) {
                     return netteAttrDoc;
                 }
+            }
+        }
+        
+        // Additional heuristic: if the token looks like a bare attribute name (without the n: prefix)
+        if (!bareToken.isEmpty()) {
+            String possibleAttr = bareToken;
+            String withPrefix = possibleAttr.startsWith("n:") ? possibleAttr : ("n:" + possibleAttr);
+            // Built-in attributes
+            if (ATTRIBUTE_DOCS.containsKey(withPrefix)) {
+                return createDocumentation("Latte Attribute: " + withPrefix, ATTRIBUTE_DOCS.get(withPrefix));
+            }
+            // Nette package attributes
+            String netteAttrDoc = getNetteAttributeDocumentation(withPrefix);
+            if (netteAttrDoc != null) {
+                return netteAttrDoc;
             }
         }
         

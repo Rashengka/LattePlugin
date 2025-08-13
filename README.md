@@ -176,6 +176,8 @@ The script will check if your installed Java and Gradle versions are compatible 
 gradle test
 ```
 
+For the disciplined loop to run, analyze, and fix tests, follow the Iterační testovací cyklus (ITC): see docs/testing/ITERACNI_TESTOVACI_CYKLUS.md. In short: treat "0 tests" as a failure, analyze results and whether tests make sense, fix causes, rerun, and never accept timeouts.
+
 ### Command Logging
 
 The build system includes functionality to log the output of Gradle commands to the `log` directory. This is useful for debugging and troubleshooting issues that occur during build, test, or IDE execution.

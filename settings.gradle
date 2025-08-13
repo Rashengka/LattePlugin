@@ -1,0 +1,24 @@
+rootProject.name = 'LattePlugin'
+
+// Provide compatibility aliases for users/scripts that call multi-project style tasks like
+// "LattePlugin:test" or ":LattePlugin:test" in a single-project build.
+// We remap those task requests to the root tasks so the command does not fail.
+// Note: Any additional Gradle arguments (e.g., --tests) remain intact and will be
+// applied to the remapped task.
+gradle.settingsEvaluated { settings ->
+    def original = gradle.startParameter.taskNames
+    if (original == null || original.isEmpty()) return
+
+    def aliases = [
+        'LattePlugin:test'  : 'test',
+        ':LattePlugin:test' : ':test',
+        'LattePlugin:check' : 'check',
+        ':LattePlugin:check': ':check'
+    ]
+
+    def remapped = original.collect { name -> aliases.getOrDefault(name, name) }
+    if (remapped != original) {
+        gradle.startParameter.setTaskNames(remapped)
+        println "Remapped task(s): ${original} -> ${remapped}"
+    }
+}

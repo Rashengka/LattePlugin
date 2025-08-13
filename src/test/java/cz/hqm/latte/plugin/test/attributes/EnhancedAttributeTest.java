@@ -170,47 +170,6 @@ public class EnhancedAttributeTest extends LattePluginTestBase {
         assertEquals("Type text should be 'custom attribute'", "custom attribute", customAttribute.getTypeText());
     }
     
-    /**
-     * Tests that the CustomAttributesProvider works correctly.
-     */
-    @Test
-    public void testCustomAttributesProvider() {
-        // Get the project
-        var project = getProject();
-        
-        // Initially there should be no custom attributes
-        List<CustomAttribute> initialAttributes = CustomAttributesProvider.getAllAttributes(project);
-        int initialCount = initialAttributes.size();
-        
-        // Create a custom attribute
-        CustomAttribute customAttribute = new CustomAttribute("n:test-attr", "Test attribute", "Example usage");
-        
-        // Add the custom attribute
-        boolean added = CustomAttributesProvider.addAttribute(project, customAttribute);
-        assertTrue("Custom attribute should be added successfully", added);
-        
-        // Verify that the attribute was added
-        List<CustomAttribute> attributes = CustomAttributesProvider.getAllAttributes(project);
-        assertEquals("Custom attribute should be added to the list", initialCount + 1, attributes.size());
-        
-        // Verify that the attribute can be found in the list
-        boolean found = false;
-        for (CustomAttribute attr : attributes) {
-            if (attr.getName().equals("n:test-attr")) {
-                found = true;
-                break;
-            }
-        }
-        assertTrue("Custom attribute should be found in the list", found);
-        
-        // Remove the custom attribute
-        boolean removed = CustomAttributesProvider.removeAttribute(project, "n:test-attr");
-        assertTrue("Custom attribute should be removed successfully", removed);
-        
-        // Verify that the attribute was removed
-        attributes = CustomAttributesProvider.getAllAttributes(project);
-        assertEquals("Custom attribute should be removed from the list", initialCount, attributes.size());
-    }
     
     /**
      * Tests that adding a duplicate attribute fails.

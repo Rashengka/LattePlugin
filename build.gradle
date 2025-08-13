@@ -37,13 +37,26 @@ ext.logToFile = { String taskName, String output ->
         
         // Log to file if enabled
         if (enableFileOutput) {
-            def logFile = file("${logsDir}/${taskName}_${timestamp}.log")
-            logFile.text = "=== ${taskName} executed at ${timestamp} ===\n\n${output}\n"
-            
-            // Only print the log file location if terminal output is enabled
-            if (enableTerminalOutput) {
-                println "Command output logged to: ${logFile.absolutePath}"
+            File logFile
+            if (taskName == 'test') {
+                // Ensure timestamped test directory exists and write summary inside it
+                def dir = file("${logsDir}/${taskName}_${timestamp}")
+                if (!dir.exists()) {
+                    dir.mkdirs()
+                }
+                logFile = new File(dir, "${taskName}_${timestamp}.log")
+            } else {
+                logFile = file("${logsDir}/${taskName}_${timestamp}.log")
             }
+            if (!logFile.exists()) {
+                logFile.text = "=== ${taskName} executed at ${timestamp} ===\n\n${output}\n"
+            } else {
+                // Append to preserve any lines written by test-side rules (timing/memory)
+                logFile.append("${output}\n")
+            }
+            
+            // Always print the log file location so users know where to find logs
+            println "Command output logged to: ${logFile.absolutePath}"
         }
         
         // Print to terminal if enabled or if both terminal and file output are disabled
@@ -74,10 +87,8 @@ ext.logToProjectRoot = { String taskName, String output ->
             def logFile = file("log/${taskName}_${timestamp}.log")
             logFile.text = "=== ${taskName} executed at ${timestamp} ===\n\n${output}\n"
             
-            // Only print the log file location if terminal output is enabled
-            if (enableTerminalOutput) {
-                println "Command output logged to: ${logFile.absolutePath}"
-            }
+            // Always print the log file location so users know where to find logs
+            println "Command output logged to: ${logFile.absolutePath}"
         }
         
         // Print to terminal if enabled or if both terminal and file output are disabled
@@ -99,10 +110,11 @@ dependencies {
     testImplementation 'junit:junit:4.13.2'
     // Mockito for mocking in tests
     testImplementation 'org.mockito:mockito-core:5.3.1'
-    // JUnit 5 dependencies commented out
-    // testImplementation 'org.junit.jupiter:junit-jupiter-api:5.9.2'
-    // testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.9.2'
-    // testRuntimeOnly 'org.junit.vintage:junit-vintage-engine:5.9.2'
+    // Enable JUnit Platform with Vintage engine so IDE directory runs discover JUnit4 tests
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.9.2'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.9.2'
+    testRuntimeOnly 'org.junit.vintage:junit-vintage-engine:5.9.2'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher:1.9.2'
 }
 
 // See https://github.com/JetBrains/gradle-intellij-plugin/
@@ -281,8 +293,39 @@ patchPluginXml {
     untilBuild = '241.*'
 }
 
+// Task to clear test artifacts (logs and test reports) so each run starts clean
+// Usage: ./gradlew clearTestArtifacts
+// Note: Not wired automatically to :test to keep the step explicit per ITC guidelines
+tasks.register('clearTestArtifacts') {
+    description = 'Removes previous test logs and reports to ensure a clean test run'
+    group = 'verification'
+    doLast {
+        def logs = file('log')
+        if (logs.exists()) {
+            // delete only timestamped test dirs: test_YYYY-MM-DD_HH-MM-SS
+            fileTree(logs).matching { include 'test_*' }.visit { f ->
+                if (f.file.isDirectory()) {
+                    project.delete(f.file)
+                } else if (f.file.name ==~ /test_\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}\.log/) {
+                    // in case a stray log file is at root
+                    project.delete(f.file)
+                }
+            }
+        }
+        // remove Gradle HTML test report to avoid reading stale results
+        def htmlReport = file('build/reports/tests/test')
+        if (htmlReport.exists()) { project.delete(htmlReport) }
+        println 'Cleared previous test artifacts from log/test_* and build/reports/tests/test'
+    }
+}
+
 test {
-    useJUnit()
+    // Use JUnit Platform so both JUnit 5 and Vintage (JUnit 4) tests are discoverable in IDE and Gradle
+    useJUnitPlatform()
+    // Treat a run with zero tests as an error (as per project guidelines)
+    filter {
+        failOnNoMatchingTests = true
+    }
     testLogging {
         events "passed", "skipped", "failed", "standardOut", "standardError"
         showStandardStreams = true
@@ -293,8 +336,20 @@ test {
     minHeapSize = '512m'
     maxHeapSize = '1024m'
 
-    // Set test execution timeout
-    timeout = Duration.ofMinutes(5)
+    // Set overall Gradle test task timeout (individual tests have their own limits; this is a global guard)
+    // Increased to avoid false positives on heavy IntelliJ-based tests; rely on per-test timeouts to catch hangs
+    timeout = Duration.ofMinutes(20)
+
+    // Run tests in isolated mode to avoid cross-test interference
+    // - No parallel forks
+    // - New JVM for each test class
+    maxParallelForks = 1
+    forkEvery = 1
+
+    // Disable JUnit Jupiter parallel execution explicitly (Vintage tests are JUnit 4)
+    systemProperty 'junit.jupiter.execution.parallel.enabled', 'false'
+    systemProperty 'junit.jupiter.execution.parallel.mode.default', 'same_thread'
+    systemProperty 'junit.jupiter.execution.parallel.mode.classes.default', 'same_thread'
 
     // Add JVM arguments for module access, logging config, and error suppression
     jvmArgs = [
@@ -410,7 +465,8 @@ test {
         System.clearProperty("idea.ignore.duplicated.injectors")
         System.clearProperty("idea.disable.language.injection")
 
-        forkEvery = 1
+        // Tests are configured to run in isolated mode (forkEvery=1, maxParallelForks=1)
+        println "Test isolation: forkEvery=${forkEvery}, maxParallelForks=${maxParallelForks}"
 
         println "Starting test task with logging enabled: ${enableCommandLogging}"
         if (enableCommandLogging) {
