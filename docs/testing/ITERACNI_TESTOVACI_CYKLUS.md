@@ -37,11 +37,13 @@ Alias pro zkrácenou zmínku: ITC (Iterační testovací cyklus).
      - Ověř, že testovací třídy v src/test/java mají správné názvy a anotace.
 
 3. Analyzuj výsledky a logy
-   - HTML report: build/reports/tests/test/index.html.
-   - Souhrnný log běhu: log/test_YYYY-MM-DD_HH-MM-SS/test_YYYY-MM-DD_HH-MM-SS.log.
-   - Per‑test logy: log/test_YYYY-MM-DD_HH-MM-SS/<TestName_method>/latte_plugin_TIMESTAMP_*.log.
-   - Per‑metoda (kompletní konzolový výstup): log/test_YYYY-MM-DD_HH-MM-SS/<Třída>/<metoda>.console.log.
-   - Konzole vždy vypíše „Command output logged to: …“ s cestou k souhrnnému logu.
+  - HTML report: build/reports/tests/test/index.html.
+  - Souhrnný log běhu: log/test_YYYY-MM-DD_HH-MM-SS/test_YYYY-MM-DD_HH-MM-SS.log.
+  - Per‑test logy: log/test_YYYY-MM-DD_HH-MM-SS/<TestName_method>/latte_plugin_TIMESTAMP_*.log.
+  - Per‑metoda (kompletní konzolový výstup): log/test_YYYY-MM-DD_HH-MM-SS/<Třída>/<metoda>.console.log.
+  - Konzole vždy vypíše „Command output logged to: …“ s cestou k souhrnnému logu.
+
+  Důležité: Pro analýzu SELHÁNÍ/timeoutů je nutné číst jak per‑metodové .console.log (plná konzole), tak per‑test plugin logy (latte_plugin_*), protože HTML report tyto informace neobsahuje kompletně.
 
 4. Zhodnoť smysluplnost testů
    - Ověř, že testy testují reálné chování pluginu (lexer, parser, completion, highlighting, integrace s HTML/Nette) a nejsou závislé na nahodilém stavu.

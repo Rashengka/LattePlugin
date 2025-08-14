@@ -73,3 +73,12 @@ The log directory can be configured using the `latte.plugin.log.dir` system prop
 ## Test Mode
 
 Test mode is automatically detected when running tests via Gradle. This is controlled by the `latte.plugin.test.mode` system property, which is set to `true` during test execution.
+
+## Analyzing test failures and timeouts
+
+When a test fails or times out, always inspect the following in order:
+1. Summary: log/test_YYYY-MM-DD_HH-MM-SS/test_YYYY-MM-DD_HH-MM-SS.log – contains per-test timing/memory lines and a summary.
+2. Full console for the specific test method: log/test_YYYY-MM-DD_HH-MM-SS/<SimpleClassName>/<method>.console.log – complete stdout+stderr with headers/footers, useful for environment warnings and stack traces not present in HTML.
+3. Per-test plugin logs: log/test_YYYY-MM-DD_HH-MM-SS/<TestName_method>/latte_plugin_TIMESTAMP_*.log – LatteLogger debug/validation details captured inside the plugin layer.
+
+Note: The console prints "Command output logged to: ..." with the absolute path to the summary log, which helps locate the current run's folder quickly.

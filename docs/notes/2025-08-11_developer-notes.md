@@ -279,6 +279,22 @@ Autor: Junie (AI), čas: 2025-08-11 12:20
 ## 13) ITC – akcelerace testů (per‑test cíle a změny 2025‑08‑13)
 - Způsob: Dle ITC analyzován poslední report `build/reports/tests/test/index.html` (13. 8. 2025 09:24). Největší podíl času mají čistě lexerové testy, které zbytečně inicializují BasePlatformTestCase.
 
+## 14) Per‑metodové zachytávání konzole – implementace a doporučení (2025‑08‑13 11:06)
+- Stav: Aktivováno pro všechny JUnit4 testy přes `@Rule TestOutputCaptureRule` a záložní `@Before/@After` v `LattePluginTestBase`.
+- Co se ukládá:
+  - Kompletní výstup každé testovací metody (stdout i stderr) do souboru:
+    - `log/test_YYYY-MM-DD_HH-MM-SS/<Třída>/<metoda>.console.log`
+  - Per‑test plugin logy (LatteLogger – debug/validation) zůstávají v:
+    - `log/test_YYYY-MM-DD_HH-MM-SS/<TestName_method>/latte_plugin_TIMESTAMP_*.log`
+  - Souhrnný log běhu testů (čas, paměť, výsledky):
+    - `log/test_YYYY-MM-DD_HH-MM-SS/test_YYYY-MM-DD_HH-MM-SS.log`
+- Proč je to důležité: U pluginových testů IntelliJ se část výstupu (varování, známé chyby font/VFS) neobjevuje vždy v HTML reportu. Per‑metodové `.console.log` poskytuje plný pohled pro analýzu příčin selhání/timeoutu.
+- Postup analýzy (zkráceně):
+  1) Otevři souhrn: `log/test_<ts>/test_<ts>.log` a HTML report `build/reports/tests/test/index.html`.
+  2) Pro konkrétní fail/timeout otevři `log/test_<ts>/<Class>/<method>.console.log` – je tam kompletní konzole s prefixy `[STDOUT]`/`[STDERR]` a hlavičkou/patičkou.
+  3) Doplň do obrazu i per‑test plugin logy v `log/test_<ts>/<TestName_method>/latte_plugin_<ts>_*.log`.
+- Pozn.: Konzole vždy vypíše `Command output logged to: ...` s absolutní cestou na souhrnný log běhu, což usnadňuje navigaci.
+
 ### 13.1) Baseline časy (před změnou)
 - NAttributeSyntaxTest
   - testNSyntaxDoubleAttribute: 1.188 s
