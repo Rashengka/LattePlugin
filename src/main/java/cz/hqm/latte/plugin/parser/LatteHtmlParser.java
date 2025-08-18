@@ -80,20 +80,22 @@ public class LatteHtmlParser implements PsiParser {
             // Complete the root marker after successful parsing
             rootMarker.done(root);
         } catch (Exception e) {
-            // Complete the root marker even when an exception occurs
-            rootMarker.done(root);
-            
-            // Check if the exception is a control flow exception
+            // On exception, do not complete the root marker here because inner markers created by
+            // the delegate may still be open. Completing the outer marker would violate LIFO order
+            // and trigger 'Another not done marker added after this one'. Drop and rethrow instead.
+            rootMarker.drop();
+
+            // Propagate control flow exceptions without logging; otherwise log and rethrow so the
+            // caller (parse()) can rebuild a minimal valid tree safely.
             if (e instanceof ControlFlowException) {
-                // Control flow exceptions should be propagated, not logged
                 throw e;
             } else {
-                // Log any other exceptions that might occur
                 LatteLogger.warn(LOG, "Exception during parsing: " + e.getMessage(), e);
+                throw e;
             }
         }
         
-        // Note: rootMarker is now completed in all code paths above, so we don't need to do it here
+        // Note: rootMarker is completed only on the success path above.
     }
     
     @Override

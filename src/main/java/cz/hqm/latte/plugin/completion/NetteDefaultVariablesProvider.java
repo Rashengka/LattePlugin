@@ -17,6 +17,65 @@ import java.util.concurrent.atomic.AtomicReference;
  * Uses caching to improve performance.
  */
 public class NetteDefaultVariablesProvider {
+    // Timeout for completion operations in milliseconds (configurable via system property latte.completion.timeout.ms)
+    private static volatile long COMPLETION_TIMEOUT_MS = Long.getLong("latte.completion.timeout.ms", 2000L);
+    // Thread-local deadline for watchdog checks
+    private static final ThreadLocal<Long> DEADLINE = new ThreadLocal<>();
+
+    /**
+     * Test-only: override the timeout for completion.
+     */
+    public static void setCompletionTimeoutForTests(long millis) {
+        COMPLETION_TIMEOUT_MS = millis;
+    }
+
+    /**
+     * Test-only: reset timeout to default.
+     */
+    public static void resetCompletionTimeoutToDefault() {
+        COMPLETION_TIMEOUT_MS = Long.getLong("latte.completion.timeout.ms", 2000L);
+    }
+
+    private static void checkDeadlineOrCanceled() {
+        // Respect IDE cancellation first
+        try {
+            com.intellij.openapi.progress.ProgressManager.checkCanceled();
+        } catch (com.intellij.openapi.progress.ProcessCanceledException pce) {
+            throw pce;
+        }
+        Long dl = DEADLINE.get();
+        if (dl != null && System.currentTimeMillis() > dl) {
+            System.out.println("[DEBUG_LOG][TIMEOUT] Latte completion timed out – canceling computation");
+            throw new com.intellij.openapi.progress.ProcessCanceledException();
+        }
+    }
+
+    /**
+     * Begin a shared completion watchdog for the current thread if not already active.
+     * This allows contributors beyond variable collection (e.g., macros) to respect the same deadline.
+     */
+    public static void beginCompletionWatchdog() {
+        if (DEADLINE.get() == null) {
+            DEADLINE.set(System.currentTimeMillis() + COMPLETION_TIMEOUT_MS);
+        }
+    }
+
+    /**
+     * Public check that can be called from any contributor to honor the shared deadline.
+     * Throws ProcessCanceledException when the deadline is exceeded or when IDE cancellation is requested.
+     */
+    public static void checkDeadlineOrCanceledNow() {
+        checkDeadlineOrCanceled();
+    }
+
+    /**
+     * End the shared completion watchdog for the current thread.
+     * Always call this in a finally block after a completion attempt to avoid leaking the deadline
+     * to subsequent tasks possibly reusing the same pooled thread.
+     */
+    public static void endCompletionWatchdog() {
+        DEADLINE.remove();
+    }
     // Cache for variables by project
     private static final Map<Project, List<NetteVariable>> variablesCache = new ConcurrentHashMap<>();
     
@@ -34,62 +93,80 @@ public class NetteDefaultVariablesProvider {
      * @return A list of default variables
      */
     public static List<NetteVariable> getAllVariables(Project project) {
-        // Check if we need to update the cache
-        if (isCacheValid(project)) {
-            System.out.println("[DEBUG_LOG] Using cached variables for project: " + project.getName());
-            return variablesCache.get(project);
+        // Set deadline for this computation
+        if (DEADLINE.get() == null) {
+            DEADLINE.set(System.currentTimeMillis() + COMPLETION_TIMEOUT_MS);
         }
-        
-        System.out.println("[DEBUG_LOG] Cache invalid or not found, rebuilding variables for project: " + project.getName());
-        
-        // Cache is invalid or not found, rebuild it
-        List<NetteVariable> variables = new ArrayList<>();
-        
-        // Add variables from Nette Application
-        if (isNetteApplicationEnabled()) {
-            variables.addAll(getNetteApplicationVariables(project));
+        try {
+            checkDeadlineOrCanceled();
+            // Check if we need to update the cache
+            if (isCacheValid(project)) {
+                System.out.println("[DEBUG_LOG] Using cached variables for project: " + project.getName());
+                return variablesCache.get(project);
+            }
+
+            System.out.println("[DEBUG_LOG] Cache invalid or not found, rebuilding variables for project: " + project.getName());
+
+            // Cache is invalid or not found, rebuild it
+            List<NetteVariable> variables = new ArrayList<>();
+
+            // Add variables from Nette Application
+            if (isNetteApplicationEnabled()) {
+                checkDeadlineOrCanceled();
+                variables.addAll(getNetteApplicationVariables(project));
+            }
+
+            // Add variables from Nette Forms
+            if (isNetteFormsEnabled()) {
+                checkDeadlineOrCanceled();
+                variables.addAll(getNetteFormsVariables(project));
+            }
+
+            // Add variables from Nette Assets
+            if (isNetteAssetsEnabled()) {
+                checkDeadlineOrCanceled();
+                variables.addAll(getNetteAssetsVariables(project));
+            }
+
+            // Add variables from Nette Database
+            if (isNetteDatabaseEnabled()) {
+                checkDeadlineOrCanceled();
+                variables.addAll(getNetteDatabaseVariables(project));
+            }
+
+            // Add variables from Nette Security
+            if (isNetteSecurityEnabled()) {
+                checkDeadlineOrCanceled();
+                variables.addAll(getNetteSecurityVariables(project));
+            }
+
+            // Add variables from Nette HTTP
+            if (isNetteHttpEnabled()) {
+                checkDeadlineOrCanceled();
+                variables.addAll(getNetteHttpVariables(project));
+            }
+
+            // Add variables from Nette Mail
+            if (isNetteMailEnabled()) {
+                checkDeadlineOrCanceled();
+                variables.addAll(getNetteMailVariables(project));
+            }
+
+            // Log all variables for debugging
+            System.out.println("[DEBUG_LOG] All variables (" + variables.size() + "):");
+            for (NetteVariable variable : variables) {
+                checkDeadlineOrCanceled();
+                System.out.println("[DEBUG_LOG] - " + variable.getName() + " (" + variable.getType() + ")");
+            }
+
+            // Update the cache
+            updateCache(project, variables);
+
+            return variables;
+        } finally {
+            // Clean deadline for next operations on this thread
+            DEADLINE.remove();
         }
-        
-        // Add variables from Nette Forms
-        if (isNetteFormsEnabled()) {
-            variables.addAll(getNetteFormsVariables(project));
-        }
-        
-        // Add variables from Nette Assets
-        if (isNetteAssetsEnabled()) {
-            variables.addAll(getNetteAssetsVariables(project));
-        }
-        
-        // Add variables from Nette Database
-        if (isNetteDatabaseEnabled()) {
-            variables.addAll(getNetteDatabaseVariables(project));
-        }
-        
-        // Add variables from Nette Security
-        if (isNetteSecurityEnabled()) {
-            variables.addAll(getNetteSecurityVariables(project));
-        }
-        
-        // Add variables from Nette HTTP
-        if (isNetteHttpEnabled()) {
-            variables.addAll(getNetteHttpVariables(project));
-        }
-        
-        // Add variables from Nette Mail
-        if (isNetteMailEnabled()) {
-            variables.addAll(getNetteMailVariables(project));
-        }
-        
-        // Log all variables for debugging
-        System.out.println("[DEBUG_LOG] All variables (" + variables.size() + "):");
-        for (NetteVariable variable : variables) {
-            System.out.println("[DEBUG_LOG] - " + variable.getName() + " (" + variable.getType() + ")");
-        }
-        
-        // Update the cache
-        updateCache(project, variables);
-        
-        return variables;
     }
     
     /**
@@ -99,6 +176,7 @@ public class NetteDefaultVariablesProvider {
      * @return True if the cache is valid, false otherwise
      */
     private static synchronized boolean isCacheValid(Project project) {
+            checkDeadlineOrCanceled();
         // Check if we have a cache for this project
         if (!variablesCache.containsKey(project)) {
             System.out.println("[DEBUG_LOG] No cache found for project: " + project.getName());

@@ -3,6 +3,7 @@ package cz.hqm.latte.plugin.parser;
 import com.intellij.lang.PsiBuilder;
 import com.intellij.lang.html.HtmlParsing;
 import com.intellij.openapi.diagnostic.Logger;
+import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.util.Ref;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.tree.ICustomParsingType;
@@ -88,13 +89,15 @@ public class LatteHtmlParsing extends HtmlParsing {
      */
     @Override
     public void parseDocument() {
-        // Reset counters at the start of document parsing
-        currentParsingDepth = 0;
-        ifBlockLevel = 0;
+            // Allow cancellation
+            ProgressManager.checkCanceled();
+            // Reset counters at the start of document parsing
+            currentParsingDepth = 0;
+            ifBlockLevel = 0;
         
-        // Call the parent implementation
-        super.parseDocument();
-    }
+            // Call the parent implementation
+            super.parseDocument();
+        }
     
     /**
      * Overrides the parseTag method to add depth tracking.
@@ -102,41 +105,44 @@ public class LatteHtmlParsing extends HtmlParsing {
      */
     @Override
     public void parseTag() {
-        // Check if we've reached the maximum parsing depth
-        if (!incrementDepth()) {
-            // If max depth reached, create a simple tag and return
-            if (token() == XmlTokenType.XML_START_TAG_START) {
-                PsiBuilder.Marker tag = mark();
-                advance(); // consume start tag
+            // Allow cancellation
+            ProgressManager.checkCanceled();
+            // Check if we've reached the maximum parsing depth
+            if (!incrementDepth()) {
+                // If max depth reached, create a simple tag and return
+                if (token() == XmlTokenType.XML_START_TAG_START) {
+                    PsiBuilder.Marker tag = mark();
+                    advance(); // consume start tag
                 
-                // Consume tag name if present
-                if (token() == XmlTokenType.XML_NAME) {
-                    advance();
+                    // Consume tag name if present
+                    if (token() == XmlTokenType.XML_NAME) {
+                        advance();
+                    }
+                
+                    // Consume until tag end
+                    while (!eof() && token() != XmlTokenType.XML_TAG_END && token() != XmlTokenType.XML_EMPTY_ELEMENT_END) {
+                        ProgressManager.checkCanceled();
+                        advance();
+                    }
+                
+                    // Consume tag end if present
+                    if (token() == XmlTokenType.XML_TAG_END || token() == XmlTokenType.XML_EMPTY_ELEMENT_END) {
+                        advance();
+                    }
+                
+                    tag.done(XmlElementType.HTML_TAG);
                 }
-                
-                // Consume until tag end
-                while (!eof() && token() != XmlTokenType.XML_TAG_END && token() != XmlTokenType.XML_EMPTY_ELEMENT_END) {
-                    advance();
-                }
-                
-                // Consume tag end if present
-                if (token() == XmlTokenType.XML_TAG_END || token() == XmlTokenType.XML_EMPTY_ELEMENT_END) {
-                    advance();
-                }
-                
-                tag.done(XmlElementType.HTML_TAG);
+                return;
             }
-            return;
-        }
         
-        try {
-            // Call the parent implementation
-            super.parseTag();
-        } finally {
-            // Always decrement the depth counter when exiting
-            decrementDepth();
+            try {
+                // Call the parent implementation
+                super.parseTag();
+            } finally {
+                // Always decrement the depth counter when exiting
+                decrementDepth();
+            }
         }
-    }
     
     @Override
     protected boolean hasCustomTopLevelContent() {
@@ -160,60 +166,65 @@ public class LatteHtmlParsing extends HtmlParsing {
      */
     @Override
     protected void parseAttribute() {
-        // Check if we've reached the maximum parsing depth
-        if (!incrementDepth()) {
-            // If max depth reached, consume the attribute name and return
-            if (token() == XmlTokenType.XML_NAME) {
-                advance();
+            // Allow cancellation
+            ProgressManager.checkCanceled();
+            // Check if we've reached the maximum parsing depth
+            if (!incrementDepth()) {
+                // If max depth reached, consume the attribute name and return
+                if (token() == XmlTokenType.XML_NAME) {
+                    advance();
+                }
+                decrementDepth();
+                return;
             }
-            decrementDepth();
-            return;
-        }
         
-        try {
-            // Call the parent implementation
-            super.parseAttribute();
-        } finally {
-            // Always decrement the depth counter when exiting
-            decrementDepth();
+            try {
+                // Call the parent implementation
+                super.parseAttribute();
+            } finally {
+                // Always decrement the depth counter when exiting
+                decrementDepth();
+            }
         }
-    }
     
     /**
      * Overrides the parseAttributeValue method to add depth tracking.
      */
     @Override
     protected void parseAttributeValue() {
-        // Check if we've reached the maximum parsing depth
-        if (!incrementDepth()) {
-            // If max depth reached, consume until attribute value end and return
-            PsiBuilder.Marker attValue = mark();
+            // Allow cancellation
+            ProgressManager.checkCanceled();
+            // Check if we've reached the maximum parsing depth
+            if (!incrementDepth()) {
+                // If max depth reached, consume until attribute value end and return
+                PsiBuilder.Marker attValue = mark();
             
-            if (token() == XmlTokenType.XML_ATTRIBUTE_VALUE_START_DELIMITER) {
-                advance();
-                while (!eof() && token() != XmlTokenType.XML_ATTRIBUTE_VALUE_END_DELIMITER) {
+                if (token() == XmlTokenType.XML_ATTRIBUTE_VALUE_START_DELIMITER) {
+                    advance();
+                    while (!eof() && token() != XmlTokenType.XML_ATTRIBUTE_VALUE_END_DELIMITER) {
+                        ProgressManager.checkCanceled();
+                        advance();
+                    }
+                    if (token() == XmlTokenType.XML_ATTRIBUTE_VALUE_END_DELIMITER) {
+                        advance();
+                    }
+                } else if (token() != XmlTokenType.XML_TAG_END && token() != XmlTokenType.XML_EMPTY_ELEMENT_END) {
                     advance();
                 }
-                if (token() == XmlTokenType.XML_ATTRIBUTE_VALUE_END_DELIMITER) {
-                    advance();
-                }
-            } else if (token() != XmlTokenType.XML_TAG_END && token() != XmlTokenType.XML_EMPTY_ELEMENT_END) {
-                advance();
+            
+                attValue.done(getHtmlAttributeValueElementType());
+                decrementDepth();
+                return;
             }
-            
-            attValue.done(getHtmlAttributeValueElementType());
-            decrementDepth();
-            return;
-        }
         
-        try {
-            // Call the parent implementation
-            super.parseAttributeValue();
-        } finally {
-            // Always decrement the depth counter when exiting
-            decrementDepth();
+            try {
+                // Call the parent implementation
+                super.parseAttributeValue();
+            } finally {
+                // Always decrement the depth counter when exiting
+                decrementDepth();
+            }
         }
-    }
 
     @Override
     protected boolean hasCustomTagContent() {
@@ -223,26 +234,28 @@ public class LatteHtmlParsing extends HtmlParsing {
 
     @Override
     protected PsiBuilder.@Nullable Marker parseCustomTagContent(@Nullable PsiBuilder.@Nullable Marker xmlText) {
-        // Check if we've reached the maximum parsing depth
-        if (!incrementDepth()) {
-            LatteLogger.warn(LOG, "Maximum parsing depth reached in parseCustomTagContent. Skipping custom content parsing.");
-            decrementDepth();
-            return xmlText;
-        }
-        
-        try {
-            // Handle Latte macros inside tags
-            if (isLatteMacro()) {
-                xmlText = terminateText(xmlText);
-                parseLatteMacro();
+            // Allow cancellation
+            ProgressManager.checkCanceled();
+            // Check if we've reached the maximum parsing depth
+            if (!incrementDepth()) {
+                LatteLogger.warn(LOG, "Maximum parsing depth reached in parseCustomTagContent. Skipping custom content parsing.");
+                decrementDepth();
                 return xmlText;
             }
-            return super.parseCustomTagContent(xmlText);
-        } finally {
-            // Always decrement the depth counter when exiting
-            decrementDepth();
+        
+            try {
+                // Handle Latte macros inside tags
+                if (isLatteMacro()) {
+                    xmlText = terminateText(xmlText);
+                    parseLatteMacro();
+                    return xmlText;
+                }
+                return super.parseCustomTagContent(xmlText);
+            } finally {
+                // Always decrement the depth counter when exiting
+                decrementDepth();
+            }
         }
-    }
 
     @Override
     protected boolean hasCustomTagHeaderContent() {
@@ -252,25 +265,27 @@ public class LatteHtmlParsing extends HtmlParsing {
 
     @Override
     protected void parseCustomTagHeaderContent() {
-        // Check if we've reached the maximum parsing depth
-        if (!incrementDepth()) {
-            LatteLogger.warn(LOG, "Maximum parsing depth reached in parseCustomTagHeaderContent. Skipping custom header parsing.");
-            decrementDepth();
-            return;
-        }
-        
-        try {
-            // Handle Latte macros in tag headers
-            if (isLatteMacro()) {
-                parseLatteMacro();
-            } else {
-                super.parseCustomTagHeaderContent();
+            // Allow cancellation
+            ProgressManager.checkCanceled();
+            // Check if we've reached the maximum parsing depth
+            if (!incrementDepth()) {
+                LatteLogger.warn(LOG, "Maximum parsing depth reached in parseCustomTagHeaderContent. Skipping custom header parsing.");
+                decrementDepth();
+                return;
             }
-        } finally {
-            // Always decrement the depth counter when exiting
-            decrementDepth();
+        
+            try {
+                // Handle Latte macros in tag headers
+                if (isLatteMacro()) {
+                    parseLatteMacro();
+                } else {
+                    super.parseCustomTagHeaderContent();
+                }
+            } finally {
+                // Always decrement the depth counter when exiting
+                decrementDepth();
+            }
         }
-    }
 
     @Override
     protected boolean hasCustomAttributeValue() {
@@ -280,25 +295,27 @@ public class LatteHtmlParsing extends HtmlParsing {
 
     @Override
     protected void parseCustomAttributeValue() {
-        // Check if we've reached the maximum parsing depth
-        if (!incrementDepth()) {
-            LatteLogger.warn(LOG, "Maximum parsing depth reached in parseCustomAttributeValue. Skipping custom attribute value parsing.");
-            decrementDepth();
-            return;
-        }
-        
-        try {
-            // Handle Latte macros in attribute values
-            if (isLatteMacro()) {
-                parseLatteMacro();
-            } else {
-                super.parseCustomAttributeValue();
+            // Allow cancellation
+            ProgressManager.checkCanceled();
+            // Check if we've reached the maximum parsing depth
+            if (!incrementDepth()) {
+                LatteLogger.warn(LOG, "Maximum parsing depth reached in parseCustomAttributeValue. Skipping custom attribute value parsing.");
+                decrementDepth();
+                return;
             }
-        } finally {
-            // Always decrement the depth counter when exiting
-            decrementDepth();
+        
+            try {
+                // Handle Latte macros in attribute values
+                if (isLatteMacro()) {
+                    parseLatteMacro();
+                } else {
+                    super.parseCustomAttributeValue();
+                }
+            } finally {
+                // Always decrement the depth counter when exiting
+                decrementDepth();
+            }
         }
-    }
 
     /**
      * Checks if the current token is the start of a Latte macro.
@@ -349,6 +366,8 @@ public class LatteHtmlParsing extends HtmlParsing {
             // Add iteration limit to prevent infinite loops
             int iterations = 0;
             while (!eof()) {
+                // Allow cancellation
+                ProgressManager.checkCanceled();
                 // Check if we've exceeded the maximum number of iterations
                 if (++iterations > MAX_MACRO_ITERATIONS) {
                     LatteLogger.warn(LOG, "Maximum iterations reached while parsing Latte macro: " + MAX_MACRO_ITERATIONS + 
@@ -391,6 +410,8 @@ public class LatteHtmlParsing extends HtmlParsing {
             // Add iteration limit to prevent infinite loops
             int iterations = 0;
             while (!eof()) {
+                // Allow cancellation
+                ProgressManager.checkCanceled();
                 // Check if we've exceeded the maximum number of iterations
                 if (++iterations > MAX_MACRO_ITERATIONS) {
                     LatteLogger.warn(LOG, "Maximum iterations reached while parsing Latte macro: " + MAX_MACRO_ITERATIONS + 

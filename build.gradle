@@ -49,7 +49,16 @@ ext.logToFile = { String taskName, String output ->
                 logFile = file("${logsDir}/${taskName}_${timestamp}.log")
             }
             if (!logFile.exists()) {
-                logFile.text = "=== ${taskName} executed at ${timestamp} ===\n\n${output}\n"
+                // Prefer the start time captured in test.doFirst if available
+                def humanTs = project.hasProperty('testStartHumanTs') && project.ext.testStartHumanTs ? project.ext.testStartHumanTs : new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date())
+                // For test task, we want a header only; for others, include output immediately
+                if (taskName == 'test') {
+                    logFile.text = "=== ${taskName} executed at ${timestamp} ===\nTest start time: ${humanTs}\n\n"
+                    // Append the output buffer after the header
+                    logFile.append("${output}\n")
+                } else {
+                    logFile.text = "=== ${taskName} executed at ${timestamp} ===\n\n${output}\n"
+                }
             } else {
                 // Append to preserve any lines written by test-side rules (timing/memory)
                 logFile.append("${output}\n")
@@ -332,13 +341,22 @@ test {
         exceptionFormat = "full"
     }
 
+    // --- Internal counters to produce accurate summary and detect global timeouts ---
+    def startedAtMsByFqn = new LinkedHashMap<String, Long>()
+    def timeoutedFqns = new LinkedHashSet<String>()
+    def totalCount = 0
+    def successCount = 0
+    def failedCount = 0
+    def skippedCount = 0
+    def outputBuffer = new StringBuilder()
+
     // Configure memory settings for test execution
     minHeapSize = '512m'
     maxHeapSize = '1024m'
 
     // Set overall Gradle test task timeout (individual tests have their own limits; this is a global guard)
-    // Increased to avoid false positives on heavy IntelliJ-based tests; rely on per-test timeouts to catch hangs
-    timeout = Duration.ofMinutes(20)
+    // Reduced from 20 minutes to 5 minutes to fail fast on global hangs, per issue requirements.
+    timeout = Duration.ofMinutes(5)
 
     // Run tests in isolated mode to avoid cross-test interference
     // - No parallel forks
@@ -473,6 +491,21 @@ test {
             println "Logs will be written to: ${file(logsDir).absolutePath}"
         }
 
+        // Capture and persist human-readable test start time before any tests run
+        def humanStartTs = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date())
+        project.ext.testStartHumanTs = humanStartTs
+        // Pre-create the main test log file with header so that later appends do not recreate header with 'now'
+        if (enableCommandLogging && enableFileOutput) {
+            def ts = buildTimestamp
+            def dir = file("${logsDir}/test_${ts}")
+            if (!dir.exists()) { dir.mkdirs() }
+            def mainLog = new File(dir, "test_${ts}.log")
+            if (!mainLog.exists()) {
+                mainLog.text = "=== test executed at ${ts} ===\nTest start time: ${humanStartTs}\n\n"
+                println "Initialized test log: ${mainLog.absolutePath}"
+            }
+        }
+
         println "=== JVM Arguments for tests ==="
         jvmArgs.each { arg ->
             println "  $arg"
@@ -493,16 +526,51 @@ test {
         println ""
     }
     
-    // Capture and log the output
-    def outputBuffer = new StringBuilder()
-    
     // We can't directly redirect standardOutput and standardError for test tasks
     // because they're used by the test framework, but we can capture the output
     // by adding a TestListener
-    
+
+    beforeTest { desc ->
+        if (enableCommandLogging) {
+            def fqn = "${desc.className}.${desc.name}"
+            startedAtMsByFqn.put(fqn, System.currentTimeMillis())
+            totalCount++
+        }
+    }
+
     afterTest { desc, result ->
         if (enableCommandLogging) {
-            outputBuffer.append("Test: ${desc.className}.${desc.name} - ${result.resultType}\n")
+            def fqn = "${desc.className}.${desc.name}"
+            def durMs = (result.endTime - result.startTime)
+            def durSec = durMs / 1000.0
+            def took = String.format(java.util.Locale.US, " [took %.4fs]", durSec)
+
+            // Decide effective result, correcting SKIPPED caused by global timeout
+            def effectiveType = result.resultType
+            try {
+                long globalTimeoutMs = timeout?.toMillis() ?: (5L * 60L * 1000L)
+                // If Gradle marks SKIPPED but duration ~= global timeout, treat as TIMEOUTED
+                if (result.resultType?.name() == 'SKIPPED' && durMs >= Math.max(0L, globalTimeoutMs - 1500L)) {
+                    effectiveType = 'TIMEOUTED'
+                    timeoutedFqns.add(fqn)
+                }
+            } catch (Throwable ignored) { /* fall back to original type */ }
+
+            // Update counters
+            if ("SUCCESS".equals(String.valueOf(effectiveType))) {
+                successCount++
+            } else if ("FAILURE".equals(String.valueOf(effectiveType))) {
+                failedCount++
+            } else if ("SKIPPED".equals(String.valueOf(effectiveType))) {
+                skippedCount++
+            } else if ("TIMEOUTED".equals(String.valueOf(effectiveType))) {
+                // custom bucket
+            }
+            // Remove from running set if present
+            startedAtMsByFqn.remove(fqn)
+
+            // Append per-test line, with TIMEOUTED if corrected
+            outputBuffer.append("Test: ${fqn} - ${effectiveType}${took}\n")
             if (result.exception) {
                 outputBuffer.append("Exception: ${result.exception}\n")
                 outputBuffer.append("Stack trace: ${result.exception.stackTrace.join('\n')}\n")
@@ -513,11 +581,57 @@ test {
     afterSuite { desc, result ->
         if (enableCommandLogging && desc.parent == null) {
             // This is the root suite, so all tests are complete
-            outputBuffer.append("\nTest summary: ${result.testCount} tests, " +
-                    "${result.successfulTestCount} succeeded, " +
-                    "${result.failedTestCount} failed, " +
-                    "${result.skippedTestCount} skipped\n")
-            
+            def summaryTs = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date())
+
+            // Any tests that started but never finished are timeouted (likely due to global task timeout)
+            long nowMs = System.currentTimeMillis()
+            startedAtMsByFqn.each { fqn, startedMs ->
+                // Append a synthetic TIMEOUTED line with best-effort duration
+                double durSec = Math.max(0L, nowMs - (startedMs ?: nowMs)) / 1000.0
+                def took = String.format(java.util.Locale.US, " [took %.4fs]", durSec)
+                outputBuffer.append("Test: ${fqn} - TIMEOUTED${took}\n")
+                timeoutedFqns.add(fqn)
+            }
+
+            // Count watchdog-reported timeouts and merge distinct FQNs
+            try {
+                def ts = buildTimestamp
+                def dir = file("${logsDir}/test_${ts}")
+                def mainLog = new File(dir, "test_${ts}.log")
+                if (mainLog.exists()) {
+                    mainLog.eachLine { line ->
+                        if (line != null && line.contains("[TEST_TIMEOUT] TIMEOUT")) {
+                            // Try to extract FQN after token
+                            def idx = line.indexOf('] TIMEOUT')
+                            if (idx >= 0) {
+                                def rest = line.substring(idx + "] TIMEOUT".length()).trim()
+                                def fqn = rest.contains(" after ") ? rest.substring(0, rest.indexOf(" after ")).trim() : null
+                                if (fqn) { timeoutedFqns.add(fqn) } else { /* count anyway */ }
+                            } else {
+                                // No parse, still count
+                                timeoutedFqns.add("__unknown__" + System.nanoTime())
+                            }
+                        }
+                    }
+                }
+            } catch (Throwable ignored) {
+                // Ignore parsing issues; logging must never break the build
+            }
+
+            int timeouted = timeoutedFqns.size()
+
+            // Compose summary using our counters to avoid Gradle mislabeling
+            int computedTotal = totalCount
+            int computedSucceeded = successCount
+            int computedFailed = failedCount
+            int computedSkipped = skippedCount
+
+            outputBuffer.append("\nTest summary at ${summaryTs}: ${computedTotal} tests, " +
+                    "${computedSucceeded} succeeded, " +
+                    "${computedFailed} failed, " +
+                    "${computedSkipped} skipped, " +
+                    "${timeouted} timeouted\n")
+
             logToFile('test', outputBuffer.toString())
         }
     }

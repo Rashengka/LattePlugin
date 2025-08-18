@@ -3,6 +3,7 @@ package cz.hqm.latte.plugin.parser;
 import com.intellij.lang.PsiBuilder;
 import com.intellij.openapi.diagnostic.ControlFlowException;
 import com.intellij.openapi.diagnostic.Logger;
+import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.xml.XmlElementType;
 import com.intellij.psi.xml.XmlTokenType;
@@ -88,6 +89,8 @@ public class SafeLatteHtmlParsing extends LatteHtmlParsing {
         
         // Process tokens until we reach the end or exceed the limits
         while (!eof() && tokensProcessed < MAX_TOKENS_TO_PROCESS) {
+            // Allow cancellation
+            ProgressManager.checkCanceled();
             // Check if we've exceeded the maximum parsing time
             long currentTime = System.currentTimeMillis();
             if (currentTime - startTime > MAX_PARSING_TIME_MS) {
@@ -167,6 +170,39 @@ public class SafeLatteHtmlParsing extends LatteHtmlParsing {
         document.done(XmlElementType.HTML_DOCUMENT);
     }
     
+    @Override
+    public void parseTag() {
+        // Allow cancellation
+        ProgressManager.checkCanceled();
+        long currentTime = System.currentTimeMillis();
+        boolean nearBudget = (currentTime - startTime) > (MAX_PARSING_TIME_MS / 2)
+                || tokensProcessed > (MAX_TOKENS_TO_PROCESS / 2);
+        if (nearBudget) {
+            // Fast-path: consume a tag quickly to avoid deep header parsing that could hang
+            PsiBuilder.Marker tag = mark();
+            if (token() == XmlTokenType.XML_START_TAG_START) {
+                advance();
+                if (token() == XmlTokenType.XML_NAME) {
+                    advance();
+                }
+                while (!eof() && token() != XmlTokenType.XML_TAG_END && token() != XmlTokenType.XML_EMPTY_ELEMENT_END) {
+                    ProgressManager.checkCanceled();
+                    advance();
+                }
+                if (token() == XmlTokenType.XML_TAG_END || token() == XmlTokenType.XML_EMPTY_ELEMENT_END) {
+                    advance();
+                }
+                tag.done(XmlElementType.HTML_TAG);
+            } else {
+                // Not actually at a tag start, delegate
+                super.parseTag();
+            }
+            return;
+        }
+        // Default behavior
+        super.parseTag();
+    }
+
     /**
      * Creates a minimal valid document structure.
      * This method is called when an exception occurs during parsing.

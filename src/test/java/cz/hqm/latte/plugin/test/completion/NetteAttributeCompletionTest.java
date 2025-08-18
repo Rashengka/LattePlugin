@@ -2,7 +2,7 @@ package cz.hqm.latte.plugin.test.completion;
 
 import com.intellij.codeInsight.completion.CompletionType;
 import org.junit.Test;
-import org.junit.Ignore;
+import org.junit.BeforeClass;
 import cz.hqm.latte.plugin.test.LattePluginTestBase;
 
 import java.util.List;
@@ -11,8 +11,22 @@ import java.util.List;
  * Tests for context-aware completion of Nette n: attributes in HTML/XML tags.
  * Verifies that n: attributes are only suggested when inside an HTML/XML tag.
  */
-@Ignore("Skipped on CI/macOS with JDK 17 + IntelliJ 2023.1.5 due to known Font2D reflection issues affecting editor services.")
 public class NetteAttributeCompletionTest extends LattePluginTestBase {
+
+    @BeforeClass
+    public static void checkEnvironmentOrSkip() {
+        try {
+            // Try to touch editor font options early; this will indirectly initialize FontFamilyService
+            com.intellij.openapi.editor.colors.impl.AppEditorFontOptions.getInstance();
+        } catch (Throwable t) {
+            String msg = String.valueOf(t);
+            if (msg.contains("sun.font.Font2D.getTypographicFamilyName") || msg.contains("FontFamilyServiceImpl")) {
+                System.out.println("[DEBUG_LOG] Skipping NetteAttributeCompletionTest in @BeforeClass due to JDK font reflection issue: " + msg);
+                org.junit.Assume.assumeTrue("Skipping due to known JDK font reflection issue", false);
+            }
+            // If it's another error, don't swallow it here; let tests proceed to expose it
+        }
+    }
 
     /**
      * Tests that n: attributes are suggested when the cursor is inside an HTML/XML tag.

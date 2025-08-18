@@ -250,6 +250,15 @@ public class LatteCompletionContributor extends CompletionContributor {
     private synchronized void initMacrosCache() {
         LatteVersion currentVersion = LatteVersionManager.getCurrentVersion();
         LatteSettings currentSettings = LatteSettings.getInstance();
+
+        // Respect shared completion watchdog and IDE cancellation at the very start
+        try {
+            com.intellij.openapi.progress.ProgressManager.checkCanceled();
+            NetteDefaultVariablesProvider.checkDeadlineOrCanceledNow();
+        } catch (com.intellij.openapi.progress.ProcessCanceledException pce) {
+            System.out.println("[DEBUG_LOG][TIMEOUT] initMacrosCache canceled at start");
+            throw pce;
+        }
         
         System.out.println("[DEBUG_LOG] Initializing macros cache for version: " + currentVersion);
         
@@ -258,7 +267,6 @@ public class LatteCompletionContributor extends CompletionContributor {
         // Add version-specific macros
         if (LatteVersionManager.isVersion4x()) {
             System.out.println("[DEBUG_LOG] Adding Latte 4.0+ macros to cache");
-            // Latte 4.0+ specific macros
             macros.add(LookupElementBuilder.create("typeCheck").bold().withTypeText("Latte 4.0+ macro"));
             macros.add(LookupElementBuilder.create("strictTypes").bold().withTypeText("Latte 4.0+ macro"));
             macros.add(LookupElementBuilder.create("asyncInclude").bold().withTypeText("Latte 4.0+ macro"));
@@ -266,15 +274,7 @@ public class LatteCompletionContributor extends CompletionContributor {
             macros.add(LookupElementBuilder.create("inject").bold().withTypeText("Latte 4.0+ macro"));
             macros.add(LookupElementBuilder.create("_").bold().withTypeText("Latte 4.0+ macro"));
             macros.add(LookupElementBuilder.create("=").bold().withTypeText("Latte 4.0+ macro"));
-
-            // Also include 3.0+ macros as they are likely still supported in 4.0+
-            macros.add(LookupElementBuilder.create("varType").bold().withTypeText("Latte 3.0+ macro"));
-            macros.add(LookupElementBuilder.create("templateType").bold().withTypeText("Latte 3.0+ macro"));
-            macros.add(LookupElementBuilder.create("php").bold().withTypeText("Latte 3.0+ macro"));
-            macros.add(LookupElementBuilder.create("do").bold().withTypeText("Latte 3.0+ macro"));
-            macros.add(LookupElementBuilder.create("parameters").bold().withTypeText("Latte 3.0+ macro"));
         } else if (LatteVersionManager.isVersion3x()) {
-            // Latte 3.0+ specific macros
             macros.add(LookupElementBuilder.create("varType").bold().withTypeText("Latte 3.0+ macro"));
             macros.add(LookupElementBuilder.create("templateType").bold().withTypeText("Latte 3.0+ macro"));
             macros.add(LookupElementBuilder.create("php").bold().withTypeText("Latte 3.0+ macro"));
@@ -290,6 +290,15 @@ public class LatteCompletionContributor extends CompletionContributor {
             macros.add(LookupElementBuilder.create("r").bold().withTypeText("Latte 2.x macro"));
             macros.add(LookupElementBuilder.create("_").bold().withTypeText("Latte 2.x macro"));
             macros.add(LookupElementBuilder.create("=").bold().withTypeText("Latte 2.x macro"));
+        }
+
+        // Early cancellation checkpoint before adding common macros
+        try {
+            com.intellij.openapi.progress.ProgressManager.checkCanceled();
+            NetteDefaultVariablesProvider.checkDeadlineOrCanceledNow();
+        } catch (com.intellij.openapi.progress.ProcessCanceledException pce) {
+            System.out.println("[DEBUG_LOG][TIMEOUT] initMacrosCache canceled before common macros");
+            throw pce;
         }
 
         // Add common macros for all versions
@@ -326,25 +335,31 @@ public class LatteCompletionContributor extends CompletionContributor {
         macros.add(LookupElementBuilder.create("skipIf").bold().withTypeText("Latte macro"));
         macros.add(LookupElementBuilder.create("breakIf").bold().withTypeText("Latte macro"));
 
+        // Checkpoint before Nette package macros/provider
+        try {
+            com.intellij.openapi.progress.ProgressManager.checkCanceled();
+            NetteDefaultVariablesProvider.checkDeadlineOrCanceledNow();
+        } catch (com.intellij.openapi.progress.ProcessCanceledException pce) {
+            System.out.println("[DEBUG_LOG][TIMEOUT] initMacrosCache canceled before provider macros");
+            throw pce;
+        }
+
         // Add Nette package macros if available
         try {
             System.out.println("[DEBUG_LOG] Adding Nette package macros to cache");
             
-            // Application macros
             if (currentSettings.isEnableNetteApplication()) {
                 macros.add(LookupElementBuilder.create("link").bold().withTypeText("nette/application"));
                 macros.add(LookupElementBuilder.create("plink").bold().withTypeText("nette/application"));
                 macros.add(LookupElementBuilder.create("control").bold().withTypeText("nette/application"));
             }
             
-            // Forms macros
             if (currentSettings.isEnableNetteForms()) {
                 macros.add(LookupElementBuilder.create("form").bold().withTypeText("nette/forms"));
                 macros.add(LookupElementBuilder.create("input").bold().withTypeText("nette/forms"));
                 macros.add(LookupElementBuilder.create("label").bold().withTypeText("nette/forms"));
             }
             
-            // Assets macros
             if (currentSettings.isEnableNetteAssets()) {
                 macros.add(LookupElementBuilder.create("css").bold().withTypeText("nette/assets"));
                 macros.add(LookupElementBuilder.create("js").bold().withTypeText("nette/assets"));
@@ -356,11 +371,18 @@ public class LatteCompletionContributor extends CompletionContributor {
             System.out.println("[DEBUG_LOG] Number of macros from provider for cache: " + providerMacros.size());
             
             for (NetteMacro macro : providerMacros) {
+                // Periodic cancellation/deadline checks within the loop
+                com.intellij.openapi.progress.ProgressManager.checkCanceled();
+                NetteDefaultVariablesProvider.checkDeadlineOrCanceledNow();
+
                 macros.add(LookupElementBuilder.create(macro.getName())
                         .bold()
                         .withTypeText(macro.getTypeText())
                         .withTailText(" - " + macro.getDescription(), true));
             }
+        } catch (com.intellij.openapi.progress.ProcessCanceledException pce) {
+            System.out.println("[DEBUG_LOG][TIMEOUT] initMacrosCache canceled during provider macros");
+            throw pce;
         } catch (Exception e) {
             System.out.println("[DEBUG_LOG] Error adding Nette package macros to cache: " + e.getMessage());
             e.printStackTrace();
@@ -430,90 +452,103 @@ public class LatteCompletionContributor extends CompletionContributor {
     private void addCachedMacros(@NotNull CompletionResultSet result, @NotNull com.intellij.openapi.project.Project project, boolean afterClosedTag) {
         System.out.println("[DEBUG_LOG] Adding cached macros to completion result with project");
         
-        // Ensure cache initialization has been started
-        if (!cacheInitializationStarted.get()) {
-            System.out.println("[DEBUG_LOG] Cache initialization not started, starting now");
-            initCachesInBackground();
-        }
-        
-        // Check if version or settings have changed
-        LatteVersion currentVersion = LatteVersionManager.getCurrentVersion();
-        LatteSettings currentSettings = LatteSettings.getInstance();
-        
-        boolean needsFullUpdate = false;
-        
-        if (cachedVersion.get() == null || !cachedVersion.get().equals(currentVersion) ||
-            cachedSettings.get() == null || !settingsEqual(cachedSettings.get(), currentSettings)) {
-            System.out.println("[DEBUG_LOG] Version or settings changed, updating all caches");
-            needsFullUpdate = true;
-        }
-        
-        if (needsFullUpdate) {
-            // Check if we're running in a test environment
-            boolean isTestMode = ApplicationManager.getApplication().isUnitTestMode();
+        // Engage shared completion watchdog so macros path respects deadlines/timeouts too
+        try {
+            NetteDefaultVariablesProvider.beginCompletionWatchdog();
+            NetteDefaultVariablesProvider.checkDeadlineOrCanceledNow();
             
-            if (isTestMode) {
-                System.out.println("[DEBUG_LOG] Test environment detected, updating caches synchronously");
-                try {
-                    updateAllCaches(project);
-                } catch (Exception e) {
-                    System.out.println("[DEBUG_LOG] Error updating caches synchronously: " + e.getMessage());
-                    e.printStackTrace();
-                }
-            } else {
-                // In normal mode, schedule the update in a background thread
-                System.out.println("[DEBUG_LOG] Scheduling cache update in background thread");
-                ApplicationManager.getApplication().executeOnPooledThread(() -> {
+            // Ensure cache initialization has been started
+            if (!cacheInitializationStarted.get()) {
+                System.out.println("[DEBUG_LOG] Cache initialization not started, starting now");
+                initCachesInBackground();
+            }
+            
+            // Check if version or settings have changed
+            LatteVersion currentVersion = LatteVersionManager.getCurrentVersion();
+            LatteSettings currentSettings = LatteSettings.getInstance();
+            
+            boolean needsFullUpdate = false;
+            
+            if (cachedVersion.get() == null || !cachedVersion.get().equals(currentVersion) ||
+                cachedSettings.get() == null || !settingsEqual(cachedSettings.get(), currentSettings)) {
+                System.out.println("[DEBUG_LOG] Version or settings changed, updating all caches");
+                needsFullUpdate = true;
+            }
+            
+            if (needsFullUpdate) {
+                // Check if we're running in a test environment
+                boolean isTestMode = ApplicationManager.getApplication().isUnitTestMode();
+                
+                if (isTestMode) {
+                    System.out.println("[DEBUG_LOG] Test environment detected, updating caches synchronously");
                     try {
+                        NetteDefaultVariablesProvider.checkDeadlineOrCanceledNow();
                         updateAllCaches(project);
+                    } catch (com.intellij.openapi.progress.ProcessCanceledException pce) {
+                        System.out.println("[DEBUG_LOG][TIMEOUT] Cache update canceled due to timeout");
+                        throw pce;
                     } catch (Exception e) {
-                        System.out.println("[DEBUG_LOG] Error updating caches in background: " + e.getMessage());
+                        System.out.println("[DEBUG_LOG] Error updating caches synchronously: " + e.getMessage());
                         e.printStackTrace();
                     }
-                });
-            }
-        } else {
-            // Just check if macros cache needs updating, but don't block if it's not ready
-            if (cachedMacros.get() != null) {
-                checkAndUpdateCache();
-            }
-        }
-        
-        // Add macros from cache to results
-        List<LookupElement> macros = cachedMacros.get();
-        if (macros != null) {
-            System.out.println("[DEBUG_LOG] Adding " + macros.size() + " macros from cache");
-            System.out.println("[DEBUG_LOG] afterClosedTag (from parameters): " + afterClosedTag);
-            
-            for (LookupElement macro : macros) {
-                // If we're after a closed tag, don't add n: attributes
-                if (afterClosedTag && macro.getLookupString().startsWith("n:")) {
-                    System.out.println("[DEBUG_LOG] Skipping n: attribute after closed tag: " + macro.getLookupString());
-                    continue;
+                } else {
+                    // In normal mode, schedule the update in a background thread
+                    System.out.println("[DEBUG_LOG] Scheduling cache update in background thread");
+                    ApplicationManager.getApplication().executeOnPooledThread(() -> {
+                        try {
+                            updateAllCaches(project);
+                        } catch (Exception e) {
+                            System.out.println("[DEBUG_LOG] Error updating caches in background: " + e.getMessage());
+                            e.printStackTrace();
+                        }
+                    });
                 }
-                result.addElement(macro);
-            }
-        } else {
-            System.out.println("[DEBUG_LOG] Macros cache is null, initializing on demand");
-            // Initialize on demand but in a lightweight way to avoid freezing
-            List<LookupElement> basicMacros = new ArrayList<>();
-            // Add a minimal set of common macros for immediate use
-            basicMacros.add(LookupElementBuilder.create("if").bold().withTypeText("Latte macro"));
-            basicMacros.add(LookupElementBuilder.create("foreach").bold().withTypeText("Latte macro"));
-            basicMacros.add(LookupElementBuilder.create("include").bold().withTypeText("Latte macro"));
-            basicMacros.add(LookupElementBuilder.create("block").bold().withTypeText("Latte macro"));
-            
-            // Add these basic macros to the result
-            for (LookupElement macro : basicMacros) {
-                // If we're after a closed tag, don't add n: attributes
-                if (afterClosedTag && macro.getLookupString().startsWith("n:")) {
-                    continue;
+            } else {
+                // Just check if macros cache needs updating, but don't block if it's not ready
+                if (cachedMacros.get() != null) {
+                    checkAndUpdateCache();
                 }
-                result.addElement(macro);
             }
             
-            // The full cache will be populated in the background
-            System.out.println("[DEBUG_LOG] Added basic macros while waiting for full cache initialization");
+            // Add macros from cache to results
+            List<LookupElement> macros = cachedMacros.get();
+            if (macros != null) {
+                System.out.println("[DEBUG_LOG] Adding " + macros.size() + " macros from cache");
+                System.out.println("[DEBUG_LOG] afterClosedTag (from parameters): " + afterClosedTag);
+                
+                for (LookupElement macro : macros) {
+                    // If we're after a closed tag, don't add n: attributes
+                    if (afterClosedTag && macro.getLookupString().startsWith("n:")) {
+                        System.out.println("[DEBUG_LOG] Skipping n: attribute after closed tag: " + macro.getLookupString());
+                        continue;
+                    }
+                    result.addElement(macro);
+                }
+            } else {
+                System.out.println("[DEBUG_LOG] Macros cache is null, initializing on demand");
+                // Initialize on demand but in a lightweight way to avoid freezing
+                List<LookupElement> basicMacros = new ArrayList<>();
+                // Add a minimal set of common macros for immediate use
+                basicMacros.add(LookupElementBuilder.create("if").bold().withTypeText("Latte macro"));
+                basicMacros.add(LookupElementBuilder.create("foreach").bold().withTypeText("Latte macro"));
+                basicMacros.add(LookupElementBuilder.create("include").bold().withTypeText("Latte macro"));
+                basicMacros.add(LookupElementBuilder.create("block").bold().withTypeText("Latte macro"));
+                
+                // Add these basic macros to the result
+                for (LookupElement macro : basicMacros) {
+                    // If we're after a closed tag, don't add n: attributes
+                    if (afterClosedTag && macro.getLookupString().startsWith("n:")) {
+                        continue;
+                    }
+                    result.addElement(macro);
+                }
+                
+                // The full cache will be populated in the background
+                System.out.println("[DEBUG_LOG] Added basic macros while waiting for full cache initialization");
+            }
+        } finally {
+            // Always clear the watchdog deadline to avoid leaking it on pooled threads
+            NetteDefaultVariablesProvider.endCompletionWatchdog();
         }
     }
     
@@ -745,6 +780,10 @@ public class LatteCompletionContributor extends CompletionContributor {
         System.out.println("[DEBUG_LOG] addNetteVariables called");
         
         try {
+            // Start/refresh watchdog for this completion call so variable path respects deadlines
+            NetteDefaultVariablesProvider.beginCompletionWatchdog();
+            NetteDefaultVariablesProvider.checkDeadlineOrCanceledNow();
+            
             // Ensure cache initialization has been started
             if (!cacheInitializationStarted.get()) {
                 System.out.println("[DEBUG_LOG] Cache initialization not started, starting now");
@@ -827,9 +866,15 @@ public class LatteCompletionContributor extends CompletionContributor {
                 
                 System.out.println("[DEBUG_LOG] Added basic variables while waiting for full cache initialization");
             }
+        } catch (com.intellij.openapi.progress.ProcessCanceledException pce) {
+            System.out.println("[DEBUG_LOG][TIMEOUT] Nette variables completion canceled due to timeout or cancellation");
+            throw pce;
         } catch (Exception e) {
             System.out.println("[DEBUG_LOG] Error adding Nette variables: " + e.getMessage());
             e.printStackTrace();
+        } finally {
+            // Always clear the watchdog deadline to avoid leaking it on pooled threads
+            NetteDefaultVariablesProvider.endCompletionWatchdog();
         }
     }
     

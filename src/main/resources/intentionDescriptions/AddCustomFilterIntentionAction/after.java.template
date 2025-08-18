@@ -1,0 +1,2 @@
+{* After registering, the filter is recognized *}
+{$var|unknownFilter}

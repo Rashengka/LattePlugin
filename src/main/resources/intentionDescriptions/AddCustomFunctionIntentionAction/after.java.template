@@ -1,0 +1,2 @@
+{* After registering, the function is recognized *}
+{customFunc(1, 2)}

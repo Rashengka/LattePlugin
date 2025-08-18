@@ -1,0 +1,2 @@
+{* After registering, the variable is known to the plugin *}
+{$unknown}

@@ -1,6 +1,6 @@
 # Project Guidelines for Junie – Operational Rules
 
-Last update: 2025-08-13 11:09
+Last update: 2025-08-18 11:45
 
 This file defines a few operational rules for working on the LattePlugin repository with the Junie assistant.
 
@@ -14,6 +14,9 @@ This file defines a few operational rules for working on the LattePlugin reposit
     - Jak bylo ověřeno (testy, logy, manuální runIde)
     - Odkazy na logy (konkrétní běh – timestamp složka)
     - Případné TODO/next steps
+  - Doporučení k formátu času: u KAŽDÉHO zápisu uveď přesný čas zápisu (např. 09:05:00); nepoužívej zástupné štítky typu "(Later)".
+  - Při více záznamech o opravách/testech v JEDNOM dni je možné dřívější příspěvky zestručnit, ale ne je úplně smazat.
+  - Nesmí se ztratit informace o tom, co bylo úspěšně dokončeno; tyto informace lze zkrátit, pokud následující příspěvek dané téma dále rozvádí a obsahuje podrobnější informace.
 
 ## 2) Kde číst logy při analýze testů
 Při selháních/timeoutu testů čti vždy tyto zdroje (v tomto pořadí):
