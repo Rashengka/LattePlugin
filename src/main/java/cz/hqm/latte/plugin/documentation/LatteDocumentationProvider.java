@@ -92,145 +92,117 @@ public class LatteDocumentationProvider extends AbstractDocumentationProvider {
         return null;
     }
     
+    /**
+     * Test-helper: generates documentation from provided raw text without needing a PSI element.
+     */
     @Nullable
-    @Override
-    public String generateDoc(PsiElement element, @Nullable PsiElement originalElement) {
-        if (element == null) {
-            return null;
-        }
-        
-        String text = element.getText();
-        String trimmedToken = text == null ? "" : text.replace("\n", " ").trim();
-        
+    public String generateDocFromString(@Nullable String text) {
+        if (text == null) return null;
+        String trimmedToken = text.replace("\n", " ").trim();
+
         // Check if the element is a Latte macro
         if (text.startsWith("{")) {
-            // Extract the macro name - it could be the entire macro or just the name
             String macroContent = text;
             if (text.endsWith("}")) {
                 macroContent = text.substring(1, text.length() - 1).trim();
             }
-            
-            // Extract just the macro name (without parameters or content)
             String macroName = macroContent.split("\\s+")[0].trim();
             if (macroName.isEmpty()) {
                 return null;
             }
-            
-            // Check built-in macros
             if (MACRO_DOCS.containsKey(macroName)) {
                 return createDocumentation("Latte Macro: " + macroName, MACRO_DOCS.get(macroName));
             }
-            
-            // Check Nette package macros
             String netteMacroDoc = getNetteMacroDocumentation(macroName);
             if (netteMacroDoc != null) {
                 return netteMacroDoc;
             }
         }
-        
+
         // Additional heuristic: if the token itself is a known macro name (without braces)
         String bareToken = trimmedToken.replaceAll("[{}\"'=<>()]", "");
         if (!bareToken.isEmpty()) {
-            // Built-in macro names
             if (MACRO_DOCS.containsKey(bareToken)) {
                 return createDocumentation("Latte Macro: " + bareToken, MACRO_DOCS.get(bareToken));
             }
-            // Nette package macros
             String netteMacroDoc = getNetteMacroDocumentation(bareToken);
             if (netteMacroDoc != null) {
                 return netteMacroDoc;
             }
         }
-        
+
         // Check if the element is a Latte n:attribute or contains an n:attribute
         if (text.contains("n:")) {
-            // Extract the attribute name
             int nIndex = text.indexOf("n:");
             if (nIndex >= 0) {
                 String afterN = text.substring(nIndex);
                 String attrName;
-                
-                // Handle the case where the attribute is followed by "="
                 int equalsIndex = afterN.indexOf("=");
                 if (equalsIndex > 0) {
                     attrName = afterN.substring(0, equalsIndex).trim();
                 } else {
-                    // Handle the case where there's no "=" (e.g., just "n:if")
                     int spaceIndex = afterN.indexOf(" ");
                     int quoteIndex = afterN.indexOf("\"");
                     int endIndex = Math.min(
-                        spaceIndex > 0 ? spaceIndex : Integer.MAX_VALUE,
-                        quoteIndex > 0 ? quoteIndex : Integer.MAX_VALUE
+                            spaceIndex > 0 ? spaceIndex : Integer.MAX_VALUE,
+                            quoteIndex > 0 ? quoteIndex : Integer.MAX_VALUE
                     );
-                    
-                    if (endIndex < Integer.MAX_VALUE) {
-                        attrName = afterN.substring(0, endIndex).trim();
-                    } else {
-                        attrName = afterN.trim();
-                    }
+                    attrName = (endIndex < Integer.MAX_VALUE) ? afterN.substring(0, endIndex).trim() : afterN.trim();
                 }
-                
-                // Check built-in attributes
                 if (ATTRIBUTE_DOCS.containsKey(attrName)) {
                     return createDocumentation("Latte Attribute: " + attrName, ATTRIBUTE_DOCS.get(attrName));
                 }
-                
-                // Check Nette package attributes
                 String netteAttrDoc = getNetteAttributeDocumentation(attrName);
                 if (netteAttrDoc != null) {
                     return netteAttrDoc;
                 }
             }
         }
-        
+
         // Additional heuristic: if the token looks like a bare attribute name (without the n: prefix)
         if (!bareToken.isEmpty()) {
-            String possibleAttr = bareToken;
-            String withPrefix = possibleAttr.startsWith("n:") ? possibleAttr : ("n:" + possibleAttr);
-            // Built-in attributes
+            String withPrefix = bareToken.startsWith("n:") ? bareToken : ("n:" + bareToken);
             if (ATTRIBUTE_DOCS.containsKey(withPrefix)) {
                 return createDocumentation("Latte Attribute: " + withPrefix, ATTRIBUTE_DOCS.get(withPrefix));
             }
-            // Nette package attributes
             String netteAttrDoc = getNetteAttributeDocumentation(withPrefix);
             if (netteAttrDoc != null) {
                 return netteAttrDoc;
             }
         }
-        
+
         // Check if the element is a Latte filter or contains a filter
         if (text.contains("|")) {
-            // Extract the filter name
             int pipeIndex = text.indexOf("|");
             if (pipeIndex >= 0) {
                 String afterPipe = text.substring(pipeIndex + 1);
                 String filterName;
-                
-                // Handle the case where there are multiple filters or parameters
                 int nextPipeIndex = afterPipe.indexOf("|");
                 int spaceIndex = afterPipe.indexOf(" ");
                 int bracketIndex = afterPipe.indexOf("}");
                 int endIndex = Math.min(
-                    nextPipeIndex > 0 ? nextPipeIndex : Integer.MAX_VALUE,
-                    Math.min(
-                        spaceIndex > 0 ? spaceIndex : Integer.MAX_VALUE,
-                        bracketIndex > 0 ? bracketIndex : Integer.MAX_VALUE
-                    )
+                        nextPipeIndex > 0 ? nextPipeIndex : Integer.MAX_VALUE,
+                        Math.min(
+                                spaceIndex > 0 ? spaceIndex : Integer.MAX_VALUE,
+                                bracketIndex > 0 ? bracketIndex : Integer.MAX_VALUE
+                        )
                 );
-                
-                if (endIndex < Integer.MAX_VALUE) {
-                    filterName = afterPipe.substring(0, endIndex).trim();
-                } else {
-                    filterName = afterPipe.trim();
-                }
-                
+                filterName = (endIndex < Integer.MAX_VALUE) ? afterPipe.substring(0, endIndex).trim() : afterPipe.trim();
                 if (FILTER_DOCS.containsKey(filterName)) {
                     return createDocumentation("Latte Filter: " + filterName, FILTER_DOCS.get(filterName));
                 }
             }
         }
-        
         return null;
+    }
+
+    @Nullable
+    @Override
+    public String generateDoc(PsiElement element, @Nullable PsiElement originalElement) {
+        if (element == null) {
+            return null;
+        }
+        return generateDocFromString(element.getText());
     }
     
     @NotNull

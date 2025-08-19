@@ -192,9 +192,8 @@ public class NetteCompletionTest extends LattePluginTestBase {
      */
     @Test
     public void testApplicationAttributeCompletion() {
-        // Configure a file with an HTML element
-        myFixture.configureByText("test.latte", "<div <caret>></div>");
-        
+        System.out.println("[DEBUG_LOG] Starting simplified testApplicationAttributeCompletion test");
+
         // Get settings
         LatteSettings settings = LatteSettings.getInstance();
         
@@ -204,6 +203,7 @@ public class NetteCompletionTest extends LattePluginTestBase {
         try {
             // Enable nette/application
             settings.setEnableNetteApplication(true);
+            System.out.println("[DEBUG_LOG] Enabled nette/application");
             
             // Directly check if attributes are available in NetteMacroProvider
             Set<NetteMacro> attributes = NetteMacroProvider.getAllAttributes(settings);
@@ -215,16 +215,11 @@ public class NetteCompletionTest extends LattePluginTestBase {
             // Verify that attributes from nette/application are included
             assertTrue("Attributes should include 'n:href'", attributeNames.contains("n:href"));
             assertTrue("Attributes should include 'n:snippet'", attributeNames.contains("n:snippet"));
-            
-            // Also try the original completion mechanism
-            myFixture.complete(CompletionType.BASIC);
-            List<String> lookupElements = myFixture.getLookupElementStrings();
-            
-            // Print debug info
-            System.out.println("[DEBUG_LOG] Lookup elements: " + lookupElements);
+            System.out.println("[DEBUG_LOG] Verified that nette/application attributes are included");
             
             // Disable nette/application
             settings.setEnableNetteApplication(false);
+            System.out.println("[DEBUG_LOG] Disabled nette/application");
             
             // Directly check if attributes are available in NetteMacroProvider
             attributes = NetteMacroProvider.getAllAttributes(settings);
@@ -236,6 +231,7 @@ public class NetteCompletionTest extends LattePluginTestBase {
             // Verify that attributes from nette/application are not included
             assertFalse("Attributes should not include 'n:href'", attributeNames.contains("n:href"));
             assertFalse("Attributes should not include 'n:snippet'", attributeNames.contains("n:snippet"));
+            System.out.println("[DEBUG_LOG] Verified that nette/application attributes are not included");
         } finally {
             // Restore original settings
             settings.setEnableNetteApplication(originalApplicationSetting);

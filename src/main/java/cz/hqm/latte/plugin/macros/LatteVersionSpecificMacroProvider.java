@@ -47,6 +47,15 @@ public class LatteVersionSpecificMacroProvider {
     public static Set<NetteMacro> getLatte3xMacros() {
         Set<NetteMacro> macros = new HashSet<>();
         
+        // Type-related macros introduced in Latte 3.x
+        macros.add(new NetteMacro("varType", "Declares type of a variable", "latte/latte"));
+        macros.add(new NetteMacro("templateType", "Declares type for the whole template", "latte/latte"));
+        
+        // PHP execution and parameters macros in 3.x
+        macros.add(new NetteMacro("php", "Executes raw PHP code", "latte/latte"));
+        macros.add(new NetteMacro("do", "Executes an expression without output", "latte/latte"));
+        macros.add(new NetteMacro("parameters", "Declares template parameters", "latte/latte"));
+        
         // Control flow macros
         macros.add(new NetteMacro("switch", "Switch statement", "latte/latte"));
         macros.add(new NetteMacro("case", "Case in switch statement", "latte/latte"));
@@ -60,8 +69,7 @@ public class LatteVersionSpecificMacroProvider {
         // Content type macros
         macros.add(new NetteMacro("contentType", "Sets the content type", "latte/latte"));
         
-        // Execution macros
-        macros.add(new NetteMacro("do", "Executes an expression without output", "latte/latte"));
+        // Debugging helpers
         macros.add(new NetteMacro("debugbreak", "Breaks the script for debugging", "latte/latte"));
         macros.add(new NetteMacro("trace", "Displays tracing", "latte/latte"));
         
@@ -215,15 +223,19 @@ public class LatteVersionSpecificMacroProvider {
             return true;
         }
         
-        // Check Latte 3.x+ specific macros
-        if ((macroName.equals("switch") || 
+        // Check Latte 3.x+ specific macros (also available in 4.x)
+        if ((macroName.equals("varType") ||
+             macroName.equals("templateType") ||
+             macroName.equals("php") ||
+             macroName.equals("parameters") ||
+             macroName.equals("do") ||
+             macroName.equals("switch") || 
              macroName.equals("case") || 
              macroName.equals("default") || 
              macroName.equals("rollback") ||
              macroName.equals("spaceless") ||
              macroName.equals("skipIf") ||
              macroName.equals("contentType") ||
-             macroName.equals("do") ||
              macroName.equals("debugbreak") ||
              macroName.equals("trace") ||
              macroName.equals("try") ||

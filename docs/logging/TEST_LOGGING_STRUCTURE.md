@@ -6,8 +6,8 @@ Previously, test outputs were being logged into a single directory for all tests
 
 The desired folder structure is:
 - Main timestamp directory: `log/test_2025-07-24_13-29-45/`
-- Test-specific subdirectories: `log/test_2025-07-24_13-29-45/CustomFiltersProvider_testGetAllFiltersEmpty/`
-- Log files within test-specific subdirectories: `log/test_2025-07-24_13-29-45/CustomFiltersProvider_testGetAllFiltersEmpty/latte_plugin_2025-07-24_13-29-45_latte_debug.log`
+- Class-specific subdirectories: `log/test_2025-07-24_13-29-45/CustomFiltersProviderTest/`
+- Log files within class-specific subdirectories (per-method): `log/test_2025-07-24_13-29-45/CustomFiltersProviderTest/testGetAllFiltersEmpty.latte_debug.log`
 
 The timestamp should be determined at the first log writing and used for all subsequent logs in the test run.
 

@@ -15,8 +15,8 @@ This file defines a few operational rules for working on the LattePlugin reposit
     - Odkazy na logy (konkrétní běh – timestamp složka)
     - Případné TODO/next steps
   - Doporučení k formátu času: u KAŽDÉHO zápisu uveď přesný čas zápisu (např. 09:05:00); nepoužívej zástupné štítky typu "(Later)".
-  - Při více záznamech o opravách/testech v JEDNOM dni je možné dřívější příspěvky zestručnit, ale ne je úplně smazat.
-  - Nesmí se ztratit informace o tom, co bylo úspěšně dokončeno; tyto informace lze zkrátit, pokud následující příspěvek dané téma dále rozvádí a obsahuje podrobnější informace.
+  - Při více záznamech o opravách/testech v JEDNOM dni je do souboru doplňuj na jeho konec.
+  - Pokud již existuje v souboru nějaký záznam, ta se nesmí přepsat, pouze doplňovat na konec.
 
 ## 2) Kde číst logy při analýze testů
 Při selháních/timeoutu testů čti vždy tyto zdroje (v tomto pořadí):

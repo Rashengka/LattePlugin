@@ -51,34 +51,24 @@ public final class TestPerTestLogWriter {
     private static File resolvePerTestDebugLogFile(Description description, String timestamp) {
         String projectRoot = System.getProperty("user.dir");
         File baseDir = new File(projectRoot + File.separator + "log" + File.separator + "test_" + timestamp);
-        String dirName = buildPerTestDirName(description);
-        File testDir = new File(baseDir, dirName);
-        String fileName = String.format("latte_plugin_%s_latte_debug.log", timestamp);
-        return new File(testDir, fileName);
+        String simpleClass = safeSimpleClassName(description);
+        String method = safeMethodName(description);
+        File classDir = new File(baseDir, simpleClass);
+        String fileName = method + ".latte_debug.log";
+        return new File(classDir, fileName);
     }
 
-    private static String buildPerTestDirName(Description description) {
+    private static String safeSimpleClassName(Description description) {
         String className = description.getClassName();
-        String methodName = description.getMethodName();
-        // simple class name
-        if (className == null) className = "UnknownClass";
+        if (className == null || className.isEmpty()) className = "UnknownClass";
         int idx = className.lastIndexOf('.');
-        if (idx >= 0) {
-            className = className.substring(idx + 1);
-        }
-        // drop trailing "Test"
-        if (className.endsWith("Test")) {
-            className = className.substring(0, className.length() - 4);
-        }
-        if (methodName == null || methodName.isEmpty()) {
-            methodName = "unknownMethod";
-        }
-        String combined = className + "_" + methodName;
-        // sanitize to be filesystem-friendly
-        combined = combined.replaceAll("[^a-zA-Z0-9_.-]", "_");
-        if (combined.length() > 50) {
-            combined = combined.substring(0, 50);
-        }
-        return combined;
+        if (idx >= 0) className = className.substring(idx + 1);
+        return className.replaceAll("[^a-zA-Z0-9_.-]", "_");
+    }
+
+    private static String safeMethodName(Description description) {
+        String methodName = description.getMethodName();
+        if (methodName == null || methodName.isEmpty()) methodName = "unknownMethod";
+        return methodName.replaceAll("[^a-zA-Z0-9_.-]", "_");
     }
 }

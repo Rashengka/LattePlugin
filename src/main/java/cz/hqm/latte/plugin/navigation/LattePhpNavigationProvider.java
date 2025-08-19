@@ -55,33 +55,52 @@ public class LattePhpNavigationProvider implements GotoDeclarationHandler {
         }
 
         Project project = sourceElement.getProject();
-        String elementText = sourceElement.getText();
+
+        // Work with the whole file text so that we can find the exact macro under the caret/offset
+        PsiFile file = sourceElement.getContainingFile();
+        if (file == null) {
+            return null;
+        }
+        String fileText = file.getText();
+        int caretOffset = sourceElement.getTextOffset();
+
+        // Helper to find the first match of a pattern that covers the caret offset
+        java.util.function.Function<Pattern, Matcher> matchAtOffset = (pattern) -> {
+            Matcher m = pattern.matcher(fileText);
+            while (m.find()) {
+                if (m.start() <= caretOffset && caretOffset < m.end()) {
+                    return m;
+                }
+            }
+            return null;
+        };
 
         // Check for n:href, {link}, or {plink}
-        Matcher linkMatcher = LINK_PATTERN.matcher(elementText);
-        if (linkMatcher.find()) {
+        Matcher linkMatcher = matchAtOffset.apply(LINK_PATTERN);
+        if (linkMatcher != null) {
             String target = linkMatcher.group(1);
-            
-            // Extract parameters
+
+            // Extract parameters within the same matched region to avoid picking unrelated params
             Map<String, String> parameters = new HashMap<>();
-            Matcher paramsMatcher = PARAMS_PATTERN.matcher(elementText);
+            CharSequence region = fileText.subSequence(linkMatcher.start(), linkMatcher.end());
+            Matcher paramsMatcher = PARAMS_PATTERN.matcher(region);
             while (paramsMatcher.find()) {
                 parameters.put(paramsMatcher.group(1), paramsMatcher.group(2));
             }
-            
+
             return findPresenterMethod(project, target, parameters, sourceElement, editor);
         }
 
         // Check for {control}
-        Matcher controlMatcher = CONTROL_PATTERN.matcher(elementText);
-        if (controlMatcher.find()) {
+        Matcher controlMatcher = matchAtOffset.apply(CONTROL_PATTERN);
+        if (controlMatcher != null) {
             String componentName = controlMatcher.group(1);
             return findComponentMethod(project, componentName, sourceElement, editor, false);
         }
-        
+
         // Check for {form}
-        Matcher formMatcher = FORM_PATTERN.matcher(elementText);
-        if (formMatcher.find()) {
+        Matcher formMatcher = matchAtOffset.apply(FORM_PATTERN);
+        if (formMatcher != null) {
             String formName = formMatcher.group(1);
             return findComponentMethod(project, formName, sourceElement, editor, true);
         }

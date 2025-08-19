@@ -109,6 +109,20 @@ ext.logToProjectRoot = { String taskName, String output ->
     }
 }
 
+// Ensure that `gradle clean` also purges logs directory contents
+// We keep the top-level logsDir folder but remove all files/subdirectories inside it
+tasks.register('cleanLogs', Delete) {
+    // Use the configured logsDir (defaults to 'log')
+    def ld = file(logsDir)
+    // Delete all immediate children (files and directories) inside logsDir, but keep the top-level folder itself
+    def children = (ld.exists() && ld.isDirectory()) ? ld.listFiles() : [] as File[]
+    delete children
+}
+
+tasks.named('clean') {
+    dependsOn tasks.named('cleanLogs')
+}
+
 repositories {
     mavenCentral()
 }

@@ -201,35 +201,51 @@ public class LatteLogger {
             String logFilePath;
 
             if (IS_TEST_MODE) {
-                // In test mode, create a test-specific subdirectory and place log files there
-                String testName = getTestName();
-                String testDirName = sanitizeTestName(testName);
-                
-                // Check if we already have a directory for this test
-                File testDir;
+                // In test mode, create a class-specific subdirectory and place per-method log files there
+                String testName = getTestName(); // format: fully.qualified.ClassName.methodName
+
+                // Parse class and method
+                String classNameFqn = "unknown";
+                String methodName = "unknownMethod";
+                if (testName != null && !testName.isEmpty() && testName.contains(".")) {
+                    int lastDot = testName.lastIndexOf('.');
+                    classNameFqn = testName.substring(0, lastDot);
+                    methodName = testName.substring(lastDot + 1);
+                }
+
+                // Simple class name (including "Test" suffix if present)
+                String simpleClassName = classNameFqn;
+                int idx = simpleClassName.lastIndexOf('.');
+                if (idx >= 0) simpleClassName = simpleClassName.substring(idx + 1);
+
+                // Sanitize names for filesystem
+                simpleClassName = simpleClassName.replaceAll("[^a-zA-Z0-9_.-]", "_");
+                methodName = methodName.replaceAll("[^a-zA-Z0-9_.-]", "_");
+                if (simpleClassName.isEmpty()) simpleClassName = "UnknownClass";
+                if (methodName.isEmpty()) methodName = "unknownMethod";
+
+                // Ensure we have class directory cached/created
+                File classDir;
                 synchronized (TEST_DIRECTORIES) {
-                    testDir = TEST_DIRECTORIES.get(testDirName);
-                    
-                    // If not, create a new test-specific directory
-                    if (testDir == null) {
-                        testDir = new File(TEST_LOG_BASE_DIR, testDirName);
-                        if (!testDir.exists()) {
-                            boolean created = testDir.mkdirs();
+                    classDir = TEST_DIRECTORIES.get(simpleClassName);
+                    if (classDir == null) {
+                        classDir = new File(TEST_LOG_BASE_DIR, simpleClassName);
+                        if (!classDir.exists()) {
+                            boolean created = classDir.mkdirs();
                             if (!created) {
-                                System.err.println("Failed to create test-specific directory at: " + testDir.getAbsolutePath());
+                                System.err.println("Failed to create class-specific directory at: " + classDir.getAbsolutePath());
                             } else {
-                                System.out.println("Created test-specific directory at: " + testDir.getAbsolutePath());
+                                System.out.println("Created class-specific directory at: " + classDir.getAbsolutePath());
                             }
                         }
-                        
-                        // Store the directory for future use
-                        TEST_DIRECTORIES.put(testDirName, testDir);
+                        TEST_DIRECTORIES.put(simpleClassName, classDir);
                     }
                 }
-                
-                // Create the log file path in the test-specific directory
-                String fileName = LOG_FILE_PREFIX + "_" + SESSION_TIMESTAMP + "_" + logFileBase + ".log";
-                logFilePath = new File(testDir, fileName).getAbsolutePath();
+
+                // Create per-method log file name inside the class directory
+                // Pattern: <method>.<type>.log (e.g., testSomething.latte_debug.log or testSomething.validation_errors.log)
+                String fileName = methodName + "." + logFileBase + ".log";
+                logFilePath = new File(classDir, fileName).getAbsolutePath();
             } else {
                 // Normal mode (not test) - use the original behavior
                 if (logFileBase.equals(DEBUG_LOG_BASE)) {
